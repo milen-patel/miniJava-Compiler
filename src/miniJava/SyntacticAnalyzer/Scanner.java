@@ -7,6 +7,7 @@ public class Scanner {
 	private char currentChar;
 	private StringBuffer currentTokenSpelling;
 	private FileInputStream inputStream;
+	private int scannerPos = 1;
 
 	public Scanner(FileInputStream fileInputStream) {
 		this.inputStream = fileInputStream; // TODO: Is it fine to double have scanners
@@ -14,9 +15,9 @@ public class Scanner {
 	}
 
 	private void pullWhiteSpace() {
-		// Reference: ASCII definition of whitespace
+		// TODO: Should i delete first whitespace check as per PA1 description
 		while (this.currentChar == ' ' || this.currentChar == '\n' || this.currentChar == '\t'
-				|| this.currentChar == '\r' || this.currentChar == '\f') {
+				|| this.currentChar == '\r') { 
 			this.pullNextChar();
 		}
 	}
@@ -24,7 +25,8 @@ public class Scanner {
 	public Token scan() {
 		this.pullWhiteSpace();
 		this.currentTokenSpelling = new StringBuffer();
-		Token t = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), 0, 0);
+		int startPos = this.scannerPos;
+		Token t = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), startPos, scannerPos);
 		return t;
 	}
 
@@ -80,13 +82,13 @@ public class Scanner {
 
 		else if (this.isAlphabetical()) {
 			this.pullNextChar();
-			while (this.isAlphabetical() || this.isNextNumber()) {
+			while (this.isAlphabetical() || this.isNextNumber() || this.isUnderscore()) { //refactor
 				this.pullNextChar();
 			}
 			return this.handleReservedWords(this.currentTokenSpelling.toString());
 		}
 
-		if ((this.currentChar) == 4) {
+		if ((this.currentChar) == 4) { //todo double check this is valid and casting issue
 			this.pullNextChar();
 			return TokenType.EOT;
 		}
@@ -178,6 +180,10 @@ public class Scanner {
 	private boolean isUpperCase() {
 		return this.currentChar >= 'A' && this.currentChar <= 'Z';
 	}
+	
+	private boolean isUnderscore() {
+		return this.currentChar == '_';
+	}
 
 	private void scanNumber() {
 		while (this.isNextNumber()) {
@@ -234,6 +240,7 @@ public class Scanner {
 			} else {
 				this.currentChar = (char) next;
 			}
+			this.scannerPos++;
 		} catch (IOException e) {
 			System.out.println("Input stream has no more tokens."); // TODO are empty files valid?
 			System.exit(miniJava.Compiler.FAILURE_RETURN_CODE);

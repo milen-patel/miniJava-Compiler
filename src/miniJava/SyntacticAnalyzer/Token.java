@@ -13,7 +13,7 @@ public class Token {
 	}
 	
 	public String toString() {
-		return "{ Type: " + this.type + ", Spelling: \"" + this.spelling + "\" }";
+		return "{ Type: " + this.type + ", Spelling: \"" + this.spelling + "\" [" + startPos + ", " +endPos +"] }";
 	}
 	
 	public TokenType getType() {
