@@ -1,52 +1,57 @@
 package miniJava.SyntacticAnalyzer;
 
-public class TokenType {
+public enum TokenType {
 	// Does 'num' in the grammar limit itself to integers or do we need to parse doubles
 	// Note you can have a variable named THIS but not this, thus reserved words are case sensitive
+	NUMBER_LITERAL,
+	IDENTIFIER,
+	EOT,
 	
-	public static final int NUMBER_LITERAL = 0;
-	public static final int IDENTIFIER = 0;
-	//whitespace
 	//reserved words
-	public static final int CLASS = 0;
-	public static final int VOID = 0;
-	public static final int PUBLIC = 0;
-	public static final int PRIVATE = 0;
-	public static final int STATIC = 0;
-	public static final int INT = 0;
-	public static final int BOOLEAN = 0;
-	public static final int THIS = 0;
-	public static final int RETURN = 0;
-	public static final int IF = 0;
-	public static final int WHILE = 0;
-	public static final int ELSE = 0;
-
+	CLASS,
+	VOID,
+	PUBLIC,
+	PRIVATE,
+	STATIC,
+	INT,
+	BOOLEAN,
+	THIS,
+	RETURN,
+	IF,
+	WHILE,
+	ELSE,
 	
 	//syntax
-	public static final int OPEN_CURLY = 0; // {
-	public static final int CLOSE_CURLY = 0; // }
-	public static final int SEMICOLON = 0;	// ;
-	public static final int OPEN_PAREN = 0;	// (
-	public static final int CLOSE_PAREN = 0; // )
-	public static final int OPEN_BRACKET = 0; // [
-	public static final int CLOSE_BRACKET = 0; // ]
-	public static final int COMMA = 0; // /
-	public static final int DOT = 0; // .
-	public static final int ASSIGNMENT = 0; // =
+	OPEN_CURLY, // {
+	CLOSE_CURLY, // }
+	SEMICOLON, // ;
+	OPEN_PAREN, // (
+	CLOSE_PAREN, // )
+	OPEN_BRACKET, // [
+	CLOSE_BRACKET, // ]
+	COMMA, // /
+	DOT, // .
+	ASSIGNMENT, // =
 
 	//unary operators
-	MINUS,
-	NOT,
-	INCREMENT, //++
-	DECREMENT, //--
-	COMPLEMENT,
+	LOGICAL_NEGATION,
+	ARITHMETIC_NEGATION,
 	
-	//binary operators
-	PLUS,
-	STAR,
-	SLASH,
-	PERCENT,
+	// relational operators
+	GREATER_THAN, 
+	LESS_THAN,
+	DOUBLE_EQUALS,
+	LESS_THAN_OR_EQUAL_TO,
+	GREATHER_THAN_OR_EQUAL_TO,
+	NOT_EQUAL_TO,
 	
-	public static final int EOT = 0;
+	// logical operators
+	LOGICAL_AND,
+	LOGICAL_OR,
 
+	// arithmetic operators
+	ADDITION,
+	SUBTRACTION,
+	MULTIPLICATION,
+	DIVISION,
 }
