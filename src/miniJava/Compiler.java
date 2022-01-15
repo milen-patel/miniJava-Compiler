@@ -3,6 +3,7 @@ package miniJava;
 import java.io.File; 
 import java.io.FileNotFoundException;
 
+import miniJava.SyntacticAnalyzer.InputReader;
 import miniJava.SyntacticAnalyzer.Scanner;
 import miniJava.SyntacticAnalyzer.Token;
 import miniJava.SyntacticAnalyzer.TokenType; 
@@ -23,8 +24,8 @@ public class Compiler {
 		try {
 			File inputFile = new File(args[0]);
 			java.util.Scanner scanner = new java.util.Scanner(inputFile);
-			
-			Scanner scnr = new Scanner(new java.io.FileInputStream(inputFile));
+			InputReader rdr = new InputReader(new java.io.FileInputStream(inputFile));
+			Scanner scnr = new Scanner(rdr);
 			while (true) {
 				Token t = scnr.scan();
 				System.out.println(t);

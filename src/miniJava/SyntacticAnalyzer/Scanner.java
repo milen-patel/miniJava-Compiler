@@ -6,11 +6,10 @@ import java.io.IOException;
 public class Scanner {
 	private char currentChar;
 	private StringBuffer currentTokenSpelling;
-	private FileInputStream inputStream;
-	private int scannerPos = 1;
+	private InputReader input;
 
-	public Scanner(FileInputStream fileInputStream) {
-		this.inputStream = fileInputStream; // TODO: Is it fine to double have scanners
+	public Scanner(InputReader input) {
+		this.input = input;
 		pullNextChar();
 	}
 
@@ -25,8 +24,8 @@ public class Scanner {
 	public Token scan() {
 		this.pullWhiteSpace();
 		this.currentTokenSpelling = new StringBuffer();
-		int startPos = this.scannerPos;
-		Token t = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), startPos, scannerPos);
+		int startPos = this.input.getScannerPosition();
+		Token t = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), startPos, input.getScannerPosition());
 		return t;
 	}
 
@@ -222,29 +221,17 @@ public class Scanner {
 		}
 	}
 
-	private boolean inputHasNext() {
-		try {
-			return this.inputStream.available() >= 0;
-		} catch (IOException e) {
-			return false;
-		}
-	}
+	
 
 	public void pullNextChar() {
-		try {
 			if (this.currentTokenSpelling != null)
 				this.currentTokenSpelling.append(this.currentChar);
-			int next = this.inputStream.read();
-			if (next == -1) {
+			int next = this.input.next();
+			if (next == -1) { // explore this more
 				this.currentChar = '\u0004';
 			} else {
 				this.currentChar = (char) next;
 			}
-			this.scannerPos++;
-		} catch (IOException e) {
-			System.out.println("Input stream has no more tokens."); // TODO are empty files valid?
-			System.exit(miniJava.Compiler.FAILURE_RETURN_CODE);
-		}
 	}
 
 }
