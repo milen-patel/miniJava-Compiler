@@ -32,7 +32,7 @@ public class Scanner {
 
 	public TokenType scanNextToken() {
 		// Integer Literal
-		if (this.isNextNumber()) {
+		if (this.isCurrentCharNumeric()) {
 			this.scanNumber();
 			return TokenType.INT;
 		} else if (this.currentChar == ';') {
@@ -80,9 +80,9 @@ public class Scanner {
 			return this.parseRelationalOperatorOrAssignment();
 		}
 
-		else if (this.isAlphabetical()) {
+		else if (this.isCurrentCharAlpabetical()) {
 			this.pullNextChar();
-			while (this.isAlphabetical() || this.isNextNumber() || this.isUnderscore()) { //refactor
+			while (this.isCurrentCharAlpabetical() || this.isCurrentCharNumeric() || this.isCurrentCharUnderscore()) { //refactor
 				this.pullNextChar();
 			}
 			return this.handleReservedWords(this.currentTokenSpelling.toString());
@@ -165,28 +165,28 @@ public class Scanner {
 		throw new RuntimeException("Shoudlnt be here");
 	}
 
-	private boolean isNextNumber() {
+	private boolean isCurrentCharNumeric() {
 		return this.currentChar >= '0' && this.currentChar <= '9';
 	}
 
-	private boolean isAlphabetical() {
-		return isLowerCase() || isUpperCase();
+	private boolean isCurrentCharAlpabetical() {
+		return isCurrentCharLowercase() || isCurrentCharUppercase();
 	}
 
-	private boolean isLowerCase() {
+	private boolean isCurrentCharLowercase() {
 		return this.currentChar >= 'a' && this.currentChar <= 'z';
 	}
 
-	private boolean isUpperCase() {
+	private boolean isCurrentCharUppercase() {
 		return this.currentChar >= 'A' && this.currentChar <= 'Z';
 	}
 	
-	private boolean isUnderscore() {
+	private boolean isCurrentCharUnderscore() {
 		return this.currentChar == '_';
 	}
 
-	private void scanNumber() {
-		while (this.isNextNumber()) {
+	private void scanNumber() { // figure out how this is being used
+		while (this.isCurrentCharNumeric()) {
 			this.pullNextChar();
 		}
 	}

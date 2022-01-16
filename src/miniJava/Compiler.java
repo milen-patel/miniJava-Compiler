@@ -32,6 +32,13 @@ public class Compiler {
 				if (t.getType() == TokenType.EOT)
 					break;
 			}
+			System.out.println(rdr.inputHasNext());
+			System.out.println(rdr.next());
+			System.out.println(rdr.inputHasNext());
+			System.out.println(rdr.next());
+			System.out.println(rdr.next());
+			System.out.println(rdr.next());
+
 			scanner.close();
 			
 		} catch (FileNotFoundException e) {
