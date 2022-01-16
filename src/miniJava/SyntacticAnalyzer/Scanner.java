@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class Scanner {
+	// something like '45fwefpj5' would pass, what should happen?
 	private char currentChar;
 	private StringBuffer currentTokenSpelling;
 	private InputReader input;
@@ -217,6 +218,8 @@ public class Scanner {
 			return TokenType.ELSE;
 		} else {
 			// TODO do identifier check
+			if (word == null || word.length() == 0)
+				throw new RuntimeException(""); // TODO find a better way to deal with this
 			return TokenType.IDENTIFIER;
 		}
 	}
