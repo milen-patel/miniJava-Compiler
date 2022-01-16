@@ -1,13 +1,11 @@
 package miniJava.SyntacticAnalyzer;
 
+/*
+ * Enumeration representing all of the Token Types for the miniJava compiler.
+ * Each Token instance has a TokenType property.
+ */
 public enum TokenType {
-	// Does 'num' in the grammar limit itself to integers or do we need to parse doubles
-	// Note you can have a variable named THIS but not this, thus reserved words are case sensitive
-	NUMBER_LITERAL,
-	IDENTIFIER,
-	EOT,
-	
-	//reserved words
+	// Reserved Words
 	CLASS,
 	VOID,
 	PUBLIC,
@@ -21,7 +19,7 @@ public enum TokenType {
 	WHILE,
 	ELSE,
 	
-	//syntax
+	// Syntax
 	OPEN_CURLY, // {
 	CLOSE_CURLY, // }
 	SEMICOLON, // ;
@@ -33,11 +31,11 @@ public enum TokenType {
 	DOT, // .
 	ASSIGNMENT, // =
 
-	//unary operators
+	// Unary Operators
 	LOGICAL_NEGATION,
 	ARITHMETIC_NEGATION,
 	
-	// relational operators
+	// Relational Operators
 	GREATER_THAN, 
 	LESS_THAN,
 	DOUBLE_EQUALS,
@@ -45,15 +43,19 @@ public enum TokenType {
 	GREATHER_THAN_OR_EQUAL_TO,
 	NOT_EQUAL_TO,
 	
-	// logical operators
+	// Logical Operators
 	LOGICAL_AND,
 	LOGICAL_OR,
 
-	// arithmetic operators
+	// Arithmetic Operators
 	ADDITION,
 	SUBTRACTION,
 	MULTIPLICATION,
 	DIVISION,
 	
+	// Other
+	NUMBER_LITERAL,
+	IDENTIFIER,
+	EOT,
 	COMMENT,
 }

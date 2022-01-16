@@ -1,8 +1,5 @@
 package miniJava.SyntacticAnalyzer;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-
 public class Scanner {
 	// something like '45fwefpj5' would pass, what should happen?
 	private char currentChar;
@@ -219,8 +216,7 @@ public class Scanner {
 					
 				}
 				if (this.currentChar == '\u0004') {
-					System.out.println("Encountered EOF without comment end");
-					System.exit(miniJava.Compiler.FAILURE_RETURN_CODE); // refactor this
+					Reporter.get().reportError("Invalid Comment: Encountered EOF without block comment end. You must end a comment if you open one.");
 				}
 			}
 		}
