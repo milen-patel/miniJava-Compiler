@@ -6,7 +6,8 @@ package miniJava.SyntacticAnalyzer;
 public class Reporter {
 	public static final int SUCCESS_RETURN_CODE = 0;
 	public static final int FAILURE_RETURN_CODE = 4;
-	
+	private static Reporter reporter;
+	private int reportingMinimum = 10;
 	/*
 	 * Prints error to user and then ends program with failure code.
 	 */
@@ -18,8 +19,10 @@ public class Reporter {
 	/*
 	 * Logs input to the user. Will become useful if we want to silence logging.
 	 */
-	public void log(String reason) {
-		System.out.println(reason);
+	public void log(String reason, int severity) {
+		if (severity >= this.reportingMinimum) {
+			System.out.println(reason);
+		}
 	}
 	
 	/*
@@ -29,7 +32,6 @@ public class Reporter {
 		System.exit(SUCCESS_RETURN_CODE);
 	}
 	
-	private static Reporter reporter;
 	public static Reporter get() {
 		if (reporter == null)
 			reporter = new Reporter();

@@ -1,35 +1,43 @@
 package miniJava.SyntacticAnalyzer;
 
 public class Scanner {
-	// something like '45fwefpj5' would pass, what should happen?
+	// Represents the current front-most character of the input stream
 	private char currentChar;
+
+	// Use to construct spelling of each Token as it's being parsed
 	private StringBuffer currentTokenSpelling;
+
+	// Used to traverse input file with ease
 	private InputReader input;
 
 	public Scanner(InputReader input) {
+		Reporter.get().log("Scanner Class Created", 1);
 		this.input = input;
+
+		// Ensure that 'currentChar' has the first character of the input sequence
 		pullNextChar();
 	}
 
-	private void pullWhiteSpace() {
-		// TODO: Should i delete first whitespace check as per PA1 description
-		while (this.currentChar == ' ' || this.currentChar == '\n' || this.currentChar == '\t'
-				|| this.currentChar == '\r') { 
-			this.pullNextChar();
-		}
-	}
-
+	/*
+	 * Returns the next token in the input stream
+	 */
 	public Token scan() {
 		this.pullWhiteSpace();
 		this.currentTokenSpelling = new StringBuffer();
 		int startPos = this.input.getScannerPosition();
-		Token t = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), startPos, input.getScannerPosition());
-		return t;
+
+		TokenPosition pos = new TokenPosition(startPos, input.getScannerPosition());
+		Token token = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), pos);
+		return token;
 	}
 
-	public TokenType scanNextToken() {
-		// Integer Literal
+	/*
+	 * Fills the StringBuffer with the spelling of the next available token and
+	 * returns the type of the token.
+	 */
+	private TokenType scanNextToken() {
 		if (this.isCurrentCharNumeric()) {
+			// Found an integer literal
 			this.scanNumber();
 			return TokenType.INT;
 		} else if (this.currentChar == ';') {
@@ -74,38 +82,39 @@ public class Scanner {
 			return this.parseLogicalOperator();
 		} else if (this.isRelationalOperatorOrAssignment()) {
 			return this.parseRelationalOperatorOrAssignment();
-		}
-
-		else if (this.isCurrentCharAlpabetical()) {
+		} else if (this.isCurrentCharAlpabetical()) {
 			this.pullNextChar();
-			while (this.isCurrentCharAlpabetical() || this.isCurrentCharNumeric() || this.isCurrentCharUnderscore()) { //refactor
+			while (isValidIdentifierBody()) {
 				this.pullNextChar();
 			}
 			return this.handleReservedWords(this.currentTokenSpelling.toString());
 		}
 
-		if ((this.currentChar) == 4) { //todo double check this is valid and casting issue
+		// TODO: Investigate this
+		if ((this.currentChar) == 4) {
 			this.pullNextChar();
 			return TokenType.EOT;
 		}
 
-		throw new RuntimeException("Invalid Input Stream didn't match any token rule");
+		Reporter.get().reportError("Invalid Input Stream didn't match any token rule");
+		return TokenType.ERROR;
 	}
 
-	private boolean isLogicalOperatorStart() {
-		return this.currentChar == '|' || this.currentChar == '&';
-	}
-
-	// Parses '&&' and '||', throws an exception if the first two characters in
-	// stream don't match
+	/*
+	 * Parses '&&' and '||', throws an error if the first two characters in stream
+	 * don't match.
+	 */
 	private TokenType parseLogicalOperator() {
 		if (!this.isLogicalOperatorStart())
-			throw new RuntimeException("Not a logical operator"); // except or exit?
+			Reporter.get().reportError("Internal Scanning Error");
+
 		char firstChar = this.currentChar;
 		this.pullNextChar();
+
 		if (this.currentChar != firstChar) {
-			throw new RuntimeException("Cannot use | or & without || or &&");
+			Reporter.get().reportError("Cannot use | or & without || or &&");
 		}
+
 		if (this.currentChar == '|') {
 			this.pullNextChar();
 			return TokenType.LOGICAL_OR;
@@ -115,17 +124,17 @@ public class Scanner {
 		}
 	}
 
-	private boolean isRelationalOperatorOrAssignment() {
-		return this.currentChar == '>' || this.currentChar == '<' || this.currentChar == '=' || this.currentChar == '!';
-	}
-
-	// != ! < > == = <= >=
+	/*
+	 * Parses the following: != ! < > == = <= >=
+	 */
 	private TokenType parseRelationalOperatorOrAssignment() {
 		if (!this.isRelationalOperatorOrAssignment())
-			throw new RuntimeException("This shouldn't have been called");
+			Reporter.get().reportError("Internal Parsing Error");
+
 		if (this.currentChar == '>') {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
+				this.pullNextChar();
 				return TokenType.GREATHER_THAN_OR_EQUAL_TO; // >=
 			} else {
 				return TokenType.GREATER_THAN; // >
@@ -134,6 +143,7 @@ public class Scanner {
 		if (this.currentChar == '<') {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
+				this.pullNextChar();
 				return TokenType.LESS_THAN_OR_EQUAL_TO; // <=
 			} else {
 				return TokenType.LESS_THAN; // <
@@ -143,6 +153,7 @@ public class Scanner {
 		if (this.currentChar == '=') {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
+				this.pullNextChar();
 				return TokenType.DOUBLE_EQUALS; // ==
 			} else {
 				return TokenType.ASSIGNMENT; // =
@@ -152,80 +163,24 @@ public class Scanner {
 		if (this.currentChar == '!') {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
+				this.pullNextChar();
 				return TokenType.NOT_EQUAL_TO;
 			} else {
 				return TokenType.LOGICAL_NEGATION;
 			}
 		}
 
-		throw new RuntimeException("Shoudlnt be here");
+		Reporter.get().reportError("Internal Scanning Error");
+		return TokenType.ERROR;
 	}
 
-	private boolean isCurrentCharNumeric() {
-		return this.currentChar >= '0' && this.currentChar <= '9';
-	}
-
-	private boolean isCurrentCharAlpabetical() {
-		return isCurrentCharLowercase() || isCurrentCharUppercase();
-	}
-
-	private boolean isCurrentCharLowercase() {
-		return this.currentChar >= 'a' && this.currentChar <= 'z';
-	}
-
-	private boolean isCurrentCharUppercase() {
-		return this.currentChar >= 'A' && this.currentChar <= 'Z';
-	}
-	
-	private boolean isCurrentCharUnderscore() {
-		return this.currentChar == '_';
-	}
-
-	private void scanNumber() { // figure out how this is being used
-		while (this.isCurrentCharNumeric()) {
-			this.pullNextChar();
-		}
-	}
-	
 	/*
-	 * If we encounter a '/' symbol, it may either be a division operand or the start of a comment.
-	 * This function will return the correct token Type
+	 * Once we finish reading in a string, we must determine if that string was a
+	 * reserved java keyword. If so, the token type should be changed accordingly.
+	 * If no reserved words are matched then we have an identifier.
 	 */
-	private TokenType handleDivisionOrComment() {
-		// Remove the initial slash
-		this.pullNextChar();
-		
-		// Option 1: End of line comment
-		if (this.currentChar == '/') {
-			while (this.currentChar != '\n') {
-				this.pullNextChar();
-			}
-			return TokenType.COMMENT;
-		}
-		
-		// Option 2: Block Comment
-		if (this.currentChar == '*') {			
-			while (true) { // todo, this might be risky, why not whhile (sb.toString.indexOf(*/) != 0)
-				this.pullNextChar();
-				if (this.currentChar == '*') {
-					this.pullNextChar();
-					if (this.currentChar == '/') {
-						this.pullNextChar();
-						return TokenType.COMMENT;
-					}
-					
-				}
-				if (this.currentChar == '\u0004') {
-					Reporter.get().reportError("Invalid Comment: Encountered EOF without block comment end. You must end a comment if you open one.");
-				}
-			}
-		}
-		
-		// If neither option, then we have a division token
-		return TokenType.DIVISION;
-	}
-
 	private TokenType handleReservedWords(String word) {
+		Reporter.get().log("Checking if identifier is a reserved word", 0);
 		if (word.contentEquals("class")) {
 			return TokenType.CLASS;
 		} else if (word.contentEquals("void")) {
@@ -251,24 +206,155 @@ public class Scanner {
 		} else if (word.contentEquals("else")) {
 			return TokenType.ELSE;
 		} else {
-			// TODO do identifier check
-			if (word == null || word.length() == 0)
-				throw new RuntimeException(""); // TODO find a better way to deal with this
 			return TokenType.IDENTIFIER;
 		}
 	}
 
-	
+	/*
+	 * If we encounter a '/' symbol, it may either be a division operand or the
+	 * start of a comment. This function will return the correct token Type
+	 */
+	private TokenType handleDivisionOrComment() {
+		// Remove the initial slash
+		this.pullNextChar();
 
-	public void pullNextChar() {
-			if (this.currentTokenSpelling != null)
-				this.currentTokenSpelling.append(this.currentChar);
-			int next = this.input.next();
-			if (next == -1) { // explore this more
-				this.currentChar = '\u0004';
-			} else {
-				this.currentChar = (char) next;
+		// Option 1: End of line comment '//'. Delete until end of line is encountered.
+		if (this.currentChar == '/') {
+			while (this.currentChar != '\n') {
+				this.pullNextChar();
 			}
+			return TokenType.COMMENT;
+		}
+
+		// Option 2: Block Comment '/* ... */'
+		// TODO: this might be risky, why not whhile (sb.toString.indexOf(*/) != 0)
+		if (this.currentChar == '*') {
+			while (true) {
+				this.pullNextChar();
+				if (this.currentChar == '*') {
+					this.pullNextChar();
+					if (this.currentChar == '/') {
+						this.pullNextChar();
+						return TokenType.COMMENT;
+					}
+
+				}
+				if (this.currentChar == '\u0004') {
+					Reporter.get().reportError(
+							"Invalid Comment: Encountered EOF without block comment end. You must end a comment if you open one.");
+				}
+			}
+		}
+
+		// If neither option, then we have a division token
+		return TokenType.DIVISION;
+	}
+
+	/*
+	 * Pulls the next character from the input sequence, appends current character
+	 * to StringBuffer
+	 */
+	private void pullNextChar() {
+		Reporter.get().log("Pulling next character from input stream...Current: " + this.currentChar, 0);
+
+		if (this.currentTokenSpelling != null) {
+			Reporter.get().log(
+					"Adding current character to string buffer...Current: " + this.currentTokenSpelling.toString(), 0);
+			this.currentTokenSpelling.append(this.currentChar);
+		}
+
+		int next = this.input.next();
+		if (next == -1) {
+			Reporter.get().log("EOF Encountered in pullNextChar", 1);
+			this.currentChar = '\u0004';
+		} else {
+			this.currentChar = (char) next;
+			Reporter.get().log("New currentChar: " + this.currentChar, 0);
+		}
+	}
+
+	/*
+	 * Once a number has been detected, this will parse out the rest of the number
+	 */
+	private void scanNumber() {
+		while (this.isCurrentCharNumeric()) {
+			this.pullNextChar();
+		}
+
+		// TODO: Depends on answer to question
+		// Now that we have finished parsing the number, check that a letter doesn't
+		// immediately follow
+		if (this.isCurrentCharAlpabetical()) {
+			Reporter.get().reportError("Identifiers cannot start with numbers");
+		}
+	}
+
+	/*
+	 * Determines if the current character may be the start of a logical 'AND' or
+	 * logical 'OR'
+	 */
+	private boolean isLogicalOperatorStart() {
+		return this.matchCurrentCharacter('|') || this.matchCurrentCharacter('&');
+	}
+
+	/* Determines if the current character represents a number */
+	private boolean isCurrentCharNumeric() {
+		return this.currentChar >= '0' && this.currentChar <= '9';
+	}
+
+	/* Determines if the current character is a letter */
+	private boolean isCurrentCharAlpabetical() {
+		return isCurrentCharLowercase() || isCurrentCharUppercase();
+	}
+
+	/* Determines if the current character is a lower case letter */
+	private boolean isCurrentCharLowercase() {
+		return this.currentChar >= 'a' && this.currentChar <= 'z';
+	}
+
+	/* Determines if the current character is an uppercase letter */
+	private boolean isCurrentCharUppercase() {
+		return this.currentChar >= 'A' && this.currentChar <= 'Z';
+	}
+
+	/*
+	 * Determines if the current character is a valid symbol in an identifier's 2nd
+	 * position onwards
+	 */
+	private boolean isValidIdentifierBody() {
+		return this.isCurrentCharAlpabetical() || this.isCurrentCharNumeric() || this.isCurrentCharUnderscore();
+	}
+
+	/*
+	 * Determines if the current character may be a relational operator or a single
+	 * equals sign
+	 */
+	private boolean isRelationalOperatorOrAssignment() {
+		return matchCurrentCharacter('>') || matchCurrentCharacter('<') || matchCurrentCharacter('=')
+				|| matchCurrentCharacter('!');
+	}
+
+	/* Determines if the current character is an underscore */
+	private boolean isCurrentCharUnderscore() {
+		return this.matchCurrentCharacter('_');
+	}
+
+	/* Determines if the current character matches the argument */
+	private boolean matchCurrentCharacter(char c) {
+		return this.currentChar == c;
+	}
+
+	/*
+	 * Pulls characters from the input sequence until the first non-whitespace token
+	 * is encountered.
+	 */
+	private void pullWhiteSpace() {
+		Reporter.get().log("Pull Whitespace Called", 0);
+		while (matchCurrentCharacter(' ') || matchCurrentCharacter('\n') || matchCurrentCharacter('\t')
+				|| matchCurrentCharacter('\r')) {
+			Reporter.get().log("Whitespace Encountered..pulling", 0);
+			this.pullNextChar();
+		}
 	}
 
 }

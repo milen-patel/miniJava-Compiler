@@ -57,5 +57,6 @@ public enum TokenType {
 	NUMBER_LITERAL,
 	IDENTIFIER,
 	EOT,
-	COMMENT,
+	COMMENT, 
+	ERROR,
 }

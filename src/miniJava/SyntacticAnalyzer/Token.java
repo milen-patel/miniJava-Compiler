@@ -11,6 +11,12 @@ public class Token {
 		this.position = new TokenPosition(startPos, endPos);
 	}
 	
+	public Token(TokenType type, String spelling, TokenPosition tokenPosition) {
+		this.type = type;
+		this.spelling = spelling;
+		this.position = tokenPosition;
+	}
+	
 	public String toString() {
 		return "{ Type: " + this.type + ", Spelling: \"" + this.spelling + "\" [" + position.getStartPos() + ", " + position.getEndPos() +"] }";
 	}
