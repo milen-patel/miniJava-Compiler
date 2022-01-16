@@ -54,4 +54,6 @@ public enum TokenType {
 	SUBTRACTION,
 	MULTIPLICATION,
 	DIVISION,
+	
+	COMMENT,
 }

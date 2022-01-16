@@ -72,8 +72,7 @@ public class Scanner {
 			this.pullNextChar();
 			return TokenType.MULTIPLICATION;
 		} else if (this.currentChar == '/') {
-			this.pullNextChar();
-			return TokenType.DIVISION;
+			return this.handleDivisionOrComment();
 		} else if (this.isLogicalOperatorStart()) {
 			return this.parseLogicalOperator();
 		} else if (this.isRelationalOperatorOrAssignment()) {
@@ -189,6 +188,45 @@ public class Scanner {
 		while (this.isCurrentCharNumeric()) {
 			this.pullNextChar();
 		}
+	}
+	
+	/*
+	 * If we encounter a '/' symbol, it may either be a division operand or the start of a comment.
+	 * This function will return the correct token Type
+	 */
+	private TokenType handleDivisionOrComment() {
+		// Remove the initial slash
+		this.pullNextChar();
+		
+		// Option 1: End of line comment
+		if (this.currentChar == '/') {
+			while (this.currentChar != '\n') {
+				this.pullNextChar();
+			}
+			return TokenType.COMMENT;
+		}
+		
+		// Option 2: Block Comment
+		if (this.currentChar == '*') {			
+			while (true) { // todo, this might be risky, why not whhile (sb.toString.indexOf(*/) != 0)
+				this.pullNextChar();
+				if (this.currentChar == '*') {
+					this.pullNextChar();
+					if (this.currentChar == '/') {
+						this.pullNextChar();
+						return TokenType.COMMENT;
+					}
+					
+				}
+				if (this.currentChar == '\u0004') {
+					System.out.println("Encountered EOF without comment end");
+					System.exit(miniJava.Compiler.FAILURE_RETURN_CODE); // refactor this
+				}
+			}
+		}
+		
+		// If neither option, then we have a division token
+		return TokenType.DIVISION;
 	}
 
 	private TokenType handleReservedWords(String word) {
