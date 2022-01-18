@@ -10,3 +10,5 @@ A compiler for miniJava
 + In pullwhitespace, does ' ' count as whitespace since the description seems to imply it doesnt
 + Explore EOF  hhandling in pullNextChar more
 
++ Make sure i handle spacing in that class{ isnt valid (or is it?) wheras class { is valid
++ Make sure scanner doesn't feed comment tokens to the parser
