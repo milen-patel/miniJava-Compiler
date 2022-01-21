@@ -20,6 +20,7 @@ public enum TokenType {
 	ELSE,
 	TRUE,
 	FALSE,
+	NEW,
 	
 	// Syntax
 	OPEN_CURLY, // {
@@ -34,8 +35,8 @@ public enum TokenType {
 	ASSIGNMENT, // =
 
 	// Unary Operators
-	LOGICAL_NEGATION,
-	ARITHMETIC_NEGATION,
+	LOGICAL_NEGATION, 
+	ARITHMETIC_NEGATION, // TODO do we need to distinguish between subtract and arithmetic negation
 	
 	// Relational Operators
 	GREATER_THAN, 

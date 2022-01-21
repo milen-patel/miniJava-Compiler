@@ -209,6 +209,8 @@ public class Scanner {
 			return TokenType.TRUE;
 		} else if (word.contentEquals("false")) {
 			return TokenType.FALSE;
+		} else if (word.contentEquals("new")) {
+			return TokenType.NEW;
 		} else {
 			return TokenType.IDENTIFIER;
 		}

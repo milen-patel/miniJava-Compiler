@@ -147,22 +147,63 @@ public class Parser {
 	
 	/*
 	 * Expression ::=
-	 *  Reference
-	 *  | Reference [ Expression ]
-	 *  | Reference(ArgumentList?)
-	 *  | unop Expression
+	 *  (5) Reference
+	 *  (6) | Reference [ Expression ]
+	 *  (7) | Reference(ArgumentList?)
+	 *  (4)| unop Expression
 	 *  | Expression binop Expression
 	 *  | ( Expression )
-	 *  | num 
-	 *  | true 
-	 *  | false
+	 *  (3) | num 
+	 *  (1) | true  
+	 *  (2) | false
 	 *  | new (id() | int[Expression] | id[Expression])
 	 */
 	private void parseExpression() {
 		switch (this.currentToken.getType()) {
-		//case TRUE:
-			
+			case TRUE: // (1)
+				accept(TokenType.TRUE, "Internal Parsing Error");
+				break;
+			case FALSE: // (2)
+				accept(TokenType.FALSE, "Internal Parsing Error");
+				break;
+			case NUMBER_LITERAL: // (3)
+				accept(TokenType.NUMBER_LITERAL, "Internal Parsing Error");
+				break;
+			case SUBTRACTION: // (4)
+				accept(TokenType.SUBTRACTION, "IPE");
+				parseExpression();
+				break;
+			case LOGICAL_NEGATION: // (4)
+				accept(TokenType.LOGICAL_NEGATION, "IPE");
+				parseExpression();
+				break;
+			case IDENTIFIER: // starters[reference] = {id, this}
+			case THIS:
+				parseReference(); // (5)
+				if (currentToken.getType() == TokenType.OPEN_BRACKET) { // (6)
+					accept(TokenType.OPEN_BRACKET, "IPE");
+					parseExpression();
+					accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
+				} else if (currentToken.getType() == TokenType.OPEN_PAREN) { // (7)
+					accept(TokenType.OPEN_PAREN, "IPE");
+					// TODO Same question should i check f or a starter of arglist or check for ')'
+					if (currentToken.getType() == TokenType.CLOSE_PAREN) {
+						accept(TokenType.CLOSE_PAREN, "IPE");
+					} else {
+						parseArguementList();
+						accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
+					}
+				}
+				break;
+			case NEW:
+				
+				
 		}
+	}
+
+	private void parseArguementList() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/* Type ::= int | boolean | id | (int|id)[] */
