@@ -15,3 +15,5 @@ A compiler for miniJava
 + Make sure that CLASS parses as an identifier.
 + Make sure word.ContentEquals is case sensitive
 + Make sure all reserved keywords are being parsed
++ Handle IPE (refactor)
++ Make sure every switch has a break

@@ -123,28 +123,58 @@ public class Parser {
 	
 	/*
 	 * Statement ::=
-	 * 	{ Statement* }
-	 * | Typeid=Expression;
+	 * 	(4) { Statement* }
+	 * | Type id=Expression;
 	 * | Reference = Expression ;
 	 * | Reference [Expression]=Expression;
 	 * | Reference (ArgumentList?);
-	 * | return Expression? ;
-	 * | if ( Expression ) Statement (else Statement)?
-	 * | while ( Expression ) Statement
+	 * (1) | return Expression? ;
+	 * (2) | if ( Expression ) Statement (else Statement)?
+	 * (3) | while ( Expression ) Statement
 	 */
 	private void parseStatement() {
-		if (currentToken.getType() == TokenType.RETURN) {
-			accept(TokenType.RETURN, "Internal Parsing Error");
-			// TODO, same as another issue. Do you check if theres a starter or check for semicolon?
-			if (this.currentToken.getType() == TokenType.SEMICOLON) {
-				// Case 1: No return expression
-				accept(TokenType.SEMICOLON, "Internal Parsing Error");
-			} else {
+		switch (this.currentToken.getType()) {
+			case RETURN: // (1)
+				accept(TokenType.RETURN, "Internal Parsing Error");
+				// TODO, same as another issue. Do you check if theres a starter or check for semicolon?
+				if (this.currentToken.getType() == TokenType.SEMICOLON) {
+					// Case 1: No return expression
+					accept(TokenType.SEMICOLON, "Internal Parsing Error");
+				} else {
+					// Case 2: Non-Empty return expression
+					parseExpression();
+					accept(TokenType.SEMICOLON, "Expected semicolon to terminate statement");
+				}
+				break;
+			case IF: // (2)
+				accept(TokenType.IF, "IPE");
+				accept(TokenType.OPEN_PAREN, "Expected '('");
 				parseExpression();
-				accept(TokenType.SEMICOLON, "Expected semicolon to terminate statement");
-			}
-			return;
+				accept(TokenType.CLOSE_PAREN, "Expected ')");
+				parseStatement();
+				if (this.currentToken.getType() == TokenType.ELSE) {
+					accept(TokenType.ELSE, "IPE");
+					parseExpression();
+				}
+				break;
+			case WHILE: // (3)
+				accept(TokenType.WHILE, "IPE");
+				accept(TokenType.OPEN_PAREN, "Expected '('");
+				parseExpression();
+				accept(TokenType.CLOSE_PAREN, "Expected ')");
+				parseStatement();
+				break;
+			case OPEN_CURLY: // (4)
+				accept(TokenType.OPEN_CURLY, "IPE");
+				while (currentToken.getType() != TokenType.CLOSE_CURLY) {
+					parseStatement();
+				}
+				accept(TokenType.CLOSE_CURLY, "Expected '}'");
+				break;
+				
+				
 		}
+		
 		
 		
 	}
