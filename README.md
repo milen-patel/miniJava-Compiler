@@ -12,3 +12,4 @@ A compiler for miniJava
 
 + Make sure i handle spacing in that class{ isnt valid (or is it?) wheras class { is valid
 + Make sure scanner doesn't feed comment tokens to the parser
++ Make sure that CLASS parses as an identifier.

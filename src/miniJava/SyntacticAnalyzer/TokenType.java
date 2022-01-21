@@ -18,6 +18,7 @@ public enum TokenType {
 	IF,
 	WHILE,
 	ELSE,
+
 	
 	// Syntax
 	OPEN_CURLY, // {

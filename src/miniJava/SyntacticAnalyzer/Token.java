@@ -24,4 +24,8 @@ public class Token {
 	public TokenType getType() {
 		return this.type;
 	}
+	
+	public int getStartPosition() {
+		return this.position.getStartPos();
+	}
 }
