@@ -152,11 +152,11 @@ public class Parser {
 	 *  (7) | Reference(ArgumentList?)
 	 *  (4)| unop Expression
 	 *  | Expression binop Expression
-	 *  | ( Expression )
+	 *  (9) | ( Expression )
 	 *  (3) | num 
 	 *  (1) | true  
 	 *  (2) | false
-	 *  | new (id() | int[Expression] | id[Expression])
+	 *  (8) | new (id() | int[Expression] | id[Expression])
 	 */
 	private void parseExpression() {
 		switch (this.currentToken.getType()) {
@@ -195,15 +195,60 @@ public class Parser {
 					}
 				}
 				break;
-			case NEW:
-				
-				
+			case NEW: // (8)
+				accept(TokenType.NEW, "IPE");
+				if (currentToken.getType() == TokenType.INT) {
+					accept(TokenType.INT, "IPE");
+					accept(TokenType.OPEN_BRACKET, "Expected '['");
+					parseExpression();
+					accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+				} else {
+					accept(TokenType.IDENTIFIER, "Expected identifier following 'new'");
+					if (currentToken.getType() == TokenType.OPEN_PAREN) {
+						accept(TokenType.OPEN_PAREN, "IPE");
+						accept(TokenType.CLOSE_PAREN, "Expected ')'");
+					} else {
+						accept(TokenType.OPEN_BRACKET, "Expected '['");
+						parseExpression();
+						accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+					}
+				}
+				break;
+			case OPEN_PAREN: // (9)
+				accept(TokenType.OPEN_PAREN, "IPE");
+				parseExpression();
+				accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
+				break;
+			default:
+				Reporter.get().reportError("No Expression Cases Matched");
+		}
+		// TODO, check if  this is correct elimination of the left recursive case
+		while (currentToken.getType() == TokenType.GREATER_THAN ||
+				currentToken.getType() == TokenType.LESS_THAN ||
+				currentToken.getType() == TokenType.DOUBLE_EQUALS ||
+				currentToken.getType() == TokenType.LESS_THAN_OR_EQUAL_TO ||
+				currentToken.getType() == TokenType.GREATHER_THAN_OR_EQUAL_TO ||
+				currentToken.getType() == TokenType.NOT_EQUAL_TO ||
+				currentToken.getType() == TokenType.LOGICAL_AND ||
+				currentToken.getType() == TokenType.LOGICAL_OR ||
+				currentToken.getType() == TokenType.ADDITION ||
+				currentToken.getType() == TokenType.SUBTRACTION || // TODO: okay to exclude '!'
+				currentToken.getType() == TokenType.DIVISION ||
+				currentToken.getType() == TokenType.MULTIPLICATION) {
+			acceptNext();
+			parseExpression();
 		}
 	}
 
+	/*
+	 * ArgumentList ::= Expression(,Expression)*
+	 */
 	private void parseArguementList() {
-		// TODO Auto-generated method stub
-		
+		parseExpression();
+		while (this.currentToken.getType() == TokenType.COMMA) {
+			accept(TokenType.COMMA, "IPE");
+			parseExpression();
+		}
 	}
 
 	/* Type ::= int | boolean | id | (int|id)[] */
@@ -226,7 +271,9 @@ public class Parser {
 			Reporter.get().reportError("Parsing error: expected typed declaration");
 		}
 	}
-
+	private void acceptNext() {
+		accept(this.currentToken.getType(), "Internal Parsing Error");
+	}
 	private void accept(TokenType type, String errorReason) {
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
