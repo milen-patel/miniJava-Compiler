@@ -26,6 +26,7 @@ public class Parser {
 		while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
 			this.parseFieldOrMethodDeclaration();
 		}
+		accept(TokenType.CLOSE_CURLY, "Expected '}' at end of class body");
 	}
 
 	/* ( FieldDeclaration | MethodDeclaration )* */
@@ -39,12 +40,13 @@ public class Parser {
 			accept(TokenType.OPEN_PAREN, "Expected '(' in method declaration");
 			parseParameterList();
 			accept(TokenType.CLOSE_PAREN, "Expected ')' in method declaratioon");
+			// TODO finish this
 		} else {
 			parseType();
 		}
 		accept(TokenType.IDENTIFIER, "Expected identifier in field/method declaration");
 		if (currentToken.getType() == TokenType.SEMICOLON) {
-
+			accept(TokenType.SEMICOLON, "IPE");
 		} else {
 			// TODO
 		}
@@ -103,8 +105,10 @@ public class Parser {
 		switch (currentToken.getType()) {
 		case PUBLIC:
 			accept(TokenType.PUBLIC, "Internal Parsing Error");
+			break;
 		case PRIVATE:
 			accept(TokenType.PRIVATE, "Internal Parsing Error");
+			break;
 		default:
 			break;
 		}
@@ -261,14 +265,14 @@ public class Parser {
 			}
 		} else if (currentToken.getType() == TokenType.BOOLEAN) {
 			accept(TokenType.BOOLEAN, "Internal Parsing Error");
+		} else if (currentToken.getType() == TokenType.IDENTIFIER) {
+			accept(TokenType.IDENTIFIER, "Internal Parsing Error");
 			if (currentToken.getType() == TokenType.OPEN_BRACKET) {
 				accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
 				accept(TokenType.CLOSE_BRACKET, "Expected ] after [");
 			}
-		} else if (currentToken.getType() == TokenType.IDENTIFIER) {
-			accept(TokenType.IDENTIFIER, "Internal Parsing Error");
 		} else {
-			Reporter.get().reportError("Parsing error: expected typed declaration");
+			Reporter.get().reportError("Parsing error: expected typed declaration at " + this.currentToken.getStartPosition() + ". Got: " + this.currentToken.toString());
 		}
 	}
 	private void acceptNext() {

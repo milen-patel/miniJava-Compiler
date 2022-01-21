@@ -29,6 +29,7 @@ public class Reporter {
 	 * Terminates program with successful return code.
 	 */
 	public void endWithSuccess() {
+		System.out.println("Program looks good!");
 		System.exit(SUCCESS_RETURN_CODE);
 	}
 	

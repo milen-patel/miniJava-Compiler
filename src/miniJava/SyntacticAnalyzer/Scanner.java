@@ -28,6 +28,9 @@ public class Scanner {
 
 		TokenPosition pos = new TokenPosition(startPos, input.getScannerPosition());
 		Token token = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), pos);
+		if (token.getType() == TokenType.COMMENT) {
+			return scan(); // TODO: is this safe
+		}
 		return token;
 	}
 
