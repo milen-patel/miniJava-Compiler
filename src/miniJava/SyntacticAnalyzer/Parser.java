@@ -191,7 +191,7 @@ public class Parser {
 				}
 			case THIS:
 				if (currentToken.getType() == TokenType.THIS) {
-					accept(TokenType.THIS, "IPE"); // catch fall through
+					parseReference(); // catch fall through
 				}
 				if (currentToken.getType() == TokenType.ASSIGNMENT) {
 					acceptNext();
@@ -359,6 +359,13 @@ public class Parser {
 		accept(this.currentToken.getType(), "Internal Parsing Error");
 	}
 	private void accept(TokenType type, String errorReason) {
+		/*
+		System.out.println(this.currentToken);
+		StackTraceElement [] trace = Thread.currentThread().getStackTrace();
+		for (int i = trace.length - 2; i > 0 ; i--) {    
+			System.out.println("\t" + trace[i]);
+		}
+		*/
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
 		} else {
