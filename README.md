@@ -17,3 +17,6 @@ A compiler for miniJava
 + Make sure all reserved keywords are being parsed
 + Handle IPE (refactor)
 + Make sure every switch has a break
+
++ Check example code, somethings look interesting: eol bool, newline on unix vs windows, pTrace
++ Check input file ends in .java?

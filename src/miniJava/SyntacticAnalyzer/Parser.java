@@ -38,64 +38,70 @@ public class Parser {
 			// Now we know it is a method declaration
 			accept(TokenType.IDENTIFIER, "Expected identifier for method name");
 			accept(TokenType.OPEN_PAREN, "Expected '(' in method declaration");
-			parseParameterList();
-			accept(TokenType.CLOSE_PAREN, "Expected ')' in method declaratioon");
-			// TODO finish this
+			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
+				parseParameterList(); // TODO: Correct way to handle optional or just make  parse rule handle?
+			}
+			accept(TokenType.CLOSE_PAREN, "Expected ')' in method declaration");
+			accept(TokenType.OPEN_CURLY, "Expected '{'");
+			while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
+				parseStatement();
+			}
+			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); // TODO repeated code below
 		} else {
 			parseType();
 		}
 		accept(TokenType.IDENTIFIER, "Expected identifier in field/method declaration");
 		if (currentToken.getType() == TokenType.SEMICOLON) {
 			accept(TokenType.SEMICOLON, "IPE");
+		} else if (currentToken.getType() == TokenType.OPEN_PAREN) {
+			accept(TokenType.OPEN_PAREN, "Expected '('");
+			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
+				parseParameterList();
+			}
+			accept(TokenType.CLOSE_PAREN, "Expected ')'");
+			accept(TokenType.OPEN_CURLY, "Expected '{'");
+			while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
+				parseStatement();
+			}
+			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); 
 		} else {
-			// TODO
+			Reporter.get().reportError("Invalid class body. Failed to parse field or method declaration");
 		}
 	}
 
 	/*
-	 * ParameterList ::= Type id ( , Type id )* starter[ParameterList] =
-	 * starter[Type id] = starter[Type] = {int, bool, id}
+	 * ParameterList ::= Type id ( , Type id )* 
 	 */
-	// TODO. Paremeter list is optional, can the rule just be replaced with and *
-	// instead of >=1
 	// TODO, is this approach right
 	private void parseParameterList() {
-		while (currentToken.getType() == TokenType.INT || currentToken.getType() == TokenType.BOOLEAN || currentToken.getType() == TokenType.IDENTIFIER) {
-			if (currentToken.getType() == TokenType.BOOLEAN) {
-				accept(TokenType.BOOLEAN, "Internal Parsing Error");
-			} else if (currentToken.getType() == TokenType.INT) {
-				accept(TokenType.INT, "Internal Parsing Error");
-				if (currentToken.getType() == TokenType.OPEN_BRACKET) {
-					accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
-					accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
-				}
-			} else if (currentToken.getType() == TokenType.IDENTIFIER) {
-				accept(TokenType.IDENTIFIER, "Internal Parsing Error");
-				if (currentToken.getType() == TokenType.OPEN_BRACKET) {
-					accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
-					accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
-				}
-			}
+		parseType();
+		accept(TokenType.IDENTIFIER, "Expected parameter name following type");
+		
+		while(this.currentToken.getType() == TokenType.COMMA) {
+			acceptNext();
+			parseType();
+			accept(TokenType.IDENTIFIER, "Expected identifier following type in parameter list.");
 		}
 	}
 
 	/*
 	 * Reference ::= id | this | Reference.id -> Eliminate left recursion Reference
-	 * ::= (id | this)(.id)*
+	 * 			 ::= (id | this)(.id)*
 	 * 
-	 *  starter[Reference]
+	 * >starter[Reference]
 	 * =starter[(id | this)(.id)*]
 	 * =starter[(id | this)]
 	 * ={id, this}
 	 */
 	private void parseReference() {
 		if (this.currentToken.getType() == TokenType.THIS) {
-			accept(TokenType.THIS, "Internal Parsing Error");
+			acceptNext();
 		} else {
-			accept(TokenType.IDENTIFIER, "TODO");
+			accept(TokenType.IDENTIFIER, "Expected Identifier in reference parsing");
 		}
+		
 		while (this.currentToken.getType() == TokenType.DOT) {
-			accept(TokenType.DOT, "Internal Parsing Error");
+			acceptNext();
 			accept(TokenType.IDENTIFIER, "Expected Identifier after '.'");
 		}
 	}
@@ -137,14 +143,10 @@ public class Parser {
 			case RETURN: // (1)
 				accept(TokenType.RETURN, "Internal Parsing Error");
 				// TODO, same as another issue. Do you check if theres a starter or check for semicolon?
-				if (this.currentToken.getType() == TokenType.SEMICOLON) {
-					// Case 1: No return expression
-					accept(TokenType.SEMICOLON, "Internal Parsing Error");
-				} else {
-					// Case 2: Non-Empty return expression
+				if (currentToken.getType() != TokenType.SEMICOLON) {
 					parseExpression();
-					accept(TokenType.SEMICOLON, "Expected semicolon to terminate statement");
 				}
+				accept(TokenType.SEMICOLON, "Expected ';' after return statement.");
 				break;
 			case IF: // (2)
 				accept(TokenType.IF, "IPE");
@@ -154,7 +156,7 @@ public class Parser {
 				parseStatement();
 				if (this.currentToken.getType() == TokenType.ELSE) {
 					accept(TokenType.ELSE, "IPE");
-					parseExpression();
+					parseStatement(); // TODO check if this can cause stack overflow or in expression
 				}
 				break;
 			case WHILE: // (3)
@@ -171,7 +173,56 @@ public class Parser {
 				}
 				accept(TokenType.CLOSE_CURLY, "Expected '}'");
 				break;
-				
+			case IDENTIFIER:
+				// Starter[type] = {id, int, boolean}
+				// Starter[reference] = {id, this}
+				//  If we find an identifier, we don't know if it is a reference or a type
+				accept(TokenType.IDENTIFIER, "IPE");
+				if (currentToken.getType() == TokenType.IDENTIFIER || currentToken.getType() == TokenType.OPEN_BRACKET) {
+					if (currentToken.getType() == TokenType.OPEN_BRACKET) {
+						acceptNext(); // TODO,is this repeated logic bad (parseType)
+						accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+					}
+					accept(TokenType.IDENTIFIER, "Expected identifier");
+					accept(TokenType.ASSIGNMENT, "Expected '='");
+					parseExpression(); // TODO this is  also repeated code
+					accept(TokenType.SEMICOLON, "Expected ';'");
+					break;
+				}
+			case THIS:
+				if (currentToken.getType() == TokenType.THIS) {
+					accept(TokenType.THIS, "IPE"); // catch fall through
+				}
+				if (currentToken.getType() == TokenType.ASSIGNMENT) {
+					acceptNext();
+					parseExpression();
+					accept(TokenType.SEMICOLON, "Expected ';'");
+				} else if (currentToken.getType() == TokenType.OPEN_BRACKET) {
+					acceptNext();
+					parseExpression();
+					accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+					accept(TokenType.ASSIGNMENT, "Expected '='");
+					parseExpression();
+					accept(TokenType.SEMICOLON, "Expected ';'");
+				} else {
+					accept(TokenType.OPEN_PAREN, "Expected '('");
+					if (currentToken.getType() != TokenType.CLOSE_PAREN) {
+						parseArguementList();
+					}
+					accept(TokenType.CLOSE_PAREN, "Expected ')'");
+					accept(TokenType.SEMICOLON, "Expected ')'");
+				}
+				break;
+			case INT:
+			case BOOLEAN:
+				parseType();
+				accept(TokenType.IDENTIFIER, "Expected identifier");
+				accept(TokenType.ASSIGNMENT, "Expected '='");
+				parseExpression(); // TODO this is  also repeated code
+				accept(TokenType.SEMICOLON, "Expected ';'");
+				break;
+			default:
+				Reporter.get().reportError("Failed to parse statement");
 				
 		}
 		
@@ -220,13 +271,11 @@ public class Parser {
 					accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
 				} else if (currentToken.getType() == TokenType.OPEN_PAREN) { // (7)
 					accept(TokenType.OPEN_PAREN, "IPE");
-					// TODO Same question should i check f or a starter of arglist or check for ')'
-					if (currentToken.getType() == TokenType.CLOSE_PAREN) {
-						accept(TokenType.CLOSE_PAREN, "IPE");
-					} else {
+					if (currentToken.getType() != TokenType.CLOSE_PAREN) {
+						// TODO Same question should i check f or a starter of arglist or check for ')'
 						parseArguementList();
-						accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
 					}
+					accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
 				}
 				break;
 			case NEW: // (8)
@@ -287,6 +336,7 @@ public class Parser {
 
 	/* Type ::= int | boolean | id | (int|id)[] */
 	private void parseType() {
+		// TODO: Refactor to switch
 		if (currentToken.getType() == TokenType.INT) {
 			accept(TokenType.INT, "Internal Parsing Error");
 			if (currentToken.getType() == TokenType.OPEN_BRACKET) {
