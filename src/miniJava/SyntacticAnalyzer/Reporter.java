@@ -12,6 +12,11 @@ public class Reporter {
 	 * Prints error to user and then ends program with failure code.
 	 */
 	public void reportError(String reason) {
+		System.out.println("Error Encountered:");
+		StackTraceElement [] trace = Thread.currentThread().getStackTrace();
+		for (int i = trace.length - 2; i > 0 ; i--) {    
+			System.out.println("\t" + trace[i]);
+		}
 		System.out.println(reason);
 		System.exit(FAILURE_RETURN_CODE);
 	}
