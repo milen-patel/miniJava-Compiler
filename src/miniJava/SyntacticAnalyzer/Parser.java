@@ -9,7 +9,7 @@ public class Parser {
 		this.currentToken = scanner.scan();
 	}
 
-	/* Program ::= (ClassDeclaration)* eot */
+	// Program ::= (ClassDeclaration)* eot 
 	public void parseProgram() {
 		while (this.currentToken.getType() == TokenType.CLASS) {
 			parseClass();
@@ -29,7 +29,7 @@ public class Parser {
 		accept(TokenType.CLOSE_CURLY, "Expected '}' at end of class body");
 	}
 
-	/* ( FieldDeclaration | MethodDeclaration )* */
+	// ( FieldDeclaration | MethodDeclaration )* 
 	private void parseFieldOrMethodDeclaration() {
 		parseVisibility();
 		parseAccess();
@@ -69,7 +69,7 @@ public class Parser {
 		}
 	}
 
-	/* ParameterList ::= Type id (, Type id)* */
+	// ParameterList ::= Type id (, Type id)* 
 	private void parseParameterList() {
 		parseType();
 		accept(TokenType.IDENTIFIER, "Expected parameter name following type");
@@ -103,7 +103,7 @@ public class Parser {
 		}
 	}
 
-	/* Visibility ::= ( public | private )? */
+	// Visibility ::= ( public | private )?
 	private void parseVisibility() {
 		switch (currentToken.getType()) {
 		case PUBLIC:
@@ -117,7 +117,7 @@ public class Parser {
 		}
 	}
 
-	/* Access ::= static? */
+	// Access ::= static? 
 	private void parseAccess() {
 		if (currentToken.getType() == TokenType.STATIC) {
 			acceptNext();
@@ -362,8 +362,7 @@ public class Parser {
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
 		} else {
-			Reporter.get().reportError(errorReason + ". Got: " + currentToken + ". Line: "
-					+ this.currentToken.getStartPosition());
+			Reporter.get().reportError(errorReason + ". Got: " + currentToken);
 		}
 	}
 }
