@@ -42,7 +42,7 @@ public class Scanner {
 		if (this.isCurrentCharNumeric()) {
 			// Found an integer literal
 			this.scanNumber();
-			return TokenType.INT;
+			return TokenType.NUMBER_LITERAL;
 		} else if (this.currentChar == ';') {
 			this.pullNextChar();
 			return TokenType.SEMICOLON;
