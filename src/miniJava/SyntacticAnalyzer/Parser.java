@@ -69,10 +69,7 @@ public class Parser {
 		}
 	}
 
-	/*
-	 * ParameterList ::= Type id ( , Type id )* 
-	 */
-	// TODO, is this approach right
+	/* ParameterList ::= Type id (, Type id)* */
 	private void parseParameterList() {
 		parseType();
 		accept(TokenType.IDENTIFIER, "Expected parameter name following type");
@@ -123,7 +120,7 @@ public class Parser {
 	/* Access ::= static? */
 	private void parseAccess() {
 		if (currentToken.getType() == TokenType.STATIC) {
-			accept(TokenType.STATIC, "Internal Parsing Error");
+			acceptNext();
 		}
 	}
 	
@@ -222,12 +219,8 @@ public class Parser {
 				accept(TokenType.SEMICOLON, "Expected ';'");
 				break;
 			default:
-				Reporter.get().reportError("Failed to parse statement");
-				
-		}
-		
-		
-		
+				Reporter.get().reportError("Failed to parse statement");		
+		}	
 	}
 	
 	/*
@@ -323,9 +316,7 @@ public class Parser {
 		}
 	}
 
-	/*
-	 * ArgumentList ::= Expression(,Expression)*
-	 */
+	// ArgumentList ::= Expression(,Expression)*
 	private void parseArguementList() {
 		parseExpression();
 		while (this.currentToken.getType() == TokenType.COMMA) {
@@ -334,38 +325,40 @@ public class Parser {
 		}
 	}
 
-	/* Type ::= int | boolean | id | (int|id)[] */
+	// Type ::= int | boolean | id | (int|id)[] 
 	private void parseType() {
-		// TODO: Refactor to switch
-		if (currentToken.getType() == TokenType.INT) {
-			accept(TokenType.INT, "Internal Parsing Error");
-			if (currentToken.getType() == TokenType.OPEN_BRACKET) {
-				accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
-				accept(TokenType.CLOSE_BRACKET, "Expected ] after [");
-			}
-		} else if (currentToken.getType() == TokenType.BOOLEAN) {
-			accept(TokenType.BOOLEAN, "Internal Parsing Error");
-		} else if (currentToken.getType() == TokenType.IDENTIFIER) {
-			accept(TokenType.IDENTIFIER, "Internal Parsing Error");
-			if (currentToken.getType() == TokenType.OPEN_BRACKET) {
-				accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
-				accept(TokenType.CLOSE_BRACKET, "Expected ] after [");
-			}
-		} else {
-			Reporter.get().reportError("Parsing error: expected typed declaration at " + this.currentToken.getStartPosition() + ". Got: " + this.currentToken.toString());
+		switch (this.currentToken.getType()) {
+			case INT:
+				accept(TokenType.INT, "Internal Parsing Error");
+				this.removeBrackets();
+				break;
+			case BOOLEAN:
+				accept(TokenType.BOOLEAN, "Internal Parsing Error");
+				break;
+			case IDENTIFIER:
+				accept(TokenType.IDENTIFIER, "Internal Parsing Error");
+				this.removeBrackets();
+				break;
+			default:
+				Reporter.get().reportError("Failed to parse type declaration");	
 		}
 	}
+	
+	// Handles ([])?
+	private void removeBrackets() {
+		if (currentToken.getType() == TokenType.OPEN_BRACKET) {
+			accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
+			accept(TokenType.CLOSE_BRACKET, "Expected ] after [");
+		}
+	}
+	
+	// Accepts the next token without checking its type
 	private void acceptNext() {
 		accept(this.currentToken.getType(), "Internal Parsing Error");
 	}
+	
+	// Accepts the next token assuming it matches type, terminates program if type doesn't match
 	private void accept(TokenType type, String errorReason) {
-		/*
-		System.out.println(this.currentToken);
-		StackTraceElement [] trace = Thread.currentThread().getStackTrace();
-		for (int i = trace.length - 2; i > 0 ; i--) {    
-			System.out.println("\t" + trace[i]);
-		}
-		*/
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
 		} else {
@@ -373,5 +366,4 @@ public class Parser {
 					+ this.currentToken.getStartPosition());
 		}
 	}
-
 }
