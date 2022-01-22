@@ -47,9 +47,9 @@ public class Parser {
 				parseStatement();
 			}
 			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); // TODO repeated code below
-		} else {
-			parseType();
+			return;
 		}
+		parseType();
 		accept(TokenType.IDENTIFIER, "Expected identifier in field/method declaration");
 		if (currentToken.getType() == TokenType.SEMICOLON) {
 			accept(TokenType.SEMICOLON, "IPE");
@@ -65,7 +65,7 @@ public class Parser {
 			}
 			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); 
 		} else {
-			Reporter.get().reportError("Invalid class body. Failed to parse field or method declaration");
+			Reporter.get().reportError("Invalid class body. Failed to parse field or method declaration. Expected ';' or '('.");
 		}
 	}
 
@@ -362,7 +362,7 @@ public class Parser {
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
 		} else {
-			Reporter.get().reportError(errorReason + ". Got: " + currentToken.getType() + ". Line: "
+			Reporter.get().reportError(errorReason + ". Got: " + currentToken + ". Line: "
 					+ this.currentToken.getStartPosition());
 		}
 	}

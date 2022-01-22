@@ -294,7 +294,7 @@ public class Scanner {
 		// Now that we have finished parsing the number, check that a letter doesn't
 		// immediately follow
 		if (this.isCurrentCharAlpabetical()) {
-			Reporter.get().reportError("Identifiers cannot start with numbers");
+			//Reporter.get().reportError("Identifiers cannot start with numbers");
 		}
 	}
 
