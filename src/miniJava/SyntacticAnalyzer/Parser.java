@@ -21,8 +21,6 @@ public class Parser {
 		accept(TokenType.CLASS, "Expected class keyword to begin class declaration");
 		accept(TokenType.IDENTIFIER, "Expected valid identifier following class keyword");
 		accept(TokenType.OPEN_CURLY, "Expected '{'");
-		// TODO: Is this fine to check for the end token or should i check for starters
-		// of F|M*
 		while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
 			this.parseFieldOrMethodDeclaration();
 		}
@@ -39,7 +37,7 @@ public class Parser {
 			accept(TokenType.IDENTIFIER, "Expected identifier for method name");
 			accept(TokenType.OPEN_PAREN, "Expected '(' in method declaration");
 			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-				parseParameterList(); // TODO: Correct way to handle optional or just make  parse rule handle?
+				parseParameterList(); 
 			}
 			accept(TokenType.CLOSE_PAREN, "Expected ')' in method declaration");
 			accept(TokenType.OPEN_CURLY, "Expected '{'");
@@ -139,7 +137,6 @@ public class Parser {
 		switch (this.currentToken.getType()) {
 			case RETURN: // (1)
 				accept(TokenType.RETURN, "Internal Parsing Error");
-				// TODO, same as another issue. Do you check if theres a starter or check for semicolon?
 				if (currentToken.getType() != TokenType.SEMICOLON) {
 					parseExpression();
 				}
@@ -176,10 +173,7 @@ public class Parser {
 				//  If we find an identifier, we don't know if it is a reference or a type
 				accept(TokenType.IDENTIFIER, "IPE");
 				if (currentToken.getType() == TokenType.IDENTIFIER || currentToken.getType() == TokenType.OPEN_BRACKET) {
-					if (currentToken.getType() == TokenType.OPEN_BRACKET) {
-						acceptNext(); // TODO,is this repeated logic bad (parseType)
-						accept(TokenType.CLOSE_BRACKET, "Expected ']'");
-					}
+					this.removeBrackets();
 					accept(TokenType.IDENTIFIER, "Expected identifier");
 					accept(TokenType.ASSIGNMENT, "Expected '='");
 					parseExpression(); // TODO this is  also repeated code
@@ -259,13 +253,12 @@ public class Parser {
 			case THIS:
 				parseReference(); // (5)
 				if (currentToken.getType() == TokenType.OPEN_BRACKET) { // (6)
-					accept(TokenType.OPEN_BRACKET, "IPE");
+					acceptNext();
 					parseExpression();
 					accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
 				} else if (currentToken.getType() == TokenType.OPEN_PAREN) { // (7)
-					accept(TokenType.OPEN_PAREN, "IPE");
+					acceptNext();
 					if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-						// TODO Same question should i check f or a starter of arglist or check for ')'
 						parseArguementList();
 					}
 					accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
