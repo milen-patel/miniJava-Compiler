@@ -91,11 +91,7 @@ public class Scanner {
 				this.pullNextChar();
 			}
 			return this.handleReservedWords(this.currentTokenSpelling.toString());
-		}
-
-		// TODO: Investigate this
-		if ((this.currentChar) == 4) {
-			this.pullNextChar();
+		} else if (this.input.eofEncountered()) {
 			return TokenType.EOT;
 		}
 
@@ -272,14 +268,8 @@ public class Scanner {
 			this.currentTokenSpelling.append(this.currentChar);
 		}
 
-		int next = this.input.next();
-		if (next == -1) {
-			Reporter.get().log("EOF Encountered in pullNextChar", 1);
-			this.currentChar = '\u0004';
-		} else {
-			this.currentChar = (char) next;
-			Reporter.get().log("New currentChar: " + this.currentChar, 0);
-		}
+		this.currentChar = this.input.nextChar();
+		Reporter.get().log("New currentChar: " + this.currentChar, 0);
 	}
 
 	/*
@@ -321,7 +311,7 @@ public class Scanner {
 		return this.currentChar >= 'a' && this.currentChar <= 'z';
 	}
 
-	/* Determines if the current character is an uppercase letter */
+	/* Determines if the current character is an upper case letter */
 	private boolean isCurrentCharUppercase() {
 		return this.currentChar >= 'A' && this.currentChar <= 'Z';
 	}

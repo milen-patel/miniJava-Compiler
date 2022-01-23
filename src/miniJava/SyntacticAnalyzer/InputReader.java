@@ -10,12 +10,14 @@ import java.io.IOException;
  */
 public class InputReader {
 	private FileInputStream fileInputStream;
-	private int scannerPos = 1;
 	private java.util.Scanner scanner;
+	private int scannerPos = 1;
+	private boolean eofEncountered;
+	private char current;
 
 	public InputReader(String fileName) {
-		// Attempt to open the file
 		File inputFile = new File(fileName);
+
 		try {
 			java.util.Scanner scanner = new java.util.Scanner(inputFile);
 			this.scanner = scanner;
@@ -23,28 +25,39 @@ public class InputReader {
 		} catch (FileNotFoundException e) {
 			Reporter.get().reportError("Unable to open input file.");
 		}
+		
+		this.eofEncountered = false;
 	}
 
 	public int getScannerPosition() {
 		return this.scannerPos;
 	}
-
-	public boolean inputHasNext() { // test this
-		try {
-			return this.fileInputStream.available() >= 0;
-		} catch (IOException e) {
-			return false;
+	
+	public boolean eofEncountered() {
+		return this.eofEncountered;
+	}
+	
+	public char nextChar() {
+		if (this.eofEncountered) {
+			return this.current;
 		}
+		return nextCharHelper();
 	}
 
-	public int next() {
+	private char nextCharHelper() {
 		try {
+			int val = this.fileInputStream.read();
+			this.current = (char) val;
+			if (val == -1) {
+				Reporter.get().log("EOF Encountered in pullNextChar", 1);
+				this.eofEncountered = true;
+			}
 			this.scannerPos++;
-			return this.fileInputStream.read();
+			return this.current;
 		} catch (IOException e) {
-			Reporter.get().reportError("Input stream has no more tokens."); // TODO are empty files valid?
+			Reporter.get().reportError("I/O Exception");
 		}
-		throw new RuntimeException("No more to read");
+		throw new RuntimeException("I/O Exception");
 	}
 	
 	public void close() {
