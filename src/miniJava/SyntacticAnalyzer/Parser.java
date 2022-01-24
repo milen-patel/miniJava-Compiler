@@ -213,7 +213,7 @@ public class Parser {
 				accept(TokenType.SEMICOLON, "Expected ';'");
 				break;
 			default:
-				Reporter.get().reportError("Failed to parse statement");		
+				Reporter.get().reportError("Failed to parse statement" + this.currentToken);		
 		}	
 	}
 	
@@ -352,6 +352,7 @@ public class Parser {
 	
 	// Accepts the next token assuming it matches type, terminates program if type doesn't match
 	private void accept(TokenType type, String errorReason) {
+		System.out.println(this.currentToken);
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
 		} else {

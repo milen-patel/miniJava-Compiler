@@ -232,10 +232,10 @@ public class Scanner {
 		}
 
 		// Option 2: Block Comment '/* ... */'
-		// TODO: this might be risky, why not whhile (sb.toString.indexOf(*/) != 0)
+		// TODO: Give this logic another check
 		if (this.currentChar == '*') {
+			this.pullNextChar();
 			while (true) {
-				this.pullNextChar();
 				if (this.currentChar == '*') {
 					this.pullNextChar();
 					if (this.currentChar == '/') {
@@ -243,8 +243,10 @@ public class Scanner {
 						return TokenType.COMMENT;
 					}
 
+				} else {
+					this.pullNextChar();
 				}
-				if (this.currentChar == '\u0004') {
+				if (this.input.eofEncountered()) {
 					Reporter.get().reportError(
 							"Invalid Comment: Encountered EOF without block comment end. You must end a comment if you open one.");
 				}
@@ -278,13 +280,6 @@ public class Scanner {
 	private void scanNumber() {
 		while (this.isCurrentCharNumeric()) {
 			this.pullNextChar();
-		}
-
-		// TODO: Depends on answer to question
-		// Now that we have finished parsing the number, check that a letter doesn't
-		// immediately follow
-		if (this.isCurrentCharAlpabetical()) {
-			//Reporter.get().reportError("Identifiers cannot start with numbers");
 		}
 	}
 
