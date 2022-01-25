@@ -52,7 +52,7 @@ public class Parser {
 		parseType();
 		accept(TokenType.IDENTIFIER, "Expected identifier in field/method declaration");
 		if (currentToken.getType() == TokenType.SEMICOLON) {
-			accept(TokenType.SEMICOLON, "IPE");
+			accept(TokenType.SEMICOLON, "Internal  Parsing Error");
 		} else if (currentToken.getType() == TokenType.OPEN_PAREN) {
 			accept(TokenType.OPEN_PAREN, "Expected '('");
 			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
@@ -150,25 +150,25 @@ public class Parser {
 				accept(TokenType.SEMICOLON, "Expected ';' after return statement.");
 				break;
 			case IF: // (2)
-				accept(TokenType.IF, "IPE");
+				accept(TokenType.IF, "Internal  Parsing Error");
 				accept(TokenType.OPEN_PAREN, "Expected '('");
 				parseExpression();
 				accept(TokenType.CLOSE_PAREN, "Expected ')");
 				parseStatement();
 				if (this.currentToken.getType() == TokenType.ELSE) {
-					accept(TokenType.ELSE, "IPE");
+					accept(TokenType.ELSE, "Internal  Parsing Error");
 					parseStatement(); // TODO check if this can cause stack overflow or in expression
 				}
 				break;
 			case WHILE: // (3)
-				accept(TokenType.WHILE, "IPE");
+				accept(TokenType.WHILE, "Internal  Parsing Error");
 				accept(TokenType.OPEN_PAREN, "Expected '('");
 				parseExpression();
 				accept(TokenType.CLOSE_PAREN, "Expected ')");
 				parseStatement();
 				break;
 			case OPEN_CURLY: // (4)
-				accept(TokenType.OPEN_CURLY, "IPE");
+				accept(TokenType.OPEN_CURLY, "Internal  Parsing Error");
 				while (currentToken.getType() != TokenType.CLOSE_CURLY) {
 					parseStatement();
 				}
@@ -178,7 +178,7 @@ public class Parser {
 				// Starter[type] = {id, int, boolean}
 				// Starter[reference] = {id, this}
 				//  If we find an identifier, we don't know if it is a reference or a type
-				accept(TokenType.IDENTIFIER, "IPE");
+				accept(TokenType.IDENTIFIER, "Internal  Parsing Error");
 				if (currentToken.getType() == TokenType.IDENTIFIER || currentToken.getType() == TokenType.OPEN_BRACKET) {
 					this.removeBrackets();
 					accept(TokenType.IDENTIFIER, "Expected identifier");
@@ -250,11 +250,11 @@ public class Parser {
 				accept(TokenType.NUMBER_LITERAL, "Internal Parsing Error");
 				break;
 			case SUBTRACTION: // (4)
-				accept(TokenType.SUBTRACTION, "IPE");
+				accept(TokenType.SUBTRACTION, "Internal  Parsing Error");
 				parseExpression();
 				break;
 			case LOGICAL_NEGATION: // (4)
-				accept(TokenType.LOGICAL_NEGATION, "IPE");
+				accept(TokenType.LOGICAL_NEGATION, "Internal  Parsing Error");
 				parseExpression();
 				break;
 			case IDENTIFIER: // starters[reference] = {id, this}
@@ -273,16 +273,16 @@ public class Parser {
 				}
 				break;
 			case NEW: // (8)
-				accept(TokenType.NEW, "IPE");
+				accept(TokenType.NEW, "Internal  Parsing Error");
 				if (currentToken.getType() == TokenType.INT) {
-					accept(TokenType.INT, "IPE");
+					accept(TokenType.INT, "Internal  Parsing Error");
 					accept(TokenType.OPEN_BRACKET, "Expected '['");
 					parseExpression();
 					accept(TokenType.CLOSE_BRACKET, "Expected ']'");
 				} else {
 					accept(TokenType.IDENTIFIER, "Expected identifier following 'new'");
 					if (currentToken.getType() == TokenType.OPEN_PAREN) {
-						accept(TokenType.OPEN_PAREN, "IPE");
+						accept(TokenType.OPEN_PAREN, "Internal  Parsing Error");
 						accept(TokenType.CLOSE_PAREN, "Expected ')'");
 					} else {
 						accept(TokenType.OPEN_BRACKET, "Expected '['");
@@ -292,7 +292,7 @@ public class Parser {
 				}
 				break;
 			case OPEN_PAREN: // (9)
-				accept(TokenType.OPEN_PAREN, "IPE");
+				accept(TokenType.OPEN_PAREN, "Internal  Parsing Error");
 				parseExpression();
 				accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
 				break;
@@ -322,7 +322,7 @@ public class Parser {
 		Reporter.get().log("<Parser> Parsing ArgumentList Rule", 3);
 		parseExpression();
 		while (this.currentToken.getType() == TokenType.COMMA) {
-			accept(TokenType.COMMA, "IPE");
+			accept(TokenType.COMMA, "Internal  Parsing Error");
 			parseExpression();
 		}
 	}
