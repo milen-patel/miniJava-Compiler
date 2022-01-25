@@ -229,7 +229,7 @@ public class Scanner {
 
 		// Option 1: End of line comment '//'. Delete until end of line is encountered.
 		if (this.currentChar == '/') {
-			while (this.currentChar != '\n') {
+			while (this.currentChar != '\n' && this.currentChar != '\r') {
 				this.pullNextChar();
 			}
 			return TokenType.COMMENT;
