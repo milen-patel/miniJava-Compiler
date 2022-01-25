@@ -11,7 +11,7 @@ public class Scanner {
 	private InputReader input;
 
 	public Scanner(InputReader input) {
-		Reporter.get().log("Scanner Class Created", 1);
+		Reporter.get().log("<Scanner> Scanner Class Created", 1);
 		this.input = input;
 
 		// Ensure that 'currentChar' has the first character of the input sequence
@@ -22,6 +22,8 @@ public class Scanner {
 	 * Returns the next token in the input stream
 	 */
 	public Token scan() {
+		Reporter.get().log("<Scanner> Asked to pull next token",1);
+		//this.currentTokenSpelling = new StringBuffer(); TODO add back after PA1 or change reporter level in pull whitespace
 		this.pullWhiteSpace();
 		this.currentTokenSpelling = new StringBuffer();
 		int startPos = this.input.getScannerPosition();
@@ -31,6 +33,7 @@ public class Scanner {
 		if (token.getType() == TokenType.COMMENT) {
 			return scan(); // TODO: is this safe
 		}
+		Reporter.get().log("<Scanner> Done pulling token. Result: " + token.toString(), 1);
 		return token;
 	}
 
@@ -39,6 +42,7 @@ public class Scanner {
 	 * returns the type of the token.
 	 */
 	private TokenType scanNextToken() {
+		Reporter.get().log("<Scanner> scanNextToken called:" +this.currentTokenSpelling.toString(), 0);
 		if (this.isCurrentCharNumeric()) {
 			// Found an integer literal
 			this.scanNumber();
@@ -95,7 +99,7 @@ public class Scanner {
 			return TokenType.EOT;
 		}
 
-		Reporter.get().reportError("Invalid Input Stream didn't match any token rule");
+		Reporter.get().reportError("<Scanner> Invalid Input Stream didn't match any token rule");
 		return TokenType.ERROR;
 	}
 
@@ -105,13 +109,13 @@ public class Scanner {
 	 */
 	private TokenType parseLogicalOperator() {
 		if (!this.isLogicalOperatorStart())
-			Reporter.get().reportError("Internal Scanning Error");
+			Reporter.get().reportError("<Scanner> Internal Scanning Error");
 
 		char firstChar = this.currentChar;
 		this.pullNextChar();
 
 		if (this.currentChar != firstChar) {
-			Reporter.get().reportError("Cannot use | or & without || or &&");
+			Reporter.get().reportError("<Scanner> Cannot use | or & without || or &&");
 		}
 
 		if (this.currentChar == '|') {
@@ -128,7 +132,7 @@ public class Scanner {
 	 */
 	private TokenType parseRelationalOperatorOrAssignment() {
 		if (!this.isRelationalOperatorOrAssignment())
-			Reporter.get().reportError("Internal Parsing Error");
+			Reporter.get().reportError("<Scanner> Internal Scanning Error");
 
 		if (this.currentChar == '>') {
 			this.pullNextChar();
@@ -169,7 +173,7 @@ public class Scanner {
 			}
 		}
 
-		Reporter.get().reportError("Internal Scanning Error");
+		Reporter.get().reportError("<Scanner> Internal Scanning Error");
 		return TokenType.ERROR;
 	}
 
@@ -179,7 +183,7 @@ public class Scanner {
 	 * If no reserved words are matched then we have an identifier.
 	 */
 	private TokenType handleReservedWords(String word) {
-		Reporter.get().log("Checking if identifier is a reserved word", 0);
+		Reporter.get().log("<Scanner> Checking if identifier is a reserved word", 0);
 		if (word.contentEquals("class")) {
 			return TokenType.CLASS;
 		} else if (word.contentEquals("void")) {
@@ -248,7 +252,7 @@ public class Scanner {
 				}
 				if (this.input.eofEncountered()) {
 					Reporter.get().reportError(
-							"Invalid Comment: Encountered EOF without block comment end. You must end a comment if you open one.");
+							"<Scanner> Invalid Comment: Encountered EOF without block comment end. You must end a comment if you open one.");
 				}
 			}
 		}
@@ -262,16 +266,16 @@ public class Scanner {
 	 * to StringBuffer
 	 */
 	private void pullNextChar() {
-		Reporter.get().log("Pulling next character from input stream...Current: " + this.currentChar, 0);
+		Reporter.get().log("<Scanner> Pulling next character from input stream...currentChar: " + this.currentChar, 0);
 
 		if (this.currentTokenSpelling != null) {
-			Reporter.get().log(
-					"Adding current character to string buffer...Current: " + this.currentTokenSpelling.toString(), 0);
 			this.currentTokenSpelling.append(this.currentChar);
+			Reporter.get().log(
+					"<Scanner> Adding current character to string buffer...Current Spelling: " + this.currentTokenSpelling.toString(), 0);
 		}
 
 		this.currentChar = this.input.nextChar();
-		Reporter.get().log("New currentChar: " + this.currentChar, 0);
+		Reporter.get().log("<Scanner> New currentChar: " + this.currentChar, 0);
 	}
 
 	/*
@@ -343,10 +347,10 @@ public class Scanner {
 	 * is encountered.
 	 */
 	private void pullWhiteSpace() {
-		Reporter.get().log("Pull Whitespace Called", 0);
+		Reporter.get().log("<Scanner> Pull Whitespace Called", 0);
 		while (matchCurrentCharacter(' ') || matchCurrentCharacter('\n') || matchCurrentCharacter('\t')
 				|| matchCurrentCharacter('\r')) {
-			Reporter.get().log("Whitespace Encountered..pulling", 0);
+			Reporter.get().log("<Scanner> Whitespace Encountered..pulling", 0);
 			this.pullNextChar();
 		}
 	}
