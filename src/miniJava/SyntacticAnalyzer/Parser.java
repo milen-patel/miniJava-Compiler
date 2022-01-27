@@ -175,21 +175,40 @@ public class Parser {
 				accept(TokenType.CLOSE_CURLY, "Expected '}'");
 				break;
 			case IDENTIFIER:
-				// Starter[type] = {id, int, boolean}
-				// Starter[reference] = {id, this}
-				//  If we find an identifier, we don't know if it is a reference or a type
-				accept(TokenType.IDENTIFIER, "Internal  Parsing Error");
-				if (currentToken.getType() == TokenType.IDENTIFIER || currentToken.getType() == TokenType.OPEN_BRACKET) {
+				System.out.println("Identifier  Detected  (A)");
+				// Not sure if Type or reference
+				accept(TokenType.IDENTIFIER, "IPE");
+				if (this.currentToken.getType()  == TokenType.OPEN_BRACKET) {
+					System.out.println("[ Detected, must be id[] => confirmed Type (B)");
+					// Confirmed  Type
 					this.removeBrackets();
-					accept(TokenType.IDENTIFIER, "Expected identifier");
-					accept(TokenType.ASSIGNMENT, "Expected '='");
-					parseExpression(); // TODO this is  also repeated code
-					accept(TokenType.SEMICOLON, "Expected ';'");
+					this.parseIDAssignmentExpression();
 					break;
+				} else if  (this.currentToken.getType() == TokenType.DOT) {
+					System.out.println(". Detected, must be Reference  (C)");
+					// Confirmed Reference
+					while (this.currentToken.getType() == TokenType.DOT) {
+						acceptNext();
+						accept(TokenType.IDENTIFIER, "Expected Identifier after '.'");
+					}
+					// Rest of parsing
+				} else {
+					// Ambigious
+					if (currentToken.getType() ==  TokenType.IDENTIFIER)  {
+						System.out.println("Confirmed Type id=Expression; (D)");
+						// Confirmed Type id=Expression;
+						this.parseIDAssignmentExpression();
+						break;
+					} else {
+						System.out.println("Must be reference");
+						//  Confirmed reference - fall down
+					}
 				}
 			case THIS:
 				if (currentToken.getType() == TokenType.THIS) {
 					parseReference(); // catch fall through
+				} else {
+					System.out.println("Fall Through");
 				}
 				if (currentToken.getType() == TokenType.ASSIGNMENT) {
 					acceptNext();
@@ -214,14 +233,22 @@ public class Parser {
 			case INT:
 			case BOOLEAN:
 				parseType();
-				accept(TokenType.IDENTIFIER, "Expected identifier");
-				accept(TokenType.ASSIGNMENT, "Expected '='");
-				parseExpression(); // TODO this is  also repeated code
-				accept(TokenType.SEMICOLON, "Expected ';'");
+				this.parseIDAssignmentExpression();
 				break;
 			default:
 				Reporter.get().reportError("<Parser> Failed to parse statement" + this.currentToken);		
 		}	
+	}
+	
+	/*
+	 * Parses = Expression;
+	 * Used in statement sub  rule "Type id = Expression;"
+	 */
+	private void parseIDAssignmentExpression() {
+		accept(TokenType.IDENTIFIER, "Expected identifier");
+		accept(TokenType.ASSIGNMENT, "Expected '='");
+		parseExpression();
+		accept(TokenType.SEMICOLON, "Expected ';'");
 	}
 	
 	/*

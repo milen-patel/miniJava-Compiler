@@ -183,6 +183,7 @@ public class Scanner {
 	 * If no reserved words are matched then we have an identifier.
 	 */
 	private TokenType handleReservedWords(String word) {
+		// TODO after PA1 - refactor to HashMap
 		Reporter.get().log("<Scanner> Checking if identifier is a reserved word", 0);
 		if (word.contentEquals("class")) {
 			return TokenType.CLASS;

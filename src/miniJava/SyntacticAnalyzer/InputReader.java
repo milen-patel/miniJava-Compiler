@@ -4,12 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
 /*
  * InputReader provides functions for traversing the input file for the purpose of aiding the Scanner class.
  */
 public class InputReader {
-	private FileInputStream fileInputStream;
+	private InputStream fileInputStream;
 	private java.util.Scanner scanner;
 	private int scannerPos = 1;
 	private boolean eofEncountered;
