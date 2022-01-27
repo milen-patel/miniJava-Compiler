@@ -175,40 +175,40 @@ public class Parser {
 				accept(TokenType.CLOSE_CURLY, "Expected '}'");
 				break;
 			case IDENTIFIER:
-				System.out.println("Identifier  Detected  (A)");
 				// Not sure if Type or reference
-				accept(TokenType.IDENTIFIER, "IPE");
+				accept(TokenType.IDENTIFIER, "Internal Parsing Error");
 				if (this.currentToken.getType()  == TokenType.OPEN_BRACKET) {
-					System.out.println("[ Detected, must be id[] => confirmed Type (B)");
-					// Confirmed  Type
-					this.removeBrackets();
-					this.parseIDAssignmentExpression();
-					break;
+					// Either (int|id)[] or Reference[expression]
+					accept(TokenType.OPEN_BRACKET,  "Internal Parsing Error");
+					if  (this.currentToken.getType() == TokenType.CLOSE_BRACKET) {
+						// Confirmed (int|id)[] => Finish and exit
+						accept(TokenType.CLOSE_BRACKET, "Internal Parsing Error");
+						this.parseIDAssignmentExpression();
+						break;
+					} else  {
+						// Confirmed  Reference[expression] = Expression; => Finish and  Exit
+						parseExpression();
+						accept(TokenType.CLOSE_BRACKET, "Expected  ']'");
+						accept(TokenType.ASSIGNMENT, "Expected = ");
+						parseExpression();
+						accept(TokenType.SEMICOLON, "Expected ';'");
+						break;
+					}
 				} else if  (this.currentToken.getType() == TokenType.DOT) {
-					System.out.println(". Detected, must be Reference  (C)");
-					// Confirmed Reference
+					// Confirmed Reference, finish parsing reference and fall through
 					while (this.currentToken.getType() == TokenType.DOT) {
 						acceptNext();
 						accept(TokenType.IDENTIFIER, "Expected Identifier after '.'");
 					}
-					// Rest of parsing
-				} else {
-					// Ambigious
-					if (currentToken.getType() ==  TokenType.IDENTIFIER)  {
-						System.out.println("Confirmed Type id=Expression; (D)");
-						// Confirmed Type id=Expression;
+				} else if (currentToken.getType() ==  TokenType.IDENTIFIER)  {
+						// Confirmed Type id=Expression; => Parse and exit
 						this.parseIDAssignmentExpression();
 						break;
-					} else {
-						System.out.println("Must be reference");
-						//  Confirmed reference - fall down
-					}
-				}
+				} 
+				 
 			case THIS:
 				if (currentToken.getType() == TokenType.THIS) {
 					parseReference(); // catch fall through
-				} else {
-					System.out.println("Fall Through");
 				}
 				if (currentToken.getType() == TokenType.ASSIGNMENT) {
 					acceptNext();
@@ -227,7 +227,7 @@ public class Parser {
 						parseArguementList();
 					}
 					accept(TokenType.CLOSE_PAREN, "Expected ')'");
-					accept(TokenType.SEMICOLON, "Expected ')'");
+					accept(TokenType.SEMICOLON, "Expected ')'");					
 				}
 				break;
 			case INT:
