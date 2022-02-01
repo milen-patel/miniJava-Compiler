@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import miniJava.ErrorReporter;
+
 /*
  * InputReader provides functions for traversing the input file for the purpose of aiding the Scanner class.
  */
@@ -51,13 +53,13 @@ public class InputReader {
 			int val = this.fileInputStream.read();
 			this.current = (char) val;
 			if (val == -1) {
-				Reporter.get().log("EOF Encountered in pullNextChar", 1);
+				ErrorReporter.get().log("EOF Encountered in pullNextChar", 1);
 				this.eofEncountered = true;
 			}
 			this.scannerPos++;
 			return this.current;
 		} catch (IOException e) {
-			Reporter.get().reportError("I/O Exception");
+			ErrorReporter.get().reportError("I/O Exception");
 		}
 		throw new RuntimeException("I/O Exception");
 	}

@@ -1,5 +1,7 @@
 package miniJava.SyntacticAnalyzer;
 
+import miniJava.ErrorReporter;
+
 public class Parser {
 	private Scanner scanner;
 	private Token currentToken;
@@ -11,7 +13,7 @@ public class Parser {
 
 	// Program ::= (ClassDeclaration)* eot 
 	public void parseProgram() {
-		Reporter.get().log("<Parser> Parsing Program Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Program Rule", 3);
 		while (this.currentToken.getType() == TokenType.CLASS) {
 			parseClass();
 		}
@@ -30,7 +32,7 @@ public class Parser {
 
 	// ( FieldDeclaration | MethodDeclaration )* 
 	private void parseFieldOrMethodDeclaration() {
-		Reporter.get().log("<Parser> Parsing FieldOrMethodDeclaration Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing FieldOrMethodDeclaration Rule", 3);
 		parseVisibility();
 		parseAccess();
 		if (currentToken.getType() == TokenType.VOID) { // TODO something special should happen here
@@ -65,13 +67,13 @@ public class Parser {
 			}
 			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); 
 		} else {
-			Reporter.get().reportError("<Parser> Invalid class body. Failed to parse field or method declaration. Expected ';' or '('.");
+			ErrorReporter.get().reportError("<Parser> Invalid class body. Failed to parse field or method declaration. Expected ';' or '('.");
 		}
 	}
 
 	// ParameterList ::= Type id (, Type id)* 
 	private void parseParameterList() {
-		Reporter.get().log("<Parser> Parsing ParameterList Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing ParameterList Rule", 3);
 		parseType();
 		accept(TokenType.IDENTIFIER, "Expected parameter name following type");
 		
@@ -92,7 +94,7 @@ public class Parser {
 	 * ={id, this}
 	 */
 	private void parseReference() {
-		Reporter.get().log("<Parser> Parsing Reference Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Reference Rule", 3);
 		if (this.currentToken.getType() == TokenType.THIS) {
 			acceptNext();
 		} else {
@@ -107,7 +109,7 @@ public class Parser {
 
 	// Visibility ::= ( public | private )?
 	private void parseVisibility() {
-		Reporter.get().log("<Parser> Parsing Visibility Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Visibility Rule", 3);
 		switch (currentToken.getType()) {
 		case PUBLIC:
 			accept(TokenType.PUBLIC, "Internal Parsing Error");
@@ -122,7 +124,7 @@ public class Parser {
 
 	// Access ::= static? 
 	private void parseAccess() {
-		Reporter.get().log("<Parser> Parsing Access Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Access Rule", 3);
 		if (currentToken.getType() == TokenType.STATIC) {
 			acceptNext();
 		}
@@ -140,7 +142,7 @@ public class Parser {
 	 * (3) | while ( Expression ) Statement
 	 */
 	private void parseStatement() {
-		Reporter.get().log("<Parser> Parsing Statement Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Statement Rule", 3);
 		switch (this.currentToken.getType()) {
 			case RETURN: // (1)
 				accept(TokenType.RETURN, "Internal Parsing Error");
@@ -236,7 +238,7 @@ public class Parser {
 				this.parseIDAssignmentExpression();
 				break;
 			default:
-				Reporter.get().reportError("<Parser> Failed to parse statement" + this.currentToken);		
+				ErrorReporter.get().reportError("<Parser> Failed to parse statement" + this.currentToken);		
 		}	
 	}
 	
@@ -265,7 +267,7 @@ public class Parser {
 	 *  (8) | new (id() | int[Expression] | id[Expression])
 	 */
 	private void parseExpression() {
-		Reporter.get().log("<Parser> Parsing Expression Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Expression Rule", 3);
 		switch (this.currentToken.getType()) {
 			case TRUE: // (1)
 				accept(TokenType.TRUE, "Internal Parsing Error");
@@ -324,7 +326,7 @@ public class Parser {
 				accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
 				break;
 			default:
-				Reporter.get().reportError("<Parser> No Expression Cases Matched");
+				ErrorReporter.get().reportError("<Parser> No Expression Cases Matched");
 		}
 		// TODO Eventually check if while can be  replaced with if
 		while (currentToken.getType() == TokenType.GREATER_THAN ||
@@ -346,7 +348,7 @@ public class Parser {
 
 	// ArgumentList ::= Expression(,Expression)*
 	private void parseArguementList() {
-		Reporter.get().log("<Parser> Parsing ArgumentList Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing ArgumentList Rule", 3);
 		parseExpression();
 		while (this.currentToken.getType() == TokenType.COMMA) {
 			accept(TokenType.COMMA, "Internal  Parsing Error");
@@ -356,7 +358,7 @@ public class Parser {
 
 	// Type ::= int | boolean | id | (int|id)[] 
 	private void parseType() {
-		Reporter.get().log("<Parser> Parsing Type Rule", 3);
+		ErrorReporter.get().log("<Parser> Parsing Type Rule", 3);
 		switch (this.currentToken.getType()) {
 			case INT:
 				accept(TokenType.INT, "Internal Parsing Error");
@@ -370,13 +372,13 @@ public class Parser {
 				this.removeBrackets();
 				break;
 			default:
-				Reporter.get().reportError("<Parser> Failed to parse type declaration");	
+				ErrorReporter.get().reportError("<Parser> Failed to parse type declaration");	
 		}
 	}
 	
 	// Handles ([])?
 	private void removeBrackets() {
-		Reporter.get().log("<Parser> Checking/Parsing Brackets", 3);
+		ErrorReporter.get().log("<Parser> Checking/Parsing Brackets", 3);
 		if (currentToken.getType() == TokenType.OPEN_BRACKET) {
 			accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
 			accept(TokenType.CLOSE_BRACKET, "Expected ] after [");
@@ -385,18 +387,18 @@ public class Parser {
 	
 	// Accepts the next token without checking its type
 	private void acceptNext() {
-		Reporter.get().log("<Parser> Accepting next terminal", 3);
+		ErrorReporter.get().log("<Parser> Accepting next terminal", 3);
 		accept(this.currentToken.getType(), "Internal Parsing Error");
 	}
 	
 	// Accepts the next token assuming it matches type, terminates program if type doesn't match
 	private void accept(TokenType type, String errorReason) {
-		Reporter.get().log("\n<Parser> Expecting a Token Type of " + type, 3);
+		ErrorReporter.get().log("\n<Parser> Expecting a Token Type of " + type, 3);
 		if (this.currentToken.getType() == type) {
 			this.currentToken = this.scanner.scan();
 		} else {
-			Reporter.get().reportError("<Parser> " + errorReason + ". Got: " + currentToken);
+			ErrorReporter.get().reportError("<Parser> " + errorReason + ". Got: " + currentToken);
 		}
-		Reporter.get().log("<Parser> Successfully found a Token Type of " + type, 3);
+		ErrorReporter.get().log("<Parser> Successfully found a Token Type of " + type, 3);
 	}
 }

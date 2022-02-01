@@ -1,12 +1,12 @@
-package miniJava.SyntacticAnalyzer;
+package miniJava;
 
 /*
  * Singleton used for logging messages and reporting errors
  */
-public class Reporter {
+public class ErrorReporter {
 	public static final int SUCCESS_RETURN_CODE = 0;
 	public static final int FAILURE_RETURN_CODE = 4;
-	private static Reporter reporter;
+	private static ErrorReporter reporter;
 	private int reportingMinimum = 10;
 	/*
 	 * Prints error to user and then ends program with failure code.
@@ -38,9 +38,9 @@ public class Reporter {
 		System.exit(SUCCESS_RETURN_CODE);
 	}
 	
-	public static Reporter get() {
+	public static ErrorReporter get() {
 		if (reporter == null)
-			reporter = new Reporter();
+			reporter = new ErrorReporter();
 		return reporter;
 	}
 }

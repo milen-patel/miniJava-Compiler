@@ -1,6 +1,5 @@
 package miniJava;
 
-import miniJava.SyntacticAnalyzer.Reporter;
 import miniJava.SyntacticAnalyzer.InputReader;
 import miniJava.SyntacticAnalyzer.Scanner;
 import miniJava.SyntacticAnalyzer.Parser;
@@ -13,7 +12,7 @@ public class Compiler {
 			System.exit(1);
 		}
 		if (!args[0].endsWith(".java") && !args[0].endsWith(".mjava"))
-			Reporter.get().reportError("Input file has incorrect extension");
+			ErrorReporter.get().reportError("Input file has incorrect extension");
 		InputReader reader = new InputReader(args[0]);
 		
 		Scanner scnr = new Scanner(reader);
@@ -21,7 +20,7 @@ public class Compiler {
 		
 		p.parseProgram();
 		reader.close();
-		Reporter.get().endWithSuccess();
+		ErrorReporter.get().endWithSuccess();
 	}
 
 }
