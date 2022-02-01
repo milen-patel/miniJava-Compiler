@@ -1,6 +1,7 @@
 package miniJava.SyntacticAnalyzer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,10 +18,8 @@ public class InputReader {
 	private char current;
 
 	public InputReader(String fileName) {
-		File inputFile = new File(fileName);
-
 		try {
-			this.fileInputStream = new java.io.FileInputStream(inputFile);
+			this.fileInputStream = new FileInputStream(fileName);
 		} catch (FileNotFoundException e) {
 			System.out.println("Unable to open input file.");
 			System.exit(1);
