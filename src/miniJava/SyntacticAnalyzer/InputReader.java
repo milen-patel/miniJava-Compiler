@@ -12,7 +12,6 @@ import miniJava.ErrorReporter;
  */
 public class InputReader {
 	private InputStream fileInputStream;
-	private java.util.Scanner scanner;
 	private int scannerPos = 1;
 	private boolean eofEncountered;
 	private char current;
@@ -21,8 +20,6 @@ public class InputReader {
 		File inputFile = new File(fileName);
 
 		try {
-			java.util.Scanner scanner = new java.util.Scanner(inputFile);
-			this.scanner = scanner;
 			this.fileInputStream = new java.io.FileInputStream(inputFile);
 		} catch (FileNotFoundException e) {
 			System.out.println("Unable to open input file.");
@@ -61,9 +58,5 @@ public class InputReader {
 			ErrorReporter.get().reportError("I/O Exception");
 		}
 		throw new RuntimeException("I/O Exception");
-	}
-	
-	public void close() {
-		this.scanner.close();
 	}
 }

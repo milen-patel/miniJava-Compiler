@@ -19,7 +19,6 @@ public class Compiler {
 		Parser p = new Parser(scnr);
 		
 		p.parseProgram();
-		reader.close();
 		ErrorReporter.get().endWithSuccess();
 	}
 
