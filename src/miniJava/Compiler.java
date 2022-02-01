@@ -8,8 +8,10 @@ import miniJava.SyntacticAnalyzer.Parser;
 public class Compiler {
 	public static void main(String[] args) {
 		// Validate proper command line arguments to program
-		if (args == null || args.length != 1)
-			Reporter.get().reportError("Expected exactly 1 command line arguement");
+		if (args == null || args.length != 1) {
+			System.out.println("Invalid Program Arguements");
+			System.exit(1);
+		}
 		if (!args[0].endsWith(".java") && !args[0].endsWith(".mjava"))
 			Reporter.get().reportError("Input file has incorrect extension");
 		InputReader reader = new InputReader(args[0]);

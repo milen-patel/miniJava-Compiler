@@ -24,7 +24,8 @@ public class InputReader {
 			this.scanner = scanner;
 			this.fileInputStream = new java.io.FileInputStream(inputFile);
 		} catch (FileNotFoundException e) {
-			Reporter.get().reportError("Unable to open input file.");
+			System.out.println("Unable to open input file.");
+			System.exit(1);
 		}
 		
 		this.eofEncountered = false;
