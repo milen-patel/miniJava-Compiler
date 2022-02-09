@@ -24,10 +24,10 @@ Final			-> 	num |
 The operator precedence is as given (from lowest to highest)
 | Class      | Operator |
 | ----------- | ----------- |
-| Disjunction      | `||`       |
-| Conjunction   | `&&`        |
-| Equality   | `==`,`!=`        |
-| Relational   | `<=`,`<`,`>`,`>=`        |
-| Additive   | `+`,`-`        |
-| Multiplicative   | `*`,`/`        |
-| Unary   | `-`,`!`        |
+| Disjunction      | &#124;&#124;       |
+| Conjunction   | &&        |
+| Equality   | ==,!=        |
+| Relational   | <=,<,>,>=  |
+| Additive   | +,-        |
+| Multiplicative   | *,/        |
+| Unary   | -,!        |
