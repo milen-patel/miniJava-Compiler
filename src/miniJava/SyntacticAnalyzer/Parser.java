@@ -253,96 +253,158 @@ public class Parser {
 		accept(TokenType.SEMICOLON, "Expected ';'");
 	}
 	
-	/*
-	 * Expression ::=
-	 *  (5) Reference
-	 *  (6) | Reference [ Expression ]
-	 *  (7) | Reference(ArgumentList?)
-	 *  (4)| unop Expression
-	 *  | Expression binop Expression
-	 *  (9) | ( Expression )
-	 *  (3) | num 
-	 *  (1) | true  
-	 *  (2) | false
-	 *  (8) | new (id() | int[Expression] | id[Expression])
-	 */
+	// Expression -> Precedence0
 	private void parseExpression() {
 		ErrorReporter.get().log("<Parser> Parsing Expression Rule", 3);
+		this.parsePrecedence0();
+	}
+	
+	// Precedence0		-> Precedence1 ('||' Precedence1)*
+	private void parsePrecedence0() {
+		this.parsePrecedence1();
+		while (this.currentToken.getType() == TokenType.LOGICAL_OR) {
+			acceptNext();
+			this.parsePrecedence1();
+		}
+	}
+	
+	// Precedence1		-> Precedence2 ('&&' Precedence2)*
+	private void parsePrecedence1() {
+		this.parsePrecedence2();
+		while (this.currentToken.getType() == TokenType.LOGICAL_AND) {
+			acceptNext();
+			this.parsePrecedence2();
+		}
+	}
+	
+	// Precedence2		-> Precedence3 (('==' || '!=') Precedence3)*
+	private void parsePrecedence2() {
+		this.parsePrecedence3();
+		while (this.currentToken.getType() == TokenType.DOUBLE_EQUALS || 
+			this.currentToken.getType() == TokenType.NOT_EQUAL_TO) {
+			acceptNext();
+			this.parsePrecedence3();
+		}
+	}
+	
+	// Precedence3		-> Precedence4 (('<=' || '<' || '>' || '>=')) Precedence4)*
+	private void parsePrecedence3() {
+		this.parsePrecedence4();
+		
+		while (currentToken.getType() == TokenType.LESS_THAN_OR_EQUAL_TO ||
+				currentToken.getType() == TokenType.LESS_THAN ||
+				currentToken.getType() == TokenType.GREATER_THAN ||
+				currentToken.getType() == TokenType.GREATHER_THAN_OR_EQUAL_TO) {
+			this.acceptNext();
+			this.parsePrecedence4();
+		}
+	}
+	
+	// Precedence4		-> Precedence5 (('+' || '-') Precedence5)*
+	private void parsePrecedence4() {
+		this.parsePrecedence5();
+		while (currentToken.getType() == TokenType.ADDITION ||
+				currentToken.getType() == TokenType.SUBTRACTION) {
+			this.acceptNext();
+			this.parsePrecedence5();
+		}
+		
+		// Intersting debate between my way and class way- does either matter
+		/*
+		this.parsePrecedence5();
+		while (this.currentToken.getType() == TokenType.ADDITION or sub) {
+			this.acceptNext();
+			this.parsePrecedence5();
+		}*/
+	}
+	
+	// Precedence5		-> Precedence6 (('*' || '/') Precedence6)*
+	private void parsePrecedence5() {
+		this.parsePrecedence6();
+		while (currentToken.getType() == TokenType.MULTIPLICATION ||
+				currentToken.getType() == TokenType.DIVISION) {
+			this.acceptNext();
+			this.parsePrecedence6();
+		}
+	}
+	
+	// Precedence6		-> (('-' || '!') Precedence6) | Final
+	private void parsePrecedence6() {
 		switch (this.currentToken.getType()) {
-			case TRUE: // (1)
-				accept(TokenType.TRUE, "Internal Parsing Error");
-				break;
-			case FALSE: // (2)
-				accept(TokenType.FALSE, "Internal Parsing Error");
-				break;
-			case NUMBER_LITERAL: // (3)
-				accept(TokenType.NUMBER_LITERAL, "Internal Parsing Error");
-				break;
-			case SUBTRACTION: // (4)
-				accept(TokenType.SUBTRACTION, "Internal  Parsing Error");
+		case SUBTRACTION:
+		case LOGICAL_NEGATION:
+			acceptNext();
+			this.parsePrecedence6();
+			break;
+		default:
+			this.parsePrecedenceFinal();
+		}
+	}
+	
+	/*
+	 * Final ::=
+	 *  (1) Reference
+	 *  (2) | Reference [ Expression ]
+	 *  (3) | Reference(ArgumentList?)
+	 *  (4) | ( Expression )
+	 *  (5) | num 
+	 *  (6) | true  
+	 *  (7) | false
+	 *  (8) | new (id() | int[Expression] | id[Expression])
+	 */
+	// Final			-> num | '(' Expression ')'
+	private void parsePrecedenceFinal() {
+		switch (this.currentToken.getType()) {
+		case TRUE: // (6)
+			accept(TokenType.TRUE, "Internal Parsing Error");
+			break;
+		case FALSE: // (7)
+			accept(TokenType.FALSE, "Internal Parsing Error");
+			break;
+		case NUMBER_LITERAL: // (5)
+			this.acceptNext();
+			break;
+		case IDENTIFIER:
+		case THIS:
+			parseReference(); // (1)
+			if (currentToken.getType() == TokenType.OPEN_BRACKET) { // (2)
+				acceptNext();
 				parseExpression();
-				break;
-			case LOGICAL_NEGATION: // (4)
-				accept(TokenType.LOGICAL_NEGATION, "Internal  Parsing Error");
-				parseExpression();
-				break;
-			case IDENTIFIER: // starters[reference] = {id, this}
-			case THIS:
-				parseReference(); // (5)
-				if (currentToken.getType() == TokenType.OPEN_BRACKET) { // (6)
-					acceptNext();
-					parseExpression();
-					accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
-				} else if (currentToken.getType() == TokenType.OPEN_PAREN) { // (7)
-					acceptNext();
-					if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-						parseArguementList();
-					}
-					accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
+				accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
+			} else if (currentToken.getType() == TokenType.OPEN_PAREN) { // (3)
+				acceptNext();
+				if (currentToken.getType() != TokenType.CLOSE_PAREN) {
+					parseArguementList();
 				}
-				break;
-			case NEW: // (8)
-				accept(TokenType.NEW, "Internal  Parsing Error");
-				if (currentToken.getType() == TokenType.INT) {
-					accept(TokenType.INT, "Internal  Parsing Error");
+				accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
+			}
+			break;
+		case NEW: // (8)
+			accept(TokenType.NEW, "Internal  Parsing Error");
+			if (currentToken.getType() == TokenType.INT) {
+				accept(TokenType.INT, "Internal  Parsing Error");
+				accept(TokenType.OPEN_BRACKET, "Expected '['");
+				parseExpression();
+				accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+			} else {
+				accept(TokenType.IDENTIFIER, "Expected identifier following 'new'");
+				if (currentToken.getType() == TokenType.OPEN_PAREN) {
+					accept(TokenType.OPEN_PAREN, "Internal  Parsing Error");
+					accept(TokenType.CLOSE_PAREN, "Expected ')'");
+				} else {
 					accept(TokenType.OPEN_BRACKET, "Expected '['");
 					parseExpression();
 					accept(TokenType.CLOSE_BRACKET, "Expected ']'");
-				} else {
-					accept(TokenType.IDENTIFIER, "Expected identifier following 'new'");
-					if (currentToken.getType() == TokenType.OPEN_PAREN) {
-						accept(TokenType.OPEN_PAREN, "Internal  Parsing Error");
-						accept(TokenType.CLOSE_PAREN, "Expected ')'");
-					} else {
-						accept(TokenType.OPEN_BRACKET, "Expected '['");
-						parseExpression();
-						accept(TokenType.CLOSE_BRACKET, "Expected ']'");
-					}
 				}
-				break;
-			case OPEN_PAREN: // (9)
-				accept(TokenType.OPEN_PAREN, "Internal  Parsing Error");
-				parseExpression();
-				accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
-				break;
-			default:
-				ErrorReporter.get().reportError("<Parser> No Expression Cases Matched");
-		}
-		// TODO Eventually check if while can be  replaced with if
-		while (currentToken.getType() == TokenType.GREATER_THAN ||
-				currentToken.getType() == TokenType.LESS_THAN ||
-				currentToken.getType() == TokenType.DOUBLE_EQUALS ||
-				currentToken.getType() == TokenType.LESS_THAN_OR_EQUAL_TO ||
-				currentToken.getType() == TokenType.GREATHER_THAN_OR_EQUAL_TO ||
-				currentToken.getType() == TokenType.NOT_EQUAL_TO ||
-				currentToken.getType() == TokenType.LOGICAL_AND ||
-				currentToken.getType() == TokenType.LOGICAL_OR ||
-				currentToken.getType() == TokenType.ADDITION ||
-				currentToken.getType() == TokenType.SUBTRACTION || // TODO: okay to exclude '!'
-				currentToken.getType() == TokenType.DIVISION ||
-				currentToken.getType() == TokenType.MULTIPLICATION) {
-			acceptNext();
-			parseExpression();
+			}
+			break;
+		case OPEN_PAREN: // (4)
+			accept(TokenType.OPEN_PAREN, "Expected '('");
+			this.parseExpression();
+			accept(TokenType.CLOSE_PAREN, "Expected ')'");
+			break;
+		default:
+			ErrorReporter.get().reportError("<Parser> Failed to parse arithmetic");
 		}
 	}
 

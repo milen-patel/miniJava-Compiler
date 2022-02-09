@@ -23,18 +23,18 @@ public class InputReader {
 			System.out.println("Unable to open input file.");
 			System.exit(1);
 		}
-		
+
 		this.eofEncountered = false;
 	}
 
 	public int getScannerPosition() {
 		return this.scannerPos;
 	}
-	
+
 	public boolean eofEncountered() {
 		return this.eofEncountered;
 	}
-	
+
 	public char nextChar() {
 		if (this.eofEncountered) {
 			return this.current;
