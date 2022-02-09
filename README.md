@@ -11,14 +11,14 @@ Precedence3		-> Precedence4 (('<=' || '<' || '>' || '>=')) Precedence4)*
 Precedence4		-> Precedence5 (('+' || '-') Precedence5)*
 Precedence5		-> Precedence6 (('*' || '/') Precedence6)*
 Precedence6		-> (('-' || '!') Precedence6) | Final
-Final			-> 	num | 
-				'(' Expression ')' | 
-				Reference | 
-				Reference[Expression] | 
-				Reference(ArguementList?) |
-				true | 
-				false | 
-				new (id() | int[Expression] | id[Expression])
+Final			-> num | 
+			'(' Expression ')' | 
+			Reference | 
+			Reference[Expression] | 
+			Reference(ArguementList?) |
+			true | 
+			false | 
+			new (id() | int[Expression] | id[Expression])
 ```
 
 The operator precedence is as given (from lowest to highest)
