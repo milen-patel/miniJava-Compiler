@@ -3,10 +3,10 @@ package miniJava.SyntacticAnalyzer;
 /*
  * Used to record the character position range of a Token in the source file.
  */
-public class TokenPosition {
+public class SourcePosition {
 	private int startPos, endPos;
 
-	public TokenPosition(int startPos, int endPos) {
+	public SourcePosition(int startPos, int endPos) {
 		this.startPos = startPos;
 		this.endPos = endPos;
 	}

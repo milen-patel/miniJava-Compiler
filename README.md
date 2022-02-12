@@ -1,3 +1,5 @@
+is it okay that i changed Terminal.java AST
+
 # miniJava-Compiler
 A compiler for miniJava
 

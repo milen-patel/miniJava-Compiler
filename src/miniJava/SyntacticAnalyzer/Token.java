@@ -3,15 +3,15 @@ package miniJava.SyntacticAnalyzer;
 public class Token {
 	private TokenType type;
 	private String spelling;
-	private TokenPosition position;
+	private SourcePosition position;
 	
 	public Token(TokenType type, String spelling, int startPos, int endPos) {
 		this.type = type;
 		this.spelling = spelling;
-		this.position = new TokenPosition(startPos, endPos);
+		this.position = new SourcePosition(startPos, endPos);
 	}
 	
-	public Token(TokenType type, String spelling, TokenPosition tokenPosition) {
+	public Token(TokenType type, String spelling, SourcePosition tokenPosition) {
 		this.type = type;
 		this.spelling = spelling;
 		this.position = tokenPosition;
@@ -27,5 +27,13 @@ public class Token {
 	
 	public int getStartPosition() {
 		return this.position.getStartPos();
+	}
+	
+	public SourcePosition getPosition() {
+		return this.position;
+	}
+	
+	public String getSpelling() {
+		return this.spelling;
 	}
 }
