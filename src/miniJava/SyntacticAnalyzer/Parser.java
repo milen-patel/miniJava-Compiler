@@ -265,6 +265,7 @@ public class Parser {
 		while (this.currentToken.getType() == TokenType.LOGICAL_OR) {
 			acceptNext();
 			this.parsePrecedence1();
+			
 		}
 	}
 	
