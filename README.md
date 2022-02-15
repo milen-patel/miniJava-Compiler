@@ -31,5 +31,80 @@ The operator precedence is as given (from lowest to highest)
 | Equality   | ==,!=        |
 | Relational   | <=,<,>,>=  |
 | Additive   | +,-        |
-| Multiplicative   | *,/        |
+| Multiplicative   | \*,/        |
 | Unary   | -,!        |
+
+
+#AST Class Explanations
+AST <- Terminal <- {BooleanLiteral, IntLiteral, Identifier, Operator}
+AST <- Expression <- {BinaryExpr}
+.
+├── AST (Abstract Class)
+|		Top Level Abstract Class
+├── ASTDisplay
+|		Visitor class for display AST Textual Representation
+├── ArrayType extends TypeDenoter (Concrete Class)
+|		Maintains a TypeDenoter that represents the type of the Element.
+|		Calls the TypeDenoter constructor with the Array TypeKind
+├── AssignStmt.java
+├── BaseRef.java
+├── BaseType extends TypeDenoter (Concrete Class)
+|		Concrete wrapper class that just maintains a TypeKind
+├── BinaryExpr extends Expression (Concrete Class)
+|		Holds an Operator, and Two Expressions (left and right)
+├── BlockStmt.java
+├── BooleanLiteral extends Terminal (Concrete Class)
+|		Concrete class that holds no new information, just signifies that this terminal is a boolean literal
+├── CallExpr.java
+├── CallStmt.java
+├── ClassDecl.java
+├── ClassDeclList.java
+├── ClassType extends TypeDenoter (Concrete Class)
+|		Maintains the class name as an Identifier Object
+|		Class the TypeDenoter constructor with the Class TypeKind
+├── Declaration.java
+├── ExprList.java
+├── Expression extends AST (Abstract Class)
+|		Extends AST but adds nothing new and is still abstract
+├── FieldDecl.java
+├── FieldDeclList.java
+├── IdRef.java
+├── Identifier extends Terminal (Concrete Class)
+|		Concrete class that holds no new information, just signifies that this terminal is an identifier
+├── IfStmt.java
+├── IntLiteral extends Terminal (Concrete Class)
+|		Concrete class that holds no new information, just signifies that this terminal is an integer literal
+├── IxAssignStmt.java
+├── IxExpr.java
+├── LiteralExpr.java
+├── LocalDecl.java
+├── MemberDecl.java
+├── MethodDecl.java
+├── MethodDeclList.java
+├── NewArrayExpr.java
+├── NewExpr.java
+├── NewObjectExpr.java
+├── Operator extends Terminal (Concrete Class)
+|		Concrete class that holds no new information, just signifies that this terminal is an operator
+├── Package.java
+├── ParameterDecl.java
+├── ParameterDeclList.java
+├── QualRef.java (a dot followed by a particular field according to lecture)
+├── RefExpr.java
+├── Reference.java
+├── ReturnStmt.java
+├── Statement.java
+├── StatementList.java
+├── Terminal extends AST (Abstract Class)
+|		Abstract class that just wraps a Token, stores the TokenType and it's spelling, discards the Token
+├── ThisRef.java
+├── TypeDenoter extends AST (Abstract Class)
+|		Abstract wrapper class that contains a TypeKind
+├── TypeKind (Enum)
+|		Enumeration of the different variable types {void, int, booolean, class, array, unsupported, error}
+|			Question: When to use unsupported or error?
+├── UnaryExpr.java
+├── VarDecl.java
+├── VarDeclStmt.java
+├── Visitor.java
+└── WhileStmt.java
