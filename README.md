@@ -36,8 +36,24 @@ The operator precedence is as given (from lowest to highest)
 
 
 #AST Class Explanations
-AST <- Terminal <- {BooleanLiteral, IntLiteral, Identifier, Operator}
-AST <- Expression <- {BinaryExpr}
+```
+AST
+    Terminal
+		BooleanLiteral
+		IntLiteral
+		Identifier
+		Operator
+	Expression
+		Binary Expression
+	TypeDenoter
+		ArrayType
+		BaseType
+		ClassType
+	Declaration
+		ClassDecl
+		MemberDecl todo
+			FieldDecl
+			MethodDecl
 .
 ├── AST (Abstract Class)
 |		Top Level Abstract Class
@@ -57,12 +73,15 @@ AST <- Expression <- {BinaryExpr}
 |		Concrete class that holds no new information, just signifies that this terminal is a boolean literal
 ├── CallExpr.java
 ├── CallStmt.java
-├── ClassDecl.java
-├── ClassDeclList.java
+├── ClassDecl extends Declaration (Concrete Class)
+|		Maintains class name (String), FieldDeclList, and MethodDeclList
+├── ClassDeclList implements Iterable<ClassDecl> (Concrete Class)
+|		Just maintains a list of ClassDecl's
 ├── ClassType extends TypeDenoter (Concrete Class)
-|		Maintains the class name as an Identifier Object
+|		Maintains the class name as an Identifier Objec
 |		Class the TypeDenoter constructor with the Class TypeKind
-├── Declaration.java
+├── Declaration extends AST (Abstract Class)
+|		Stores a declaration as a name (String) and type (TypeDenoter)
 ├── ExprList.java
 ├── Expression extends AST (Abstract Class)
 |		Extends AST but adds nothing new and is still abstract
@@ -86,7 +105,8 @@ AST <- Expression <- {BinaryExpr}
 ├── NewObjectExpr.java
 ├── Operator extends Terminal (Concrete Class)
 |		Concrete class that holds no new information, just signifies that this terminal is an operator
-├── Package.java
+├── Package extends AST (Concrete Class)
+|		Top Level Node in AST, Just has a ClassDeclList
 ├── ParameterDecl.java
 ├── ParameterDeclList.java
 ├── QualRef.java (a dot followed by a particular field according to lecture)
@@ -102,9 +122,10 @@ AST <- Expression <- {BinaryExpr}
 |		Abstract wrapper class that contains a TypeKind
 ├── TypeKind (Enum)
 |		Enumeration of the different variable types {void, int, booolean, class, array, unsupported, error}
-|			Question: When to use unsupported or error?
+|			Question: When to use unsupported or error? or even class since ClassDecl doesn't
 ├── UnaryExpr.java
 ├── VarDecl.java
 ├── VarDeclStmt.java
 ├── Visitor.java
 └── WhileStmt.java
+```
