@@ -1,5 +1,7 @@
 package miniJava;
 
+import miniJava.AbstractSyntaxTrees.AST;
+import miniJava.AbstractSyntaxTrees.ASTDisplay;
 import miniJava.SyntacticAnalyzer.InputReader;
 import miniJava.SyntacticAnalyzer.Scanner;
 import miniJava.SyntacticAnalyzer.Parser;
@@ -18,7 +20,10 @@ public class Compiler {
 		Scanner scnr = new Scanner(reader);
 		Parser p = new Parser(scnr);
 		
-		p.parseProgram();
+		AST tree = p.parseProgram();
+		ASTDisplay display = new ASTDisplay();
+		display.showPosition = true;
+		display.showTree(tree);
 		ErrorReporter.get().endWithSuccess();
 	}
 

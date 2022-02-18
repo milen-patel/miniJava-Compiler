@@ -18,4 +18,8 @@ public class SourcePosition {
 	public int getEndPos() {
 		return this.endPos;
 	}
+	
+	public String toString() {
+		return "[" + startPos + ", "+ endPos + "]";
+	}
 }

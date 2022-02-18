@@ -22,24 +22,36 @@ public class Parser {
 			classes.add(parseClass());
 		}
 		accept(TokenType.EOT, "Expected EOT after series of class declarations");
-		SourcePosition endPos = this.currentToken.getPosition();
+		SourcePosition endPos = this.currentToken.getPosition(); // TODO ask about position issue
 		Package pack = new Package(classes, new SourcePosition(startPos.getStartPos(), endPos.getEndPos()));
 		return pack;
 	}
 
 	private ClassDecl parseClass() {
+		SourcePosition startPos = this.currentToken.getPosition();
 		accept(TokenType.CLASS, "Expected class keyword to begin class declaration");
-		accept(TokenType.IDENTIFIER, "Expected valid identifier following class keyword");
+		
+		Identifier className = this.parseIdentifier();
+		FieldDeclList fields = new FieldDeclList();
+		MethodDeclList methods = new MethodDeclList();
+		
 		accept(TokenType.OPEN_CURLY, "Expected '{'");
 		while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
-			this.parseFieldOrMethodDeclaration();
+			MemberDecl decl = this.parseFieldOrMethodDeclaration();
+			if (decl instanceof FieldDecl) {
+				fields.add((FieldDecl) decl);
+			} else if (decl instanceof MethodDecl) {
+				methods.add((MethodDecl) decl);
+			} else {
+				ErrorReporter.get().reportError("Internal Parsing Error");
+			}
 		}
 		accept(TokenType.CLOSE_CURLY, "Expected '}' at end of class body");
-		return null;
+		return new ClassDecl(className.spelling, fields, methods, startPos);
 	}
 
 	// ( FieldDeclaration | MethodDeclaration )* 
-	private void parseFieldOrMethodDeclaration() {
+	private MemberDecl parseFieldOrMethodDeclaration() {
 		ErrorReporter.get().log("<Parser> Parsing FieldOrMethodDeclaration Rule", 3);
 		parseVisibility();
 		parseAccess();
@@ -57,7 +69,7 @@ public class Parser {
 				parseStatement();
 			}
 			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); // TODO repeated code below
-			return;
+			return null;
 		}
 		parseType();
 		accept(TokenType.IDENTIFIER, "Expected identifier in field/method declaration");
@@ -77,6 +89,7 @@ public class Parser {
 		} else {
 			ErrorReporter.get().reportError("<Parser> Invalid class body. Failed to parse field or method declaration. Expected ';' or '('.");
 		}
+		return null;
 	}
 
 	// ParameterList ::= Type id (, Type id)* 
@@ -445,6 +458,15 @@ public class Parser {
 			default:
 				ErrorReporter.get().reportError("<Parser> Failed to parse type declaration");	
 		}
+	}
+	
+	/*
+	 * Parses an identifiier and returns an Identifier AST node.
+	 */
+	private Identifier parseIdentifier() {
+		Token id = this.currentToken;
+		accept(TokenType.IDENTIFIER, "Expected valid identifier following class keyword");
+		return new Identifier(id);
 	}
 	
 	// Handles ([])?
