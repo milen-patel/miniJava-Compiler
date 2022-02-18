@@ -30,8 +30,9 @@ public class Scanner {
 		this.currentTokenSpelling = new StringBuffer();
 		int startPos = this.input.getScannerPosition();
 
+		TokenType t = this.scanNextToken();
 		SourcePosition pos = new SourcePosition(startPos, input.getScannerPosition());
-		Token token = new Token(this.scanNextToken(), this.currentTokenSpelling.toString(), pos);
+		Token token = new Token(t, this.currentTokenSpelling.toString(), pos);
 		if (token.getType() == TokenType.COMMENT) {
 			return scan(); // TODO: is this safe
 		}
