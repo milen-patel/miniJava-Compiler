@@ -12,7 +12,7 @@ import miniJava.ErrorReporter;
  */
 public class InputReader {
 	private InputStream fileInputStream;
-	private int scannerPos = 1;
+	private int scannerPos = 0;
 	private boolean eofEncountered;
 	private char current;
 
