@@ -1,6 +1,8 @@
 package miniJava.SyntacticAnalyzer;
 
 import miniJava.ErrorReporter;
+import miniJava.AbstractSyntaxTrees.*; // TODO remove wildcard
+import miniJava.AbstractSyntaxTrees.Package;
 
 public class Parser {
 	private Scanner scanner;
@@ -12,15 +14,20 @@ public class Parser {
 	}
 
 	// Program ::= (ClassDeclaration)* eot 
-	public void parseProgram() {
+	public Package parseProgram() {
+		SourcePosition startPos = this.currentToken.getPosition(); // TODO could get NPE?
+		ClassDeclList classes = new ClassDeclList();
 		ErrorReporter.get().log("<Parser> Parsing Program Rule", 3);
 		while (this.currentToken.getType() == TokenType.CLASS) {
-			parseClass();
+			classes.add(parseClass());
 		}
 		accept(TokenType.EOT, "Expected EOT after series of class declarations");
+		SourcePosition endPos = this.currentToken.getPosition();
+		Package pack = new Package(classes, new SourcePosition(startPos.getStartPos(), endPos.getEndPos()));
+		return pack;
 	}
 
-	private void parseClass() {
+	private ClassDecl parseClass() {
 		accept(TokenType.CLASS, "Expected class keyword to begin class declaration");
 		accept(TokenType.IDENTIFIER, "Expected valid identifier following class keyword");
 		accept(TokenType.OPEN_CURLY, "Expected '{'");
@@ -28,6 +35,7 @@ public class Parser {
 			this.parseFieldOrMethodDeclaration();
 		}
 		accept(TokenType.CLOSE_CURLY, "Expected '}' at end of class body");
+		return null;
 	}
 
 	// ( FieldDeclaration | MethodDeclaration )* 
