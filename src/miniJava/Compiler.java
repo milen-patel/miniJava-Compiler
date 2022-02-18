@@ -21,8 +21,8 @@ public class Compiler {
 		Parser p = new Parser(scnr);
 		
 		AST tree = p.parseProgram();
+		ASTDisplay.showPosition = true; // TODO Change before submission
 		ASTDisplay display = new ASTDisplay();
-		display.showPosition = true;
 		display.showTree(tree);
 		ErrorReporter.get().endWithSuccess();
 	}
