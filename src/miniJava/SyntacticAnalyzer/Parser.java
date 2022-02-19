@@ -31,7 +31,7 @@ public class Parser {
 		SourcePosition startPos = this.currentToken.getPosition();
 		accept(TokenType.CLASS, "Expected class keyword to begin class declaration");
 		
-		Identifier className = this.parseIdentifier();
+		Identifier className = this.parseIdentifier("Expected identifier following class keyword");
 		FieldDeclList fields = new FieldDeclList();
 		MethodDeclList methods = new MethodDeclList();
 		
@@ -47,45 +47,68 @@ public class Parser {
 			}
 		}
 		accept(TokenType.CLOSE_CURLY, "Expected '}' at end of class body");
-		return new ClassDecl(className.spelling, fields, methods, startPos);
+		SourcePosition pos = new SourcePosition(startPos.getStartPos(), this.currentToken.getPosition().getStartPos());
+		return new ClassDecl(className.spelling, fields, methods, pos);
 	}
 
 	// ( FieldDeclaration | MethodDeclaration )* 
 	private MemberDecl parseFieldOrMethodDeclaration() {
 		ErrorReporter.get().log("<Parser> Parsing FieldOrMethodDeclaration Rule", 3);
-		parseVisibility();
-		parseAccess();
-		if (currentToken.getType() == TokenType.VOID) { // TODO something special should happen here
-			accept(TokenType.VOID, "Internal Parsing Error");
-			// Now we know it is a method declaration
-			accept(TokenType.IDENTIFIER, "Expected identifier for method name");
+		
+		SourcePosition pos = this.currentToken.getPosition();
+		boolean isPrivate = parseVisibility();
+		boolean isStatic = parseAccess();
+		ParameterDeclList params = new ParameterDeclList();
+		StatementList sl = new StatementList();
+		Identifier iden = null;
+		TypeDenoter memberType = null;
+		
+		// If we find void keyword, then it must be a method declaration
+		if (currentToken.getType() == TokenType.VOID) { 
+			memberType = new BaseType(TypeKind.VOID, this.currentToken.getPosition()); // TODO do we used basetype for void
+			iden = this.parseIdentifier("Expected identifier for method name");
+			
+			// Parse the parameter list
 			accept(TokenType.OPEN_PAREN, "Expected '(' in method declaration");
 			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-				parseParameterList(); 
+				params = parseParameterList(); 
 			}
 			accept(TokenType.CLOSE_PAREN, "Expected ')' in method declaration");
+			
+			// Parse the method body
 			accept(TokenType.OPEN_CURLY, "Expected '{'");
 			while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
-				parseStatement();
+				sl.add(parseStatement());
 			}
 			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); // TODO repeated code below
-			return null;
+			
+			// TODO, do we use the same position for both here?
+			return new MethodDecl(new FieldDecl(isPrivate, isStatic, memberType, iden.spelling, pos),params, sl, pos);
 		}
-		parseType();
-		accept(TokenType.IDENTIFIER, "Expected identifier in field/method declaration");
+	
+		memberType = parseType();
+		iden = this.parseIdentifier("Expected identifier in field/method declaration");
+	
+		// If we find a semicolon, then it must be a field declaration
 		if (currentToken.getType() == TokenType.SEMICOLON) {
 			accept(TokenType.SEMICOLON, "Internal  Parsing Error");
+			return new FieldDecl(isPrivate, isStatic, memberType, iden.spelling, pos);
 		} else if (currentToken.getType() == TokenType.OPEN_PAREN) {
+			// Must be a method, parse parameter list
 			accept(TokenType.OPEN_PAREN, "Expected '('");
 			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-				parseParameterList();
+				params = parseParameterList();
 			}
 			accept(TokenType.CLOSE_PAREN, "Expected ')'");
+			
+			// Parse method body
 			accept(TokenType.OPEN_CURLY, "Expected '{'");
 			while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
-				parseStatement();
+				sl.add(parseStatement());
 			}
 			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); 
+			
+			return new MethodDecl(new FieldDecl(isPrivate, isStatic, memberType, iden.spelling, pos),params, sl, pos);
 		} else {
 			ErrorReporter.get().reportError("<Parser> Invalid class body. Failed to parse field or method declaration. Expected ';' or '('.");
 		}
@@ -93,16 +116,26 @@ public class Parser {
 	}
 
 	// ParameterList ::= Type id (, Type id)* 
-	private void parseParameterList() {
+	private ParameterDeclList parseParameterList() {
 		ErrorReporter.get().log("<Parser> Parsing ParameterList Rule", 3);
-		parseType();
-		accept(TokenType.IDENTIFIER, "Expected parameter name following type");
+		ParameterDeclList l = new ParameterDeclList();
 		
+		// Parse the required first parameter
+		SourcePosition pos = this.currentToken.getPosition();
+		TypeDenoter t = parseType();
+		Identifier i = parseIdentifier("Expected identifier following type in parameter list.");
+		l.add(new ParameterDecl(t, i.spelling, pos));
+		
+		// Parse remaining parameters as we see them
 		while(this.currentToken.getType() == TokenType.COMMA) {
 			acceptNext();
-			parseType();
-			accept(TokenType.IDENTIFIER, "Expected identifier following type in parameter list.");
+			SourcePosition posn = this.currentToken.getPosition();
+			TypeDenoter type = parseType();
+			Identifier identifier = parseIdentifier("Expected identifier following type in parameter list.");
+			l.add(new ParameterDecl(type, identifier.spelling, posn));
 		}
+		
+		return l;
 	}
 
 	/*
@@ -128,27 +161,35 @@ public class Parser {
 		}
 	}
 
-	// Visibility ::= ( public | private )?
-	private void parseVisibility() {
+	/*
+	 *  Visibility ::= ( public | private )?
+	 *  returns true if private, false otherwise
+	 */
+	private boolean parseVisibility() {
 		ErrorReporter.get().log("<Parser> Parsing Visibility Rule", 3);
 		switch (currentToken.getType()) {
 		case PUBLIC:
 			accept(TokenType.PUBLIC, "Internal Parsing Error");
-			break;
+			return false;
 		case PRIVATE:
 			accept(TokenType.PRIVATE, "Internal Parsing Error");
-			break;
+			return true;
 		default:
-			break;
+			return false;
 		}
 	}
 
-	// Access ::= static? 
-	private void parseAccess() {
+	/*
+	 *  Access ::= static? 
+	 *  Returns true if static, false otherwise
+	 */
+	private boolean parseAccess() {
 		ErrorReporter.get().log("<Parser> Parsing Access Rule", 3);
 		if (currentToken.getType() == TokenType.STATIC) {
 			acceptNext();
+			return true;
 		}
+		return false;
 	}
 	
 	/*
@@ -162,7 +203,7 @@ public class Parser {
 	 * (2) | if ( Expression ) Statement (else Statement)?
 	 * (3) | while ( Expression ) Statement
 	 */
-	private void parseStatement() {
+	private Statement parseStatement() {
 		ErrorReporter.get().log("<Parser> Parsing Statement Rule", 3);
 		switch (this.currentToken.getType()) {
 			case RETURN: // (1)
@@ -261,6 +302,7 @@ public class Parser {
 			default:
 				ErrorReporter.get().reportError("<Parser> Failed to parse statement" + this.currentToken);		
 		}	
+		return new BlockStmt(new StatementList(), currentToken.getPosition()); // TODO change this
 	}
 	
 	/*
@@ -441,41 +483,61 @@ public class Parser {
 	}
 
 	// Type ::= int | boolean | id | (int|id)[] 
-	private void parseType() {
+	private TypeDenoter parseType() {
 		ErrorReporter.get().log("<Parser> Parsing Type Rule", 3);
 		switch (this.currentToken.getType()) {
 			case INT:
+				SourcePosition intPos = this.currentToken.getPosition();
 				accept(TokenType.INT, "Internal Parsing Error");
-				this.removeBrackets();
-				break;
+				BaseType intDef = new BaseType(TypeKind.INT, intPos);
+				
+				if (this.removeBrackets()) {
+					// TODO do we use the same pos in both arguements or what? whhen is typekind array used? same for below
+					return new ArrayType(intDef, intPos);
+				} else {
+					return intDef;
+				}
 			case BOOLEAN:
+				SourcePosition boolPos = this.currentToken.getPosition();
 				accept(TokenType.BOOLEAN, "Internal Parsing Error");
-				break;
+				return new BaseType(TypeKind.BOOLEAN, boolPos);
 			case IDENTIFIER:
-				accept(TokenType.IDENTIFIER, "Internal Parsing Error");
-				this.removeBrackets();
-				break;
+				SourcePosition idPos = this.currentToken.getPosition();
+				Identifier cn = this.parseIdentifier("Internal Parsing Error");
+				ClassType ct = new ClassType(cn, idPos);
+				
+				if (this.removeBrackets()) {
+					return new ArrayType(ct, idPos);
+				} else {
+					return ct;
+				}
 			default:
 				ErrorReporter.get().reportError("<Parser> Failed to parse type declaration");	
+				return null;
 		}
 	}
 	
 	/*
 	 * Parses an identifiier and returns an Identifier AST node.
 	 */
-	private Identifier parseIdentifier() {
+	private Identifier parseIdentifier(String reason) {
 		Token id = this.currentToken;
-		accept(TokenType.IDENTIFIER, "Expected valid identifier following class keyword");
+		accept(TokenType.IDENTIFIER, reason);
 		return new Identifier(id);
 	}
 	
-	// Handles ([])?
-	private void removeBrackets() {
+	/*
+	 *  Handles ([])?
+	 *  Returns true if there are brackets, false otherwise
+	 */
+	private boolean removeBrackets() {
 		ErrorReporter.get().log("<Parser> Checking/Parsing Brackets", 3);
 		if (currentToken.getType() == TokenType.OPEN_BRACKET) {
 			accept(TokenType.OPEN_BRACKET, "Internal Parsing Error");
 			accept(TokenType.CLOSE_BRACKET, "Expected ] after [");
+			return true;
 		}
+		return false;
 	}
 	
 	// Accepts the next token without checking its type
