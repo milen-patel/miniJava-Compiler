@@ -310,62 +310,81 @@ public class Parser {
 	}
 	
 	// Expression -> Precedence0
-	private void parseExpression() {
+	private Expression parseExpression() {
 		ErrorReporter.get().log("<Parser> Parsing Expression Rule", 3);
-		this.parsePrecedence0();
+		return this.parsePrecedence0();
 	}
 	
 	// Precedence0		-> Precedence1 ('||' Precedence1)*
-	private void parsePrecedence0() {
-		this.parsePrecedence1();
+	private Expression parsePrecedence0() {
+		Expression expr = this.parsePrecedence1();
 		while (this.currentToken.getType() == TokenType.LOGICAL_OR) {
+			Operator o = new Operator(this.currentToken);
 			acceptNext();
-			this.parsePrecedence1();
-			
+			Expression rhs = this.parsePrecedence1();
+			expr = new BinaryExpr(o, expr, rhs, o.posn);
 		}
+		
+		return expr;
 	}
 	
 	// Precedence1		-> Precedence2 ('&&' Precedence2)*
-	private void parsePrecedence1() {
-		this.parsePrecedence2();
+	private Expression parsePrecedence1() {
+		Expression expr = this.parsePrecedence2();
 		while (this.currentToken.getType() == TokenType.LOGICAL_AND) {
+			Operator o = new Operator(this.currentToken);
 			acceptNext();
-			this.parsePrecedence2();
+			Expression rhs = this.parsePrecedence2();
+			expr = new BinaryExpr(o, expr, rhs, o.posn);
 		}
+		
+		return expr;
 	}
 	
 	// Precedence2		-> Precedence3 (('==' || '!=') Precedence3)*
-	private void parsePrecedence2() {
-		this.parsePrecedence3();
+	private Expression parsePrecedence2() {
+		Expression expr = this.parsePrecedence3();
 		while (this.currentToken.getType() == TokenType.DOUBLE_EQUALS || 
 			this.currentToken.getType() == TokenType.NOT_EQUAL_TO) {
+			Operator o = new Operator(this.currentToken);
 			acceptNext();
-			this.parsePrecedence3();
+			
+			Expression rhs = this.parsePrecedence3();
+			expr = new BinaryExpr(o,expr,rhs,o.posn);
 		}
+		
+		return expr;
 	}
 	
 	// Precedence3		-> Precedence4 (('<=' || '<' || '>' || '>=')) Precedence4)*
-	private void parsePrecedence3() {
-		this.parsePrecedence4();
+	private Expression parsePrecedence3() {
+		Expression expr = this.parsePrecedence4();
 		
 		while (currentToken.getType() == TokenType.LESS_THAN_OR_EQUAL_TO ||
 				currentToken.getType() == TokenType.LESS_THAN ||
 				currentToken.getType() == TokenType.GREATER_THAN ||
 				currentToken.getType() == TokenType.GREATHER_THAN_OR_EQUAL_TO) {
+			Operator o = new Operator(this.currentToken);
 			this.acceptNext();
-			this.parsePrecedence4();
+			Expression rhs = this.parsePrecedence4();
+			expr = new BinaryExpr(o,expr,rhs,o.posn);
 		}
+		
+		return expr; 
 	}
 	
 	// Precedence4		-> Precedence5 (('+' || '-') Precedence5)*
-	private void parsePrecedence4() {
-		this.parsePrecedence5();
+	private Expression parsePrecedence4() {
+		Expression expr =this.parsePrecedence5();
 		while (currentToken.getType() == TokenType.ADDITION ||
 				currentToken.getType() == TokenType.SUBTRACTION) {
+			Operator o = new Operator(this.currentToken);
 			this.acceptNext();
-			this.parsePrecedence5();
+			Expression rhs = this.parsePrecedence5();
+			expr = new BinaryExpr(o,expr,rhs,o.posn);
 		}
 		
+		return expr;
 		// Intersting debate between my way and class way- does either matter
 		/*
 		this.parsePrecedence5();
@@ -376,25 +395,34 @@ public class Parser {
 	}
 	
 	// Precedence5		-> Precedence6 (('*' || '/') Precedence6)*
-	private void parsePrecedence5() {
-		this.parsePrecedence6();
+	private Expression parsePrecedence5() {
+		Expression expr = this.parsePrecedence6();
 		while (currentToken.getType() == TokenType.MULTIPLICATION ||
 				currentToken.getType() == TokenType.DIVISION) {
+			Operator o = new Operator(this.currentToken);
 			this.acceptNext();
-			this.parsePrecedence6();
+			Expression rhs = this.parsePrecedence6();
+			// TODO, do we left nest? which position to use?
+			expr = new BinaryExpr(o, expr, rhs, o.posn);
 		}
+		
+		return expr;
 	}
 	
+
+	
 	// Precedence6		-> (('-' || '!') Precedence6) | Final
-	private void parsePrecedence6() {
+	private Expression parsePrecedence6() {
+		SourcePosition pos = this.currentToken.getPosition();
 		switch (this.currentToken.getType()) {
 		case SUBTRACTION:
 		case LOGICAL_NEGATION:
+			Operator operator = new Operator(this.currentToken);
 			acceptNext();
-			this.parsePrecedence6();
-			break;
+			Expression e = this.parsePrecedence6();
+			return new UnaryExpr(operator, e, pos);
 		default:
-			this.parsePrecedenceFinal();
+			return this.parsePrecedenceFinal();
 		}
 	}
 	
@@ -410,69 +438,91 @@ public class Parser {
 	 *  (8) | new (id() | int[Expression] | id[Expression])
 	 */
 	// Final			-> num | '(' Expression ')'
-	private void parsePrecedenceFinal() {
+	private Expression parsePrecedenceFinal() {
+		SourcePosition pos = this.currentToken.getPosition();
 		switch (this.currentToken.getType()) {
 		case TRUE: // (6)
+			Terminal tTerminal = new BooleanLiteral(this.currentToken);
 			accept(TokenType.TRUE, "Internal Parsing Error");
-			break;
+			return new LiteralExpr(tTerminal, pos);
 		case FALSE: // (7)
+			Terminal fTerminal = new BooleanLiteral(this.currentToken);
 			accept(TokenType.FALSE, "Internal Parsing Error");
-			break;
+			return new LiteralExpr(fTerminal, pos);
 		case NUMBER_LITERAL: // (5)
-			this.acceptNext();
-			break;
+			Terminal nTerminal = new IntLiteral(this.currentToken);
+			accept(TokenType.NUMBER_LITERAL, "Internal Parsing Error");
+			return new LiteralExpr(nTerminal, pos);
 		case IDENTIFIER:
 		case THIS:
-			parseReference(); // (1)
+			Reference ref = parseReference(); // (1)
 			if (currentToken.getType() == TokenType.OPEN_BRACKET) { // (2)
+				// Parsing: Reference [ Expression ]
 				acceptNext();
-				parseExpression();
+				Expression e = parseExpression();
 				accept(TokenType.CLOSE_BRACKET, "Expected ']' following '['");
+				return new IxExpr(ref, e, pos);
 			} else if (currentToken.getType() == TokenType.OPEN_PAREN) { // (3)
+				// Parsing: Reference(ArgumentList?)
 				acceptNext();
+				ExprList argList = new ExprList();
 				if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-					parseArguementList();
+					argList = parseArguementList();
 				}
 				accept(TokenType.CLOSE_PAREN, "Expected ')' following '('");
+				return new CallExpr(ref, argList, pos);
 			}
-			break;
+			return new RefExpr(ref, pos);
 		case NEW: // (8)
 			accept(TokenType.NEW, "Internal  Parsing Error");
 			if (currentToken.getType() == TokenType.INT) {
+				TypeDenoter elementType = new BaseType(TypeKind.INT, this.currentToken.getPosition());
 				accept(TokenType.INT, "Internal  Parsing Error");
+				
 				accept(TokenType.OPEN_BRACKET, "Expected '['");
-				parseExpression();
+				Expression e = parseExpression();
 				accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+				
+				return new NewArrayExpr(elementType, e, pos);
 			} else {
-				accept(TokenType.IDENTIFIER, "Expected identifier following 'new'");
+				Identifier id = this.parseIdentifier("Expected identifier following 'new'");
 				if (currentToken.getType() == TokenType.OPEN_PAREN) {
 					accept(TokenType.OPEN_PAREN, "Internal  Parsing Error");
 					accept(TokenType.CLOSE_PAREN, "Expected ')'");
+					ClassType ct = new ClassType(id, id.posn); // TODO correct posn?
+					return new NewObjectExpr(ct, pos);
 				} else {
 					accept(TokenType.OPEN_BRACKET, "Expected '['");
-					parseExpression();
+					Expression e = parseExpression();
 					accept(TokenType.CLOSE_BRACKET, "Expected ']'");
+					TypeDenoter elementType = new ClassType(id, id.posn); // TODO which posn
+					return new NewArrayExpr(elementType, e, pos);
+					// TODO later refactoring to combine above code and remove duplication
 				}
 			}
-			break;
 		case OPEN_PAREN: // (4)
 			accept(TokenType.OPEN_PAREN, "Expected '('");
-			this.parseExpression();
+			Expression e = this.parseExpression();
 			accept(TokenType.CLOSE_PAREN, "Expected ')'");
-			break;
+			return e; // TODO is this correct?
 		default:
 			ErrorReporter.get().reportError("<Parser> Failed to parse arithmetic");
 		}
+		return null;
 	}
 
 	// ArgumentList ::= Expression(,Expression)*
-	private void parseArguementList() {
+	private ExprList parseArguementList() {
 		ErrorReporter.get().log("<Parser> Parsing ArgumentList Rule", 3);
-		parseExpression();
+		ExprList l = new ExprList();
+
+		l.add(parseExpression());
 		while (this.currentToken.getType() == TokenType.COMMA) {
 			accept(TokenType.COMMA, "Internal  Parsing Error");
-			parseExpression();
+			l.add(parseExpression());
 		}
+		
+		return l;
 	}
 
 	// Type ::= int | boolean | id | (int|id)[] 
