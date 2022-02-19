@@ -197,101 +197,137 @@ public class Parser {
 	 * (3) | while ( Expression ) Statement
 	 */
 	private Statement parseStatement() {
+		SourcePosition pos = this.currentToken.getPosition();
 		ErrorReporter.get().log("<Parser> Parsing Statement Rule", 3);
+		Reference ref = null;
 		switch (this.currentToken.getType()) {
 			case RETURN: // (1)
 				accept(TokenType.RETURN, "Internal Parsing Error");
+				Expression returnExpr = null; // TODO, should return null if no return statement?
+				
+				// Check if there is a return statement
 				if (currentToken.getType() != TokenType.SEMICOLON) {
-					parseExpression();
+					returnExpr = parseExpression();
 				}
+				
 				accept(TokenType.SEMICOLON, "Expected ';' after return statement.");
-				break;
+				return new ReturnStmt(returnExpr, pos);
 			case IF: // (2)
 				accept(TokenType.IF, "Internal  Parsing Error");
 				accept(TokenType.OPEN_PAREN, "Expected '('");
-				parseExpression();
+				Expression condition = parseExpression();
 				accept(TokenType.CLOSE_PAREN, "Expected ')");
-				parseStatement();
+				Statement then = parseStatement();
 				if (this.currentToken.getType() == TokenType.ELSE) {
 					accept(TokenType.ELSE, "Internal  Parsing Error");
-					parseStatement(); // TODO check if this can cause stack overflow or in expression
+					Statement elseStmt = parseStatement(); // TODO check if this can cause stack overflow or in expression
+					return new IfStmt(condition, then, elseStmt, pos);
 				}
-				break;
+				return new IfStmt(condition, then, pos);
 			case WHILE: // (3)
 				accept(TokenType.WHILE, "Internal  Parsing Error");
 				accept(TokenType.OPEN_PAREN, "Expected '('");
-				parseExpression();
+				Expression whileCondition = parseExpression();
 				accept(TokenType.CLOSE_PAREN, "Expected ')");
-				parseStatement();
-				break;
+				Statement whileBody = parseStatement();
+				return new WhileStmt(whileCondition, whileBody, pos);
 			case OPEN_CURLY: // (4)
 				accept(TokenType.OPEN_CURLY, "Internal  Parsing Error");
+				StatementList sl = new StatementList();
 				while (currentToken.getType() != TokenType.CLOSE_CURLY) {
-					parseStatement();
+					sl.add(parseStatement());
 				}
 				accept(TokenType.CLOSE_CURLY, "Expected '}'");
-				break;
+				return new BlockStmt(sl, pos);
 			case IDENTIFIER:
 				// Not sure if Type or reference
-				accept(TokenType.IDENTIFIER, "Internal Parsing Error");
+				Identifier iden = this.parseIdentifier("Internal Parsing Error");
 				if (this.currentToken.getType()  == TokenType.OPEN_BRACKET) {
 					// Either (int|id)[] or Reference[expression]
 					accept(TokenType.OPEN_BRACKET,  "Internal Parsing Error");
 					if  (this.currentToken.getType() == TokenType.CLOSE_BRACKET) {
 						// Confirmed (int|id)[] => Finish and exit
 						accept(TokenType.CLOSE_BRACKET, "Internal Parsing Error");
-						this.parseIDAssignmentExpression();
-						break;
+						Identifier varName = this.parseIdentifier("Expected name for local var declaration");
+						accept(TokenType.ASSIGNMENT, "Expected '='");
+						Expression value = parseExpression();
+						accept(TokenType.SEMICOLON, "Expected ';'");				
+						
+						TypeDenoter type = new ArrayType(new ClassType(iden, pos),pos); // TODO figure out pos
+						VarDecl dec = new VarDecl(type, iden.spelling, pos);
+						return new VarDeclStmt(dec, value, pos);
 					} else  {
 						// Confirmed  Reference[expression] = Expression; => Finish and  Exit
-						parseExpression();
+						Expression indexEx = parseExpression();
 						accept(TokenType.CLOSE_BRACKET, "Expected  ']'");
 						accept(TokenType.ASSIGNMENT, "Expected = ");
-						parseExpression();
+						Expression rhsExpr = parseExpression();
 						accept(TokenType.SEMICOLON, "Expected ';'");
-						break;
+						
+						return new IxAssignStmt(new IdRef(iden, iden.posn), indexEx, rhsExpr, pos);
 					}
 				} else if  (this.currentToken.getType() == TokenType.DOT) {
 					// Confirmed Reference, finish parsing reference and fall through
+					Reference r = new IdRef(iden, iden.posn);
 					while (this.currentToken.getType() == TokenType.DOT) {
 						acceptNext();
-						accept(TokenType.IDENTIFIER, "Expected Identifier after '.'");
+						Identifier idf = this.parseIdentifier("Expected Identifier after '.'");
+						r = new QualRef(r,idf,idf.posn);
 					}
+					ref = r;
 				} else if (currentToken.getType() ==  TokenType.IDENTIFIER)  {
 						// Confirmed Type id=Expression; => Parse and exit
-						this.parseIDAssignmentExpression();
-						break;
+						Identifier varName = this.parseIdentifier("Expected Identifier in local var declaration statement");
+						accept(TokenType.ASSIGNMENT, "Expected '='");
+						Expression varValue = parseExpression();
+						accept(TokenType.SEMICOLON, "Expected ';'");				
+						VarDecl dec = new VarDecl(new ClassType(iden, iden.posn), varName.spelling, pos);
+						return new VarDeclStmt(dec, varValue, pos);
 				} 
+				if (ref == null) {
+					ref = new IdRef(iden, iden.posn);
+				}
 				 
 			case THIS:
 				if (currentToken.getType() == TokenType.THIS) {
-					parseReference(); // catch fall through
+					if (ref != null) {
+						ErrorReporter.get().reportError("Cannot have this following identifier");
+					}
+					ref = parseReference(); // catch fall through
 				}
+				System.out.println(ref == null);
 				if (currentToken.getType() == TokenType.ASSIGNMENT) {
 					acceptNext();
-					parseExpression();
+					Expression expr = parseExpression();
 					accept(TokenType.SEMICOLON, "Expected ';'");
+					return new AssignStmt(ref, expr, pos);
 				} else if (currentToken.getType() == TokenType.OPEN_BRACKET) {
 					acceptNext();
-					parseExpression();
+					Expression index = parseExpression();
 					accept(TokenType.CLOSE_BRACKET, "Expected ']'");
 					accept(TokenType.ASSIGNMENT, "Expected '='");
-					parseExpression();
+					Expression value = parseExpression();
 					accept(TokenType.SEMICOLON, "Expected ';'");
+					return new IxAssignStmt(ref, index, value, pos);
 				} else {
+					ExprList funcallParams = new ExprList();
 					accept(TokenType.OPEN_PAREN, "Expected '('");
 					if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-						parseArguementList();
+						funcallParams = parseArguementList();
 					}
 					accept(TokenType.CLOSE_PAREN, "Expected ')'");
-					accept(TokenType.SEMICOLON, "Expected ')'");					
+					accept(TokenType.SEMICOLON, "Expected ')'");
+					return new CallStmt(ref, funcallParams, pos);
 				}
-				break;
 			case INT:
 			case BOOLEAN:
-				parseType();
-				this.parseIDAssignmentExpression();
-				break;
+				TypeDenoter t = parseType();
+				Identifier id = this.parseIdentifier("Expected Identifier in local var declaration statement");
+				accept(TokenType.ASSIGNMENT, "Expected '='");
+				Expression value = parseExpression();
+				accept(TokenType.SEMICOLON, "Expected ';'");				
+				VarDecl dec = new VarDecl(t, id.spelling, pos);
+				return new VarDeclStmt(dec, value, pos);
 			default:
 				ErrorReporter.get().reportError("<Parser> Failed to parse statement" + this.currentToken);		
 		}	
