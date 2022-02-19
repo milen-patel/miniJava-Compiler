@@ -66,29 +66,13 @@ public class Parser {
 		// If we find void keyword, then it must be a method declaration
 		if (currentToken.getType() == TokenType.VOID) { 
 			memberType = new BaseType(TypeKind.VOID, this.currentToken.getPosition()); // TODO do we used basetype for void
-			iden = this.parseIdentifier("Expected identifier for method name");
-			
-			// Parse the parameter list
-			accept(TokenType.OPEN_PAREN, "Expected '(' in method declaration");
-			if (currentToken.getType() != TokenType.CLOSE_PAREN) {
-				params = parseParameterList(); 
-			}
-			accept(TokenType.CLOSE_PAREN, "Expected ')' in method declaration");
-			
-			// Parse the method body
-			accept(TokenType.OPEN_CURLY, "Expected '{'");
-			while (this.currentToken.getType() != TokenType.CLOSE_CURLY) {
-				sl.add(parseStatement());
-			}
-			accept(TokenType.CLOSE_CURLY, "Expected '}' to finish class declaration. "); // TODO repeated code below
-			
-			// TODO, do we use the same position for both here?
-			return new MethodDecl(new FieldDecl(isPrivate, isStatic, memberType, iden.spelling, pos),params, sl, pos);
+			accept(TokenType.VOID, "Internal Parsing Error");
+		} else {
+			memberType = parseType();
 		}
 	
-		memberType = parseType();
 		iden = this.parseIdentifier("Expected identifier in field/method declaration");
-	
+		
 		// If we find a semicolon, then it must be a field declaration
 		if (currentToken.getType() == TokenType.SEMICOLON) {
 			accept(TokenType.SEMICOLON, "Internal  Parsing Error");
