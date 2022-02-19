@@ -131,18 +131,27 @@ public class Parser {
 	 * =starter[(id | this)]
 	 * ={id, this}
 	 */
-	private void parseReference() {
+	private Reference parseReference() {
 		ErrorReporter.get().log("<Parser> Parsing Reference Rule", 3);
+		Reference r = null;
+		
 		if (this.currentToken.getType() == TokenType.THIS) {
+			r = new ThisRef(this.currentToken.getPosition());
 			acceptNext();
 		} else {
-			accept(TokenType.IDENTIFIER, "Expected Identifier in reference parsing");
+			SourcePosition pos = this.currentToken.getPosition(); // TODO figure out if right pos
+			Identifier id = this.parseIdentifier("Expected Identifier in reference parsing");
+			r = new IdRef(id, pos);
 		}
 		
 		while (this.currentToken.getType() == TokenType.DOT) {
+			// TODO figure out source position, figure out if tree should be left developed
 			acceptNext();
-			accept(TokenType.IDENTIFIER, "Expected Identifier after '.'");
+			Identifier id = this.parseIdentifier("Expected Identifier after '.'");
+			r = new QualRef(r, id, r.posn);
 		}
+		
+		return r; // TODO test this method
 	}
 
 	/*
