@@ -235,6 +235,9 @@ public class Scanner {
 		if (this.currentChar == '/') {
 			while (this.currentChar != '\n' && this.currentChar != '\r') {
 				this.pullNextChar();
+				if (this.input.eofEncountered()) {
+					return TokenType.COMMENT;
+				}
 			}
 			return TokenType.COMMENT;
 		}
