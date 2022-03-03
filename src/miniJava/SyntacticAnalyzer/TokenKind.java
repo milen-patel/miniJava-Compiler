@@ -4,7 +4,7 @@ package miniJava.SyntacticAnalyzer;
  * Enumeration representing all of the Token Types for the miniJava compiler.
  * Each Token instance has a TokenType property.
  */
-public enum TokenType {
+public enum TokenKind {
 	// Reserved Words
 	CLASS,
 	VOID,

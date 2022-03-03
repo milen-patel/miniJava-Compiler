@@ -1,36 +1,36 @@
 package miniJava.SyntacticAnalyzer;
 
 public class Token {
-	private TokenType type;
-	private String spelling;
-	private SourcePosition position;
+	public TokenKind kind;
+	public String spelling;
+	public SourcePosition posn;
 	
-	public Token(TokenType type, String spelling, int startPos, int endPos) {
-		this.type = type;
+	public Token(TokenKind type, String spelling, int startPos, int endPos) {
+		this.kind = type;
 		this.spelling = spelling;
-		this.position = new SourcePosition(startPos, endPos);
+		this.posn = new SourcePosition(startPos, endPos);
 	}
 	
-	public Token(TokenType type, String spelling, SourcePosition tokenPosition) {
-		this.type = type;
+	public Token(TokenKind type, String spelling, SourcePosition tokenPosition) {
+		this.kind = type;
 		this.spelling = spelling;
-		this.position = tokenPosition;
+		this.posn = tokenPosition;
 	}
 	
 	public String toString() {
-		return "{ Type: " + this.type + ", Spelling: \"" + this.spelling + "\" [" + position.getStartPos() + ", " + position.getEndPos() +"] }";
+		return "{ Type: " + this.kind + ", Spelling: \"" + this.spelling + "\" [" + posn.getStartPos() + ", " + posn.getEndPos() +"] }";
 	}
 	
-	public TokenType getType() {
-		return this.type;
+	public TokenKind getType() {
+		return this.kind;
 	}
 	
 	public int getStartPosition() {
-		return this.position.getStartPos();
+		return this.posn.getStartPos();
 	}
 	
 	public SourcePosition getPosition() {
-		return this.position;
+		return this.posn;
 	}
 	
 	public String getSpelling() {

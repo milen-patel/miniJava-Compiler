@@ -30,10 +30,10 @@ public class Scanner {
 		this.currentTokenSpelling = new StringBuffer();
 		int startPos = this.input.getScannerPosition();
 
-		TokenType t = this.scanNextToken();
+		TokenKind t = this.scanNextToken();
 		SourcePosition pos = new SourcePosition(startPos, input.getScannerPosition());
 		Token token = new Token(t, this.currentTokenSpelling.toString(), pos);
-		if (token.getType() == TokenType.COMMENT) {
+		if (token.getType() == TokenKind.COMMENT) {
 			return scan(); // TODO: is this safe
 		}
 		ErrorReporter.get().log("<Scanner> Done pulling token. Result: " + token.toString(), 1);
@@ -44,48 +44,48 @@ public class Scanner {
 	 * Fills the StringBuffer with the spelling of the next available token and
 	 * returns the type of the token.
 	 */
-	private TokenType scanNextToken() {
+	private TokenKind scanNextToken() {
 		ErrorReporter.get().log("<Scanner> scanNextToken called:" +this.currentTokenSpelling.toString(), 0);
 		if (this.isCurrentCharNumeric()) {
 			// Found an integer literal
 			this.scanNumber();
-			return TokenType.NUMBER_LITERAL;
+			return TokenKind.NUMBER_LITERAL;
 		} else if (this.currentChar == ';') {
 			this.pullNextChar();
-			return TokenType.SEMICOLON;
+			return TokenKind.SEMICOLON;
 		} else if (this.currentChar == '.') {
 			this.pullNextChar();
-			return TokenType.DOT;
+			return TokenKind.DOT;
 		} else if (this.currentChar == '(') {
 			this.pullNextChar();
-			return TokenType.OPEN_PAREN;
+			return TokenKind.OPEN_PAREN;
 		} else if (this.currentChar == ')') {
 			this.pullNextChar();
-			return TokenType.CLOSE_PAREN;
+			return TokenKind.CLOSE_PAREN;
 		} else if (this.currentChar == '{') {
 			this.pullNextChar();
-			return TokenType.OPEN_CURLY;
+			return TokenKind.OPEN_CURLY;
 		} else if (this.currentChar == '}') {
 			this.pullNextChar();
-			return TokenType.CLOSE_CURLY;
+			return TokenKind.CLOSE_CURLY;
 		} else if (this.currentChar == '[') {
 			this.pullNextChar();
-			return TokenType.OPEN_BRACKET;
+			return TokenKind.OPEN_BRACKET;
 		} else if (this.currentChar == ']') {
 			this.pullNextChar();
-			return TokenType.CLOSE_BRACKET;
+			return TokenKind.CLOSE_BRACKET;
 		} else if (this.currentChar == ',') {
 			this.pullNextChar();
-			return TokenType.COMMA;
+			return TokenKind.COMMA;
 		} else if (this.currentChar == '+') {
 			this.pullNextChar();
-			return TokenType.ADDITION;
+			return TokenKind.ADDITION;
 		} else if (this.currentChar == '-') {
 			this.pullNextChar();
-			return TokenType.SUBTRACTION;
+			return TokenKind.SUBTRACTION;
 		} else if (this.currentChar == '*') {
 			this.pullNextChar();
-			return TokenType.MULTIPLICATION;
+			return TokenKind.MULTIPLICATION;
 		} else if (this.currentChar == '/') {
 			return this.handleDivisionOrComment();
 		} else if (this.isLogicalOperatorStart()) {
@@ -99,18 +99,18 @@ public class Scanner {
 			}
 			return this.handleReservedWords(this.currentTokenSpelling.toString());
 		} else if (this.input.eofEncountered()) {
-			return TokenType.EOT;
+			return TokenKind.EOT;
 		}
 
 		ErrorReporter.get().reportError("<Scanner> Invalid Input Stream didn't match any token rule");
-		return TokenType.ERROR;
+		return TokenKind.ERROR;
 	}
 
 	/*
 	 * Parses '&&' and '||', throws an error if the first two characters in stream
 	 * don't match.
 	 */
-	private TokenType parseLogicalOperator() {
+	private TokenKind parseLogicalOperator() {
 		if (!this.isLogicalOperatorStart())
 			ErrorReporter.get().reportError("<Scanner> Internal Scanning Error");
 
@@ -123,17 +123,17 @@ public class Scanner {
 
 		if (this.currentChar == '|') {
 			this.pullNextChar();
-			return TokenType.LOGICAL_OR;
+			return TokenKind.LOGICAL_OR;
 		} else {
 			this.pullNextChar();
-			return TokenType.LOGICAL_AND;
+			return TokenKind.LOGICAL_AND;
 		}
 	}
 
 	/*
 	 * Parses the following: != ! < > == = <= >=
 	 */
-	private TokenType parseRelationalOperatorOrAssignment() {
+	private TokenKind parseRelationalOperatorOrAssignment() {
 		if (!this.isRelationalOperatorOrAssignment())
 			ErrorReporter.get().reportError("<Scanner> Internal Scanning Error");
 
@@ -141,18 +141,18 @@ public class Scanner {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
 				this.pullNextChar();
-				return TokenType.GREATHER_THAN_OR_EQUAL_TO; // >=
+				return TokenKind.GREATHER_THAN_OR_EQUAL_TO; // >=
 			} else {
-				return TokenType.GREATER_THAN; // >
+				return TokenKind.GREATER_THAN; // >
 			}
 		}
 		if (this.currentChar == '<') {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
 				this.pullNextChar();
-				return TokenType.LESS_THAN_OR_EQUAL_TO; // <=
+				return TokenKind.LESS_THAN_OR_EQUAL_TO; // <=
 			} else {
-				return TokenType.LESS_THAN; // <
+				return TokenKind.LESS_THAN; // <
 			}
 		}
 
@@ -160,9 +160,9 @@ public class Scanner {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
 				this.pullNextChar();
-				return TokenType.DOUBLE_EQUALS; // ==
+				return TokenKind.DOUBLE_EQUALS; // ==
 			} else {
-				return TokenType.ASSIGNMENT; // =
+				return TokenKind.ASSIGNMENT; // =
 			}
 		}
 
@@ -170,14 +170,14 @@ public class Scanner {
 			this.pullNextChar();
 			if (this.currentChar == '=') {
 				this.pullNextChar();
-				return TokenType.NOT_EQUAL_TO;
+				return TokenKind.NOT_EQUAL_TO;
 			} else {
-				return TokenType.LOGICAL_NEGATION;
+				return TokenKind.LOGICAL_NEGATION;
 			}
 		}
 
 		ErrorReporter.get().reportError("<Scanner> Internal Scanning Error");
-		return TokenType.ERROR;
+		return TokenKind.ERROR;
 	}
 
 	/*
@@ -185,41 +185,41 @@ public class Scanner {
 	 * reserved java keyword. If so, the token type should be changed accordingly.
 	 * If no reserved words are matched then we have an identifier.
 	 */
-	private TokenType handleReservedWords(String word) {
+	private TokenKind handleReservedWords(String word) {
 		// TODO after PA1 - refactor to HashMap
 		ErrorReporter.get().log("<Scanner> Checking if identifier is a reserved word", 0);
 		if (word.contentEquals("class")) {
-			return TokenType.CLASS;
+			return TokenKind.CLASS;
 		} else if (word.contentEquals("void")) {
-			return TokenType.VOID;
+			return TokenKind.VOID;
 		} else if (word.contentEquals("public")) {
-			return TokenType.PUBLIC;
+			return TokenKind.PUBLIC;
 		} else if (word.contentEquals("private")) {
-			return TokenType.PRIVATE;
+			return TokenKind.PRIVATE;
 		} else if (word.contentEquals("static")) {
-			return TokenType.STATIC;
+			return TokenKind.STATIC;
 		} else if (word.contentEquals("int")) {
-			return TokenType.INT;
+			return TokenKind.INT;
 		} else if (word.contentEquals("boolean")) {
-			return TokenType.BOOLEAN;
+			return TokenKind.BOOLEAN;
 		} else if (word.contentEquals("this")) {
-			return TokenType.THIS;
+			return TokenKind.THIS;
 		} else if (word.contentEquals("return")) {
-			return TokenType.RETURN;
+			return TokenKind.RETURN;
 		} else if (word.contentEquals("if")) {
-			return TokenType.IF;
+			return TokenKind.IF;
 		} else if (word.contentEquals("while")) {
-			return TokenType.WHILE;
+			return TokenKind.WHILE;
 		} else if (word.contentEquals("else")) {
-			return TokenType.ELSE;
+			return TokenKind.ELSE;
 		} else if (word.contentEquals("true")) {
-			return TokenType.TRUE;
+			return TokenKind.TRUE;
 		} else if (word.contentEquals("false")) {
-			return TokenType.FALSE;
+			return TokenKind.FALSE;
 		} else if (word.contentEquals("new")) {
-			return TokenType.NEW;
+			return TokenKind.NEW;
 		} else {
-			return TokenType.IDENTIFIER;
+			return TokenKind.IDENTIFIER;
 		}
 	}
 
@@ -227,7 +227,7 @@ public class Scanner {
 	 * If we encounter a '/' symbol, it may either be a division operand or the
 	 * start of a comment. This function will return the correct token Type
 	 */
-	private TokenType handleDivisionOrComment() {
+	private TokenKind handleDivisionOrComment() {
 		// Remove the initial slash
 		this.pullNextChar();
 
@@ -236,10 +236,10 @@ public class Scanner {
 			while (this.currentChar != '\n' && this.currentChar != '\r') {
 				this.pullNextChar();
 				if (this.input.eofEncountered()) {
-					return TokenType.COMMENT;
+					return TokenKind.COMMENT;
 				}
 			}
-			return TokenType.COMMENT;
+			return TokenKind.COMMENT;
 		}
 
 		// Option 2: Block Comment '/* ... */'
@@ -251,7 +251,7 @@ public class Scanner {
 					this.pullNextChar();
 					if (this.currentChar == '/') {
 						this.pullNextChar();
-						return TokenType.COMMENT;
+						return TokenKind.COMMENT;
 					}
 
 				} else {
@@ -265,7 +265,7 @@ public class Scanner {
 		}
 
 		// If neither option, then we have a division token
-		return TokenType.DIVISION;
+		return TokenKind.DIVISION;
 	}
 
 	/*

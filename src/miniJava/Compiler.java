@@ -1,7 +1,5 @@
 package miniJava;
 
-import java.io.*;
-
 import miniJava.AbstractSyntaxTrees.AST;
 import miniJava.AbstractSyntaxTrees.ASTDisplay;
 import miniJava.SyntacticAnalyzer.InputReader;
@@ -12,7 +10,7 @@ public class Compiler {
 	public static void main(String[] args) {
 		if (args == null || args.length != 1) {
 			System.out.println("Invalid Program Arguements");
-			System.exit(1);
+			System.exit(3);
 		}
 		if (!args[0].endsWith(".java") && !args[0].endsWith(".mjava"))
 			ErrorReporter.get().reportError("Input file has incorrect extension");
