@@ -153,37 +153,6 @@ public class Parser {
 		
 		return r; // TODO test this method
 	}
-
-	/*
-	 *  Visibility ::= ( public | private )?
-	 *  returns true if private, false otherwise
-	 */
-	private boolean parseVisibility() {
-		ErrorReporter.get().log("<Parser> Parsing Visibility Rule", 3);
-		switch (currentToken.getType()) {
-		case PUBLIC:
-			accept(TokenType.PUBLIC, "Internal Parsing Error");
-			return false;
-		case PRIVATE:
-			accept(TokenType.PRIVATE, "Internal Parsing Error");
-			return true;
-		default:
-			return false;
-		}
-	}
-
-	/*
-	 *  Access ::= static? 
-	 *  Returns true if static, false otherwise
-	 */
-	private boolean parseAccess() {
-		ErrorReporter.get().log("<Parser> Parsing Access Rule", 3);
-		if (currentToken.getType() == TokenType.STATIC) {
-			acceptNext();
-			return true;
-		}
-		return false;
-	}
 	
 	/*
 	 * Statement ::=
@@ -254,7 +223,7 @@ public class Parser {
 						accept(TokenType.SEMICOLON, "Expected ';'");				
 						
 						TypeDenoter type = new ArrayType(new ClassType(iden, pos),pos); // TODO figure out pos
-						VarDecl dec = new VarDecl(type, iden.spelling, pos);
+						VarDecl dec = new VarDecl(type, varName.spelling, pos);
 						return new VarDeclStmt(dec, value, pos);
 					} else  {
 						// Confirmed  Reference[expression] = Expression; => Finish and  Exit
@@ -295,7 +264,6 @@ public class Parser {
 					}
 					ref = parseReference(); // catch fall through
 				}
-				System.out.println(ref == null);
 				if (currentToken.getType() == TokenType.ASSIGNMENT) {
 					acceptNext();
 					Expression expr = parseExpression();
@@ -421,13 +389,6 @@ public class Parser {
 		}
 		
 		return expr;
-		// Intersting debate between my way and class way- does either matter
-		/*
-		this.parsePrecedence5();
-		while (this.currentToken.getType() == TokenType.ADDITION or sub) {
-			this.acceptNext();
-			this.parsePrecedence5();
-		}*/
 	}
 	
 	// Precedence5		-> Precedence6 (('*' || '/') Precedence6)*
@@ -542,51 +503,63 @@ public class Parser {
 			accept(TokenType.CLOSE_PAREN, "Expected ')'");
 			return e; // TODO is this correct?
 		default:
-			ErrorReporter.get().reportError("<Parser> Failed to parse arithmetic");
+			ErrorReporter.get().reportError("<Parser> Failed to parse expression");
 		}
 		return null;
 	}
 
-	// ArgumentList ::= Expression(,Expression)*
+	/*
+	 * ArgumentList ::= Expression (,Expression)*
+	 * Returns an Expression List AST Node corresponding to the formal parameters of a function application.
+	 */
 	private ExprList parseArguementList() {
 		ErrorReporter.get().log("<Parser> Parsing ArgumentList Rule", 3);
-		ExprList l = new ExprList();
-
-		l.add(parseExpression());
+		
+		// Create return list and expect atleast 1 expression
+		ExprList expressionList = new ExprList();
+		expressionList.add(parseExpression());
+		
+		// Keep parsing expressions as the list continues
 		while (this.currentToken.getType() == TokenType.COMMA) {
 			accept(TokenType.COMMA, "Internal  Parsing Error");
-			l.add(parseExpression());
+			expressionList.add(parseExpression());
 		}
 		
-		return l;
+		return expressionList;
 	}
 
-	// Type ::= int | boolean | id | (int|id)[] 
+	/*
+	 *  Type ::= int | boolean | id | (int|id)[] 
+	 *  Returns a TypeDenoter instance correctly identifying the parsed type.
+	 */
 	private TypeDenoter parseType() {
 		ErrorReporter.get().log("<Parser> Parsing Type Rule", 3);
+		
+		// Grab the starting position
+		SourcePosition pos = this.currentToken.getPosition();
+		
 		switch (this.currentToken.getType()) {
 			case INT:
-				SourcePosition intPos = this.currentToken.getPosition();
 				accept(TokenType.INT, "Internal Parsing Error");
-				BaseType intDef = new BaseType(TypeKind.INT, intPos);
+				BaseType intDef = new BaseType(TypeKind.INT, pos);
 				
+				// Check if we have a int or an int[]
 				if (this.removeBrackets()) {
 					// TODO do we use the same pos in both arguements or what? whhen is typekind array used? same for below
-					return new ArrayType(intDef, intPos);
+					return new ArrayType(intDef, pos);
 				} else {
 					return intDef;
 				}
 			case BOOLEAN:
-				SourcePosition boolPos = this.currentToken.getPosition();
 				accept(TokenType.BOOLEAN, "Internal Parsing Error");
-				return new BaseType(TypeKind.BOOLEAN, boolPos);
+				return new BaseType(TypeKind.BOOLEAN, pos);
 			case IDENTIFIER:
-				SourcePosition idPos = this.currentToken.getPosition();
 				Identifier cn = this.parseIdentifier("Internal Parsing Error");
-				ClassType ct = new ClassType(cn, idPos);
+				ClassType ct = new ClassType(cn, pos); 
 				
+				// Check if we have a Object or an array of Object type
 				if (this.removeBrackets()) {
-					return new ArrayType(ct, idPos);
+					return new ArrayType(ct, pos);
 				} else {
 					return ct;
 				}
@@ -597,7 +570,38 @@ public class Parser {
 	}
 	
 	/*
-	 * Parses an identifiier and returns an Identifier AST node.
+	 *  Visibility ::= ( public | private )?
+	 *  returns true if private, false otherwise
+	 */
+	private boolean parseVisibility() {
+		ErrorReporter.get().log("<Parser> Parsing Visibility Rule", 3);
+		switch (currentToken.getType()) {
+		case PUBLIC:
+			accept(TokenType.PUBLIC, "Internal Parsing Error");
+			return false;
+		case PRIVATE:
+			accept(TokenType.PRIVATE, "Internal Parsing Error");
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	/*
+	 *  Access ::= static? 
+	 *  Returns true if static, false otherwise
+	 */
+	private boolean parseAccess() {
+		ErrorReporter.get().log("<Parser> Parsing Access Rule", 3);
+		if (currentToken.getType() == TokenType.STATIC) {
+			acceptNext();
+			return true;
+		}
+		return false;
+	}
+	
+	/*
+	 * Parses an identifier and returns an Identifier AST node.
 	 */
 	private Identifier parseIdentifier(String reason) {
 		Token id = this.currentToken;
