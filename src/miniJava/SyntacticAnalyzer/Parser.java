@@ -67,8 +67,24 @@ public class Parser {
 		if (currentToken.getType() == TokenKind.VOID) { 
 			memberType = new BaseType(TypeKind.VOID, this.currentToken.getPosition()); // TODO do we used basetype for void
 			accept(TokenKind.VOID, "Internal Parsing Error");
+			// Must be a method, parse parameter list
+			accept(TokenKind.OPEN_PAREN, "Expected '('");
+			if (currentToken.getType() != TokenKind.CLOSE_PAREN) {
+				params = parseParameterList();
+			}
+			accept(TokenKind.CLOSE_PAREN, "Expected ')'");
+						
+			// Parse method body
+			accept(TokenKind.OPEN_CURLY, "Expected '{'");
+			while (this.currentToken.getType() != TokenKind.CLOSE_CURLY) {
+				sl.add(parseStatement());
+			}
+			accept(TokenKind.CLOSE_CURLY, "Expected '}' to finish class declaration. "); 
+						
+			return new MethodDecl(new FieldDecl(isPrivate, isStatic, memberType, iden.spelling, pos),params, sl, pos);
 		} else {
 			memberType = parseType();
+			
 		}
 	
 		iden = this.parseIdentifier("Expected identifier in field/method declaration");
