@@ -19,10 +19,13 @@ public class Compiler {
 			InputReader reader = new InputReader(args[0]);
 			Scanner scnr = new Scanner(reader);
 			Parser p = new Parser(scnr);
+			System.out.println("Syntactic Analysis...");
 			AST tree = p.parseProgram();
+			System.out.println("Syntactic Analysis Complete");
 			
-			ASTDisplay.showPosition = false;
+			ASTDisplay.showPosition = false;			
 			ASTDisplay display = new ASTDisplay();
+			System.out.println("Valid miniJava program");
 			display.showTree(tree);
 			
 			ErrorReporter.get().endWithSuccess();

@@ -21,7 +21,7 @@ public class InputReader {
 			this.fileInputStream = new FileInputStream(fileName);
 		} catch (FileNotFoundException e) {
 			System.out.println("Unable to open input file.");
-			System.exit(1);
+			System.exit(3);
 		}
 
 		this.eofEncountered = false;
