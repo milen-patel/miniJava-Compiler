@@ -12,6 +12,7 @@ class A {
 	}
 }
 class NULL {}
+class A {}
 
 
 /*
