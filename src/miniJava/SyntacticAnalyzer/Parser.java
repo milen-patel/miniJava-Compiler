@@ -67,6 +67,7 @@ public class Parser {
 		if (currentToken.getType() == TokenKind.VOID) { 
 			memberType = new BaseType(TypeKind.VOID, this.currentToken.getPosition()); // TODO do we used basetype for void
 			accept(TokenKind.VOID, "Internal Parsing Error");
+			iden = this.parseIdentifier("Expected identifier in field/method declaration");
 			// Must be a method, parse parameter list
 			accept(TokenKind.OPEN_PAREN, "Expected '('");
 			if (currentToken.getType() != TokenKind.CLOSE_PAREN) {
