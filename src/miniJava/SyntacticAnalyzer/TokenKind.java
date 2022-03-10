@@ -21,6 +21,7 @@ public enum TokenKind {
 	TRUE,
 	FALSE,
 	NEW,
+	NULL,
 	
 	// Syntax
 	OPEN_CURLY, // {

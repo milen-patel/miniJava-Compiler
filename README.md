@@ -1,4 +1,5 @@
-is it okay that i changed Terminal.java AST
+added AST visitor and display for NullLiteral
+Added NullLiteral class to AST package
 
 # miniJava-Compiler
 A compiler for miniJava
@@ -20,6 +21,7 @@ Final			-> num |
 			Reference(ArguementList?) |
 			true | 
 			false | 
+			null |
 			new (id() | int[Expression] | id[Expression])
 ```
 

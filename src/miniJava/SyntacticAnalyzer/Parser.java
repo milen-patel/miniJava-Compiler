@@ -455,6 +455,10 @@ public class Parser {
 	private Expression parsePrecedenceFinal() {
 		SourcePosition pos = this.currentToken.getPosition();
 		switch (this.currentToken.getType()) {
+		case NULL:
+			Terminal nullTerminal = new NullLiteral(this.currentToken);
+			accept(TokenKind.NULL, "Internal Parsing Error");
+			return new LiteralExpr(nullTerminal, pos);
 		case TRUE: // (6)
 			Terminal tTerminal = new BooleanLiteral(this.currentToken);
 			accept(TokenKind.TRUE, "Internal Parsing Error");

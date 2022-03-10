@@ -218,6 +218,8 @@ public class Scanner {
 			return TokenKind.FALSE;
 		} else if (word.contentEquals("new")) {
 			return TokenKind.NEW;
+		} else if (word.contentEquals("null")) {
+			return TokenKind.NULL;
 		} else {
 			return TokenKind.IDENTIFIER;
 		}
