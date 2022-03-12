@@ -23,7 +23,7 @@ public class Parser {
 		}
 		accept(TokenKind.EOT, "Expected EOT after series of class declarations");
 		SourcePosition endPos = this.currentToken.getPosition(); // TODO ask about position issue
-		Package pack = new Package(classes, new SourcePosition(startPos.getStartPos(), endPos.getEndPos()));
+		Package pack = new Package(classes, new SourcePosition(startPos.getStartPos(), endPos.getEndPos(), startPos.getLineNumber()));
 		return pack;
 	}
 
@@ -47,7 +47,7 @@ public class Parser {
 			}
 		}
 		accept(TokenKind.CLOSE_CURLY, "Expected '}' at end of class body");
-		SourcePosition pos = new SourcePosition(startPos.getStartPos(), this.currentToken.getPosition().getStartPos());
+		SourcePosition pos = new SourcePosition(startPos.getStartPos(), this.currentToken.getPosition().getStartPos(), startPos.getLineNumber());
 		return new ClassDecl(className.spelling, fields, methods, pos);
 	}
 

@@ -24,11 +24,11 @@ public class Compiler {
 			Package tree = p.parseProgram();
 			System.out.println("Syntactic Analysis Complete");
 			
-			ASTDisplay.showPosition = false;			
-			//ASTDisplay display = new ASTDisplay();
+			ASTDisplay.showPosition = true;			
+			ASTDisplay display = new ASTDisplay();
 			System.out.println("Valid miniJava program");
-			//display.showTree(tree);
-			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
+			display.showTree(tree);
+			//(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			ErrorReporter.get().endWithSuccess();
 		} catch (Exception e) {
 			ErrorReporter.get().reportError("Uncaught Exception");

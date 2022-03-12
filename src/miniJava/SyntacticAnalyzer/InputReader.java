@@ -13,6 +13,7 @@ import miniJava.ErrorReporter;
 public class InputReader {
 	private InputStream fileInputStream;
 	private int scannerPos = 0;
+	private int lineNumber = 1;
 	private boolean eofEncountered;
 	private char current;
 
@@ -29,6 +30,10 @@ public class InputReader {
 
 	public int getScannerPosition() {
 		return this.scannerPos;
+	}
+	
+	public int getLineNumber() {
+		return this.lineNumber;
 	}
 
 	public boolean eofEncountered() {
@@ -49,6 +54,9 @@ public class InputReader {
 			if (val == -1) {
 				ErrorReporter.get().log("EOF Encountered in pullNextChar", 1);
 				this.eofEncountered = true;
+			}
+			if (val == '\n') {
+				this.lineNumber++;
 			}
 			this.scannerPos++;
 			return this.current;

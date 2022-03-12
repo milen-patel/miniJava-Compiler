@@ -29,10 +29,12 @@ public class Scanner {
 		this.pullWhiteSpace();
 		this.currentTokenSpelling = new StringBuffer();
 		int startPos = this.input.getScannerPosition();
-
+		int lineNumber = this.input.getLineNumber();
+		
 		TokenKind t = this.scanNextToken();
-		SourcePosition pos = new SourcePosition(startPos, input.getScannerPosition());
+		SourcePosition pos = new SourcePosition(startPos, input.getScannerPosition(), lineNumber);
 		Token token = new Token(t, this.currentTokenSpelling.toString(), pos);
+		
 		if (token.getType() == TokenKind.COMMENT) {
 			return scan(); // TODO: is this safe
 		}

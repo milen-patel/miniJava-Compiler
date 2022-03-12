@@ -5,10 +5,10 @@ public class Token {
 	public String spelling;
 	public SourcePosition posn;
 	
-	public Token(TokenKind type, String spelling, int startPos, int endPos) {
+	public Token(TokenKind type, String spelling, int startPos, int endPos, int lineNumber) {
 		this.kind = type;
 		this.spelling = spelling;
-		this.posn = new SourcePosition(startPos, endPos);
+		this.posn = new SourcePosition(startPos, endPos, lineNumber);
 	}
 	
 	public Token(TokenKind type, String spelling, SourcePosition tokenPosition) {
@@ -18,7 +18,7 @@ public class Token {
 	}
 	
 	public String toString() {
-		return "{ Type: " + this.kind + ", Spelling: \"" + this.spelling + "\" [" + posn.getStartPos() + ", " + posn.getEndPos() +"] }";
+		return "{ Type: " + this.kind + ", Spelling: \"" + this.spelling + " " + posn.toString();
 	}
 	
 	public TokenKind getType() {

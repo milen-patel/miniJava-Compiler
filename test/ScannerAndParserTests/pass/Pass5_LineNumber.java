@@ -1,9 +1,3 @@
-// Null Tests Fail
-//class null {}
-//class A { void f(null o) {} }
-//class A { void f(int null) {} }
-
-// Null Tests Pass
 /*
  *
  */
@@ -43,28 +37,3 @@ class A {
 }
 class NULL {}
 class A {}
-
-
-/*
-class HelloWorld {
-	public int getName() {
-		int x = 5;
-
-		{
-
-			
-			
-			int a = 5;
-		}
-		{
-			{
-				{
-					{
-						int a = 5;
-					}
-				}
-			}
-		}
-	}
-}
-*/
