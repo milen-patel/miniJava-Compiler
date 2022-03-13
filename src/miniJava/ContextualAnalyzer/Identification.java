@@ -9,6 +9,7 @@ import miniJava.AbstractSyntaxTrees.Package;
 
 public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Object, Object> {
 	IdentificationTable table = new IdentificationTable();
+	ClassDecl currentClass = null;
 
 	@Override
 	public Object visitPackage(Package prog, Object arg) {
@@ -34,6 +35,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitClassDecl(ClassDecl cd, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class: " + cd.name, 5);
 		table.openScope();
+		currentClass = cd;
 
 		// Visit all the variable declarations, make sure none are already defined
 		FieldDeclList varDecls = cd.fieldDeclList;
@@ -49,6 +51,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		table.print();
 
 		table.closeScope();
+		currentClass = null;
 		return null;
 	}
 
@@ -271,13 +274,29 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitThisRef(ThisRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		if (currentClass == null) {
+			System.out.println(
+					"*** line " + ref.posn.getLineNumber() + ": Invalid reference to this");
+		}
+		ref.setDeclaration(currentClass);
 		return null;
 	}
 
 	@Override
 	public Object visitIdRef(IdRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		// Check that there is a corresponding declaration
+		if (this.table.find(ref.id.spelling) == null) {
+			System.out.println(
+					"*** line " + ref.posn.getLineNumber() + ": Unknown reference to identifier '" + ref.id.spelling + "'.");
+		}
+		// TODO not sure this will work
+		/*
+		 * class A {
+		 * 	int A;
+		 * 	void f() { int x = A; } how does it know which one to point to
+		 * }
+		 */
+		ref.setDeclaration(table.find(ref.id.spelling));
 		return null;
 	}
 
