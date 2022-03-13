@@ -1,5 +1,8 @@
 package miniJava.ContextualAnalyzer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.*;
 import miniJava.AbstractSyntaxTrees.Package;
@@ -11,35 +14,74 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitPackage(Package prog, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Starting contextual analysis", 5);
 		
-		// Add all classes to the table
-		for (ClassDecl cd: prog.classDeclList) {
-			ErrorReporter.get().log("<Contextual Analysis> Adding class to top-level scope: " + cd.name, 5);
-			table.addEntry(cd);
+		ClassDeclList classes = prog.classDeclList;
+		for (int i = 0; i < classes.size(); i++) {
+			ClassDecl cd = classes.get(i);
+			String cn = cd.name;
+			table.addClass(cn, cd);
 		}
 		
-		// Now visit all the classes
-		for (ClassDecl cd : prog.classDeclList) {
-			cd.visit(this, arg);
+		for (int i = 0; i < classes.size(); i++) {
+			classes.get(i).visit(this, arg);
 		}
-		
 		return null;
 	}
+	int VisitClassDecl = 5;
 
 	@Override
 	public Object visitClassDecl(ClassDecl cd, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class: " + cd.name, 5);
 		table.openScope();
-		// Add all class variables
-		for (FieldDecl fd : cd.fieldDeclList) {
-			table.addEntry(fd);
-		}
 		
-		// Add all class methods
-		for (MethodDecl md : cd.methodDeclList) {
+		// Visit all the variable declarations, make sure none are already defined
+		Map<String, FieldDecl> varDeclarationsTracker = new HashMap<String, FieldDecl>();
+		FieldDeclList varDecls = cd.fieldDeclList;
+		for (int i = 0; i < varDecls.size(); i++) {
+			String vName = varDecls.get(i).name;
+			FieldDecl vDecl = varDecls.get(i);
 			
+			// Check if variable already defined
+			if (varDeclarationsTracker.containsKey(vName)) {
+				System.out.println("*** line " + vDecl.posn.getLineNumber() + ": Duplicate class variable declaration error. Variable " + vName + " has already been defined.");
+			}
+			varDeclarationsTracker.put(vName, vDecl);
 		}
 		
-		ErrorReporter.get().log("<Contextual Analysis> Closing Scope...Done Visiting class: " + cd.name, 5);
+		// Visit each of the variable types
+		for (int i = 0; i < varDecls.size(); i++) {
+			FieldDecl decl = varDecls.get(i);
+			TypeDenoter declType = decl.type;
+			
+			if (declType instanceof ClassType) {
+				// If the variable is of type class, then make sure the class exists
+				ClassType ct = (ClassType) declType;
+				if (!this.table.classesTable.containsKey(ct.className.spelling)) {
+					System.out.println("*** line " + varDecls.get(i).posn.getLineNumber() + ": Unknown class type '" + ct.className.spelling + "'.");
+				}
+				
+				// If the class exists, make the declaration point to the class declaration
+				ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
+			} else if (declType instanceof ArrayType) {
+				System.out.println("Array Type");
+				ArrayType at = (ArrayType) declType;
+				TypeDenoter elementType = at.eltType;
+				
+				// For array variables, we only need to be cautious if the element type is non-basic
+				if (elementType instanceof ClassType) {
+					ClassType ct = (ClassType) elementType;
+					if (!this.table.classesTable.containsKey(ct.className.spelling)) {
+						System.out.println("*** line " + varDecls.get(i).posn.getLineNumber() + ": Unknown array element type '" + ct.className.spelling + "'.");
+					}
+					ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
+				}
+			} else {
+				if (!(declType instanceof BaseType)) {
+					throw new RuntimeException("TODO");
+				}
+			}
+		}
+		
+		
 		table.closeScope();
 		return null;
 	}
@@ -76,7 +118,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitClassType(ClassType type, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting A Class Denoter Type", 5);
 		return null;
 	}
 

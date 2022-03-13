@@ -7,7 +7,7 @@ public class ErrorReporter {
 	public static final int SUCCESS_RETURN_CODE = 0;
 	public static final int FAILURE_RETURN_CODE = 4;
 	private static ErrorReporter reporter;
-	private int reportingMinimum = 5;
+	private int reportingMinimum = 10;
 	
 	/*
 	 * Prints error to user and then ends program with failure code.

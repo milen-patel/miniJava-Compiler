@@ -11,6 +11,10 @@ class A {
 /*
  *
  */
+	B a;
+	NULL b;
+	A[] x;
+	int a;
 	void f() {
 		int
 		   	x 

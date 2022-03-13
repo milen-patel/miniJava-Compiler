@@ -25,12 +25,14 @@ public class Compiler {
 			System.out.println("Syntactic Analysis Complete");
 			
 			ASTDisplay.showPosition = true;			
+			
+			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			ASTDisplay display = new ASTDisplay();
 			System.out.println("Valid miniJava program");
 			display.showTree(tree);
-			//(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			ErrorReporter.get().endWithSuccess();
 		} catch (Exception e) {
+			System.out.println(e);
 			ErrorReporter.get().reportError("Uncaught Exception");
 		} 
 		

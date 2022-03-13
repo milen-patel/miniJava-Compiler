@@ -2,6 +2,7 @@ package miniJava.ContextualAnalyzer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
@@ -10,43 +11,34 @@ import miniJava.AbstractSyntaxTrees.FieldDecl;
 import miniJava.AbstractSyntaxTrees.MethodDecl;
 
 public class IdentificationTable {
-	private LinkedHashMap map;
+	Stack<Map<String, Declaration>> table;
+	Map<String, ClassDecl> classesTable;
 	
 	public IdentificationTable() {
-		map = new LinkedHashMap();
+		this.table = new Stack<Map<String, Declaration>>();
+		this.classesTable = new HashMap<String, ClassDecl>();
+		this.table.push(new HashMap<String, Declaration>());
+	}
+	
+	public void addClass(String className, ClassDecl decl) {
+		// Check if class already exists
+		if (classesTable.containsKey(className)) {
+			System.out.println("*** line " + decl.posn.getLineNumber() + ": Duplicate class error. Class " + className + " has already been defined.");
+			// TODO should we stop here
+		}
+		this.classesTable.put(className, decl);
 	}
 	
 	public void openScope() {
-		LinkedHashMap childScope = new LinkedHashMap(this.map);
-		this.map = childScope;
+		ErrorReporter.get().log("Opening Scope " + (table.size() + 1), 5);
+		this.table.push(new HashMap<String, Declaration>());
 	}
 	
 	public void closeScope() {
-		if (!this.map.hasParentScope()) {
-			// Report Error
+		ErrorReporter.get().log("Closing Scope " + (table.size() + 1), 5);
+		if (this.table.size() <= 1) {
+			ErrorReporter.get().reportError("Shouldn't be closing scope here");
 		}
-		this.map = this.map.getParent();
+		this.table.pop();
 	}
-	
-	public void addEntry(ClassDecl c) {
-		if (this.map.lookup(c.name) != null) {
-			// TODO should duplicate class declarations be caught here?
-			ErrorReporter.get().reportError("Class with name '" + c.name + "' appears  to have been declared twice");
-		}
-		this.map.map.put(c.name, c);
-	}
-	
-	public void addEntry(FieldDecl f) {
-		// Check duplicate, not sure how if var has class name or summ like that
-		this.map.map.put(f.name, f);
-	}
-	
-	public void addEntry(MethodDecl m) {
-		// Check duplicate
-		this.map.map.put(m.name, m);
-	}
-	
-	
-	
-	
 }
