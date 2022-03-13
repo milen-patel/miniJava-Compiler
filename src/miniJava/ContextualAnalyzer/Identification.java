@@ -60,39 +60,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			System.out.println("*** line " + decl.posn.getLineNumber()
 					+ ": Duplicate class field declaration error. Variable " + vName + " has already been defined.");
 		}
+		
+		// Record the variable name
 		table.add(vName, decl);
-		TypeDenoter declType = decl.type;
-
-		if (declType instanceof ClassType) {
-			// If the variable is of type class, then make sure the class exists
-			ClassType ct = (ClassType) declType;
-			if (!this.table.classesTable.containsKey(ct.className.spelling)) {
-				System.out.println("*** line " + decl.posn.getLineNumber() + ": Unknown class type '"
-						+ ct.className.spelling + "'.");
-			}
-
-			// If the class exists, make the declaration point to the class declaration
-			ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
-		} else if (declType instanceof ArrayType) {
-			System.out.println("Array Type");
-			ArrayType at = (ArrayType) declType;
-			TypeDenoter elementType = at.eltType;
-
-			// For array variables, we only need to be cautious if the element type is
-			// non-basic
-			if (elementType instanceof ClassType) {
-				ClassType ct = (ClassType) elementType;
-				if (!this.table.classesTable.containsKey(ct.className.spelling)) {
-					System.out.println("*** line " + decl.posn.getLineNumber() + ": Unknown array element type '"
-							+ ct.className.spelling + "'.");
-				}
-				ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
-			}
-		} else {
-			if (!(declType instanceof BaseType)) {
-				throw new RuntimeException("TODO");
-			}
-		}
+		
+		// Check the type of the variable
+		decl.type.visit(this, arg);
 
 		return arg;
 	}
@@ -103,10 +76,11 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		// Make sure a variable/method with that name hasn't already been defined
 		if (table.containsKeyAtTopScope(md.name)) {
-			System.out.println("*** line " + md.posn.getLineNumber()
-			+ ": Duplicate class field declaration error. Field " + md.name + " has already been defined. oops!");
+			System.out
+					.println("*** line " + md.posn.getLineNumber() + ": Duplicate class field declaration error. Field "
+							+ md.name + " has already been defined. oops!");
 		}
-		
+
 		table.add(md.name, md);
 		return null;
 	}
@@ -125,19 +99,33 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitBaseType(BaseType type, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting Base Type...Nothing to Do", 5);
 		return null;
 	}
 
 	@Override
-	public Object visitClassType(ClassType type, Object arg) {
-		ErrorReporter.get().log("Visiting A Class Denoter Type", 5);
+	public Object visitClassType(ClassType declType, Object arg) {
+		ErrorReporter.get().log("Visiting Class Denoter Type", 5);
+		
+		// Make sure the class exists
+		if (!this.table.classesTable.containsKey(declType.className.spelling)) {
+			System.out.println(
+					"*** line " + declType.posn.getLineNumber() + ": Unknown class type '" + declType.className.spelling + "'.");
+		}
+
+		// If the class exists, make the declaration point to the class declaration
+		declType.className.setDecalaration(table.classesTable.get(declType.className.spelling));
+
 		return null;
 	}
 
 	@Override
-	public Object visitArrayType(ArrayType type, Object arg) {
-		// TODO Auto-generated method stub
+	public Object visitArrayType(ArrayType at, Object arg) {
+		ErrorReporter.get().log("Visiting Array Type", 5);
+
+		TypeDenoter elementType = at.eltType;
+		elementType.visit(this, arg);
+		
 		return null;
 	}
 
