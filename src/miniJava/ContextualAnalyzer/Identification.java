@@ -35,7 +35,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitClassDecl(ClassDecl cd, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class: " + cd.name, 5);
 		table.openScope();
-		currentClass = cd;
+		setClass(cd);
 
 		// Visit all the variable declarations, make sure none are already defined
 		FieldDeclList varDecls = cd.fieldDeclList;
@@ -51,7 +51,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		table.print();
 
 		table.closeScope();
-		currentClass = null;
+		clearClass();
 		return null;
 	}
 
@@ -274,6 +274,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitThisRef(ThisRef ref, Object arg) {
+		ErrorReporter.get().log("Visiting a 'this' reference", 5);
 		if (currentClass == null) {
 			System.out.println(
 					"*** line " + ref.posn.getLineNumber() + ": Invalid reference to this");
@@ -336,4 +337,15 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		return null;
 	}
 
+	// Needed for visitThisRef to identify the current class being visited
+	public void setClass(ClassDecl newClass) {
+		if (currentClass != null) {
+			ErrorReporter.get().log("Shouldn't be setting non-empty class", 9); // TODO
+		}
+		this.currentClass = newClass;
+	}
+	
+	public void clearClass() {
+		this.currentClass = null;
+	}
 }
