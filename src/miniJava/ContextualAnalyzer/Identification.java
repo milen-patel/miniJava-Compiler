@@ -19,6 +19,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			ClassDecl cd = classes.get(i);
 			String cn = cd.name;
 			table.addClass(cn, cd);
+			table.add(cn, cd);
 		}
 		
 		for (int i = 0; i < classes.size(); i++) {
@@ -34,23 +35,24 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		table.openScope();
 		
 		// Visit all the variable declarations, make sure none are already defined
-		Map<String, FieldDecl> varDeclarationsTracker = new HashMap<String, FieldDecl>();
 		FieldDeclList varDecls = cd.fieldDeclList;
 		for (int i = 0; i < varDecls.size(); i++) {
 			String vName = varDecls.get(i).name;
 			FieldDecl vDecl = varDecls.get(i);
 			
 			// Check if variable already defined
-			if (varDeclarationsTracker.containsKey(vName)) {
+			if (table.containsKeyAtTopScope(vName)) {
 				System.out.println("*** line " + vDecl.posn.getLineNumber() + ": Duplicate class variable declaration error. Variable " + vName + " has already been defined.");
 			}
-			varDeclarationsTracker.put(vName, vDecl);
+			table.add(vName, vDecl);
 		}
 		
 		// Visit each of the variable types
 		for (int i = 0; i < varDecls.size(); i++) {
 			varDecls.get(i).visit(this, arg);
 		}
+		
+		// Visit all the method declarations, make sure none are already defined
 		
 		
 		table.closeScope();

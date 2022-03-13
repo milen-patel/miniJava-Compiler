@@ -23,7 +23,8 @@ public class IdentificationTable {
 	public void addClass(String className, ClassDecl decl) {
 		// Check if class already exists
 		if (classesTable.containsKey(className)) {
-			System.out.println("*** line " + decl.posn.getLineNumber() + ": Duplicate class error. Class " + className + " has already been defined.");
+			// This logic is being replaced in the add function
+			//System.out.println("*** line " + decl.posn.getLineNumber() + ": Duplicate class error. Class " + className + " has already been defined.");
 			// TODO should we stop here
 		}
 		this.classesTable.put(className, decl);
@@ -40,5 +41,42 @@ public class IdentificationTable {
 			ErrorReporter.get().reportError("Shouldn't be closing scope here");
 		}
 		this.table.pop();
+	}
+	
+	public boolean containsKeyAtTopScope(String key) {
+		return this.table.peek().containsKey(key);
+	}
+	
+	public Declaration find(String key) {
+		for (int i = this.table.size(); i >= 0; i--) {
+			if (this.table.get(i).containsKey(key)) {
+				return this.table.get(i).get(key);
+			}
+		}
+		return null;
+	}
+	
+	public int getScopeLevel() {
+		return this.table.size();
+	}
+	
+	public void add(String key, Declaration val) {
+		System.out.println("Enter:  " + key);
+		// Check if declaration exists in most current scope
+		if (this.table.peek().containsKey(key)) {
+			System.out.println("*** line " + val.posn.getLineNumber() + ": Duplicate declaration error. Identifier '" + key + "' has already been used.");
+			return;
+		}
+		
+		// Declarations at level 4 or higher cannot hide declarations at level 3 or higher
+		if (this.getScopeLevel() >= 4) {
+			for (int i = 2; i < table.size(); i++) {
+				if (this.table.get(i).containsKey(key)) {
+					System.out.println("*** line " + val.posn.getLineNumber() + ": declarations at level 4 or higher cannot hide declarations at level 3 or higher");
+				}
+			}
+		}
+		this.table.peek().put(key, val);
+		
 	}
 }
