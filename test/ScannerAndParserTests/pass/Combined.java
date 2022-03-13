@@ -16,7 +16,11 @@ class A {
 	A[] x;
 	int a;
 	int f;
-	void f() {
+	void f2() {
+		A d = this;
+	}
+	void f1(int z, int z) {}
+	void f(C x) {
 		int
 		   	x 
 			= 
@@ -33,14 +37,16 @@ class A {
 			null;
 		A x = null;
 		{
-			int a = 5;
+			int x = 5;
 			{
-				int b = 5;
+				int x = 5;
 				{
-					int c = 5;
+					int x = 5;
+					int noError = 5;
 				}
 				{
-					int d = 5;
+					int x = 5;
+					int noError = 5;
 				}
 			}
 		}

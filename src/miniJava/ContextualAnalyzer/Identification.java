@@ -46,6 +46,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		for (int i = 0; i < methodDecls.size(); i++) {
 			methodDecls.get(i).visit(this, arg);
 		}
+		table.print();
 
 		table.closeScope();
 		return null;
@@ -80,20 +81,50 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 					.println("*** line " + md.posn.getLineNumber() + ": Duplicate class field declaration error. Field "
 							+ md.name + " has already been defined. oops!");
 		}
-
+		
+		// Record the method name in the top scope level of the table
 		table.add(md.name, md);
+		table.openScope();
+		
+		// Ensure all of the parameters are correctly typed
+		for (int i = 0; i < md.parameterDeclList.size(); i++) {
+			md.parameterDeclList.get(i).visit(this, arg);
+		}
+		
+		// Visit each statement in the method body
+		for (int i = 0; i < md.statementList.size(); i++) {
+			md.statementList.get(i).visit(this, arg);
+		}
+		
+		table.closeScope();
 		return null;
+		
 	}
 
 	@Override
 	public Object visitParameterDecl(ParameterDecl pd, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("<Contextual Analysis> Visiting parameter declaration: " + pd.name, 5);
+		// Ensure parameter type is valid
+		pd.type.visit(this, arg);
+		
+		// Add parameter to top level of scope table
+		this.table.add(pd.name, pd);
+		
 		return null;
 	}
 
 	@Override
 	public Object visitVarDecl(VarDecl decl, Object arg) {
-		// TODO Auto-generated method stub
+		// Check that the type is valid
+		decl.type.visit(this, arg);
+		
+		// See if the variable has already been defined
+		if (this.table.containsKeyAtNonCoverableScope(decl.name)) {
+			System.out.println("*** line " + decl.posn.getLineNumber() + ": Local variable '" + decl.name + "' declaration attempts to hide declaration at level 3+");
+		} else {
+			this.table.add(decl.name, decl);
+		}
+		
 		return null;
 	}
 
@@ -131,13 +162,26 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitBlockStmt(BlockStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting Block Statement", 5);
+		// Each Statement Block Opens a New Scope
+		this.table.openScope();
+		
+		// Visit each statement in the block, then close scope
+		for (int i = 0; i < stmt.sl.size(); i++) {
+			stmt.sl.get(i).visit(this, arg);
+		}
+		
+		this.table.closeScope();
+		ErrorReporter.get().log("Finished Visiting Block Statement", 5);
 		return null;
 	}
 
 	@Override
 	public Object visitVardeclStmt(VarDeclStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting Variable Declaration Statement", 5);
+		// Visit the Type+Id and then visit the initializing expression
+		stmt.varDecl.visit(this, arg);
+		stmt.initExp.visit(this, arg);
 		return null;
 	}
 

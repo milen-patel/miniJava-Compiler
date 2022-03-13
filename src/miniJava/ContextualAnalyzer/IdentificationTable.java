@@ -47,6 +47,16 @@ public class IdentificationTable {
 		return this.table.peek().containsKey(key);
 	}
 	
+	public boolean containsKeyAtNonCoverableScope(String key) {
+		for (int i = 2; i < table.size(); i++) {
+			if (table.get(i).containsKey(key)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public Declaration find(String key) {
 		for (int i = this.table.size(); i >= 0; i--) {
 			if (this.table.get(i).containsKey(key)) {
@@ -72,10 +82,24 @@ public class IdentificationTable {
 			for (int i = 2; i < table.size(); i++) {
 				if (this.table.get(i).containsKey(key)) {
 					System.out.println("*** line " + val.posn.getLineNumber() + ": declarations at level 4 or higher cannot hide declarations at level 3 or higher");
+					break;
 				}
 			}
 		}
-		this.table.peek().put(key, val);
-		
+		this.table.peek().put(key, val);	
+	}
+	
+	public void print() {
+		System.out.println("==========================================");
+		String prefix = "";
+		for (int i = 0; i < this.table.size(); i++) {
+			System.out.println(prefix + "Scope " + (i+1));
+			Map<String, Declaration> hm = this.table.get(i);
+			for (String key : hm.keySet()) {
+				System.out.println(prefix + "\t" + key);
+			}
+			prefix += "\t";
+		}
+		System.out.println("==========================================");
 	}
 }
