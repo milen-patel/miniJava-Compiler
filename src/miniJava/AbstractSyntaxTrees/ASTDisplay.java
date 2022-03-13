@@ -115,7 +115,7 @@ public class ASTDisplay implements Visitor<String,Object> {
     	String ptrLabel = "";
     	if (f.type instanceof ClassType) {
     		ClassType ct = (ClassType) f.type;
-    		ptrLabel = ". points to class " + ct.className.getDeclaration().name;
+    		ptrLabel = ". points to class " + ct.className.getDeclaration();
     	} else if (f.type instanceof ArrayType) {
     		
     	}

@@ -49,36 +49,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		
 		// Visit each of the variable types
 		for (int i = 0; i < varDecls.size(); i++) {
-			FieldDecl decl = varDecls.get(i);
-			TypeDenoter declType = decl.type;
-			
-			if (declType instanceof ClassType) {
-				// If the variable is of type class, then make sure the class exists
-				ClassType ct = (ClassType) declType;
-				if (!this.table.classesTable.containsKey(ct.className.spelling)) {
-					System.out.println("*** line " + varDecls.get(i).posn.getLineNumber() + ": Unknown class type '" + ct.className.spelling + "'.");
-				}
-				
-				// If the class exists, make the declaration point to the class declaration
-				ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
-			} else if (declType instanceof ArrayType) {
-				System.out.println("Array Type");
-				ArrayType at = (ArrayType) declType;
-				TypeDenoter elementType = at.eltType;
-				
-				// For array variables, we only need to be cautious if the element type is non-basic
-				if (elementType instanceof ClassType) {
-					ClassType ct = (ClassType) elementType;
-					if (!this.table.classesTable.containsKey(ct.className.spelling)) {
-						System.out.println("*** line " + varDecls.get(i).posn.getLineNumber() + ": Unknown array element type '" + ct.className.spelling + "'.");
-					}
-					ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
-				}
-			} else {
-				if (!(declType instanceof BaseType)) {
-					throw new RuntimeException("TODO");
-				}
-			}
+			varDecls.get(i).visit(this, arg);
 		}
 		
 		
@@ -87,9 +58,38 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	}
 
 	@Override
-	public Object visitFieldDecl(FieldDecl fd, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object visitFieldDecl(FieldDecl decl, Object arg) {
+		TypeDenoter declType = decl.type;
+		
+		if (declType instanceof ClassType) {
+			// If the variable is of type class, then make sure the class exists
+			ClassType ct = (ClassType) declType;
+			if (!this.table.classesTable.containsKey(ct.className.spelling)) {
+				System.out.println("*** line " + decl.posn.getLineNumber() + ": Unknown class type '" + ct.className.spelling + "'.");
+			}
+			
+			// If the class exists, make the declaration point to the class declaration
+			ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
+		} else if (declType instanceof ArrayType) {
+			System.out.println("Array Type");
+			ArrayType at = (ArrayType) declType;
+			TypeDenoter elementType = at.eltType;
+			
+			// For array variables, we only need to be cautious if the element type is non-basic
+			if (elementType instanceof ClassType) {
+				ClassType ct = (ClassType) elementType;
+				if (!this.table.classesTable.containsKey(ct.className.spelling)) {
+					System.out.println("*** line " + decl.posn.getLineNumber() + ": Unknown array element type '" + ct.className.spelling + "'.");
+				}
+				ct.className.setDecalaration(table.classesTable.get(ct.className.spelling));
+			}
+		} else {
+			if (!(declType instanceof BaseType)) {
+				throw new RuntimeException("TODO");
+			}
+		}
+		
+		return arg;
 	}
 
 	@Override
