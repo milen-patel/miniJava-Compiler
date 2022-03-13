@@ -15,6 +15,7 @@ class A {
 	NULL b;
 	A[] x;
 	int a;
+	int f;
 	void f() {
 		int
 		   	x 

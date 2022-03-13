@@ -61,7 +61,6 @@ public class IdentificationTable {
 	}
 	
 	public void add(String key, Declaration val) {
-		System.out.println("Enter:  " + key);
 		// Check if declaration exists in most current scope
 		if (this.table.peek().containsKey(key)) {
 			System.out.println("*** line " + val.posn.getLineNumber() + ": Duplicate declaration error. Identifier '" + key + "' has already been used.");
