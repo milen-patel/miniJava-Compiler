@@ -9,8 +9,8 @@ import miniJava.AbstractSyntaxTrees.Package;
 
 public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Object, Object> {
 	IdentificationTable table = new IdentificationTable();
-	ClassDecl currentClass = null;
-
+	Context ctx = new Context();
+	
 	@Override
 	public Object visitPackage(Package prog, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Starting contextual analysis", 5);
@@ -35,7 +35,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitClassDecl(ClassDecl cd, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class: " + cd.name, 5);
 		table.openScope();
-		setClass(cd);
+		ctx.setCurrentClass(cd);
 
 		// Visit all the variable declarations, make sure none are already defined
 		FieldDeclList varDecls = cd.fieldDeclList;
@@ -51,7 +51,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		table.print();
 
 		table.closeScope();
-		clearClass();
+		ctx.clearCurrentClass();
 		return null;
 	}
 
@@ -102,6 +102,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		table.closeScope();
 		return null;
 		
+		// TODO needs to do a separate check to make sure no instance variables are being used
 	}
 
 	@Override
@@ -275,11 +276,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitThisRef(ThisRef ref, Object arg) {
 		ErrorReporter.get().log("Visiting a 'this' reference", 5);
-		if (currentClass == null) {
+		if (!ctx.inClass()) {
 			System.out.println(
 					"*** line " + ref.posn.getLineNumber() + ": Invalid reference to this");
 		}
-		ref.setDeclaration(currentClass);
+		ref.setDeclaration(ctx.getCurrentClass());
+		// need to check for static TODO
 		return null;
 	}
 
@@ -335,17 +337,5 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitNullLiteral(NullLiteral nullLiteral, Object arg) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	// Needed for visitThisRef to identify the current class being visited
-	public void setClass(ClassDecl newClass) {
-		if (currentClass != null) {
-			ErrorReporter.get().log("Shouldn't be setting non-empty class", 9); // TODO
-		}
-		this.currentClass = newClass;
-	}
-	
-	public void clearClass() {
-		this.currentClass = null;
 	}
 }
