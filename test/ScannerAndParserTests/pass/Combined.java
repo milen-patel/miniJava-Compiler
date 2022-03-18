@@ -16,7 +16,8 @@ class A {
 	A[] x;
 	int a;
 	int f;
-	void f2() {
+	// Duplicate Parameter
+	void f2(int dupl, boolean dupl) {
 		A d = this;
 	}
 	void f1(int z, int z) {}

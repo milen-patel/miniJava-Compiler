@@ -1,8 +1,5 @@
 package miniJava.ContextualAnalyzer;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.*;
 import miniJava.AbstractSyntaxTrees.Package;
@@ -85,6 +82,13 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 							+ md.name + " has already been defined. oops!");
 		}
 		
+		// Check if we are in a static method
+		if (md.isStatic) {
+			ctx.setStatic(true);
+		} else {
+			ctx.setStatic(false);
+		}
+		
 		// Record the method name in the top scope level of the table
 		table.add(md.name, md);
 		table.openScope();
@@ -104,6 +108,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		
 		// TODO needs to do a separate check to make sure no instance variables are being used
 	}
+	
 
 	@Override
 	public Object visitParameterDecl(ParameterDecl pd, Object arg) {
@@ -112,6 +117,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		pd.type.visit(this, arg);
 		
 		// Add parameter to top level of scope table
+		// This will also ensure that there are no duplicate name declarations of parameters.
 		this.table.add(pd.name, pd);
 		
 		return null;
@@ -185,6 +191,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		ErrorReporter.get().log("Visiting Variable Declaration Statement", 5);
 		// Visit the Type+Id and then visit the initializing expression
 		stmt.varDecl.visit(this, arg);
+		// TODO init expression cannoot reference the variable name
 		stmt.initExp.visit(this, arg);
 		return null;
 	}
@@ -192,24 +199,36 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitAssignStmt(AssignStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
+		// visit reference, visit expression
 		return null;
 	}
 
 	@Override
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
+		// visit reference, visit index, visit expression
+		// make sure reference is an array type
 		return null;
 	}
 
 	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
+		/*
+		 * should be same as visitCallExpr
+		 * Check if in static method, if so should only call other static methods and not use keywords (check params too)
+		 * check reference is a method
+		 * check parameters align with expected types - prolly type checking
+		 * check that the method isn't private if we are external to class
+		 * check we arent accessing a static method with 'this'
+		 */
 		return null;
 	}
 
 	@Override
 	public Object visitReturnStmt(ReturnStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
+		// make sure we arent returning a function
 		return null;
 	}
 
@@ -315,9 +334,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		return null;
 	}
 
+	static int temp = 5;
 	@Override
+
 	public Object visitOperator(Operator op, Object arg) {
 		// TODO Auto-generated method stub
+		System.out.println(temp);
 		return null;
 	}
 
