@@ -191,8 +191,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		ErrorReporter.get().log("Visiting Variable Declaration Statement", 5);
 		// Visit the Type+Id and then visit the initializing expression
 		stmt.varDecl.visit(this, arg);
+		
 		// TODO init expression cannoot reference the variable name
+		ctx.setVariableInDeclaration(stmt.varDecl.name);
 		stmt.initExp.visit(this, arg);
+		ctx.exitVariableInDeclaration();
+		
 		return null;
 	}
 
@@ -269,7 +273,11 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitRefExpr(RefExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		// Check if the expression is the right hand side of a local variable declaration statement.
+		if (ctx.inMethodVariableDeclaration()) {
+			
+			return null;
+		}
 		return null;
 	}
 
@@ -310,6 +318,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			System.out.println(
 					"*** line " + ref.posn.getLineNumber() + ": Invalid reference to this");
 		}
+		
+		if (ctx.inStaticMethod()) {
+			System.out.println(
+					"*** line " + ref.posn.getLineNumber() + ": static methods cannot use 'this' keyword");
+		}
+		
 		ref.setDeclaration(ctx.getCurrentClass());
 		// need to check for static TODO
 		return null;
@@ -332,6 +346,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		ref.setDeclaration(table.find(ref.id.spelling));
 		return null;
 	}
+	
 
 	@Override
 	public Object visitQRef(QualRef ref, Object arg) {

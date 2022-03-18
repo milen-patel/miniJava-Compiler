@@ -7,6 +7,7 @@ public class Context {
 	static int x = 5;
 	private ClassDecl currentClass;
 	private boolean inStaticMethod = false;
+	private String variableInDeclaration = null;
 	
 	public ClassDecl getCurrentClass() {
 		return this.currentClass;
@@ -34,5 +35,23 @@ public class Context {
 	
 	public boolean inStaticMethod() {
 		return this.inStaticMethod;
+	}
+	
+	public boolean inMethodVariableDeclaration() {
+		return this.variableInDeclaration != null;
+	}
+	
+	public void setVariableInDeclaration(String varName) {
+		this.variableInDeclaration = varName;
+	}
+	
+	public String getVariableInDeclaration() {
+		// TODO assert non null
+		return this.variableInDeclaration;
+	}
+	
+	public void exitVariableInDeclaration() {
+		// TODO need to assert that we are currently decalaring a variable already
+		this.variableInDeclaration = null;
 	}
 }
