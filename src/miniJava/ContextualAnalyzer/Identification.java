@@ -257,7 +257,13 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitBinaryExpr(BinaryExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		/*
+		 * Trivially visit the operator which requires no work since operators need not be identified.
+		 * Then, visit the two expressions associated with the binary operator.
+		 */
+		expr.left.visit(this, arg);
+		expr.operator.visit(this, arg);
+		expr.right.visit(this, arg);
 		return null;
 	}
 
