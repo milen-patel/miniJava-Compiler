@@ -246,7 +246,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		/*
+		 * Trivially visit the operator which requires no work since operators need not be identified.
+		 * Then, visit the expression associated with the unary operator.
+		 */
+		expr.operator.visit(this, arg);
+		expr.expr.visit(this, arg);
 		return null;
 	}
 
