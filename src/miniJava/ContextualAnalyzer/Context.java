@@ -10,6 +10,7 @@ public class Context {
 	private String variableInDeclaration = null;
 	
 	public ClassDecl getCurrentClass() {
+		this.x = 5;
 		return this.currentClass;
 	}
 	

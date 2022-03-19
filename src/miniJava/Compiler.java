@@ -32,7 +32,7 @@ public class Compiler {
 			display.showTree(tree);
 			ErrorReporter.get().endWithSuccess();
 		} catch (Exception e) {
-			System.out.println(e);
+			System.out.println(e.toString());
 			ErrorReporter.get().reportError("Uncaught Exception");
 		} 
 		

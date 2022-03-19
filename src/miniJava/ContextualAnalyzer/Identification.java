@@ -3,6 +3,9 @@ package miniJava.ContextualAnalyzer;
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.*;
 import miniJava.AbstractSyntaxTrees.Package;
+import miniJava.SyntacticAnalyzer.SourcePosition;
+import miniJava.SyntacticAnalyzer.Token;
+import miniJava.SyntacticAnalyzer.TokenKind;
 
 public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Object, Object> {
 	IdentificationTable table = new IdentificationTable();
@@ -10,14 +13,51 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	
 	@Override
 	public Object visitPackage(Package prog, Object arg) {
+		int y = ctx.x;
 		ErrorReporter.get().log("<Contextual Analysis> Starting contextual analysis", 5);
-
+		
+		// Add predefined classes
+		FieldDeclList class_System_Fields = new FieldDeclList();
+		MethodDeclList class_System_Methods = new MethodDeclList();
+		Token printStreamToken = new Token(TokenKind.IDENTIFIER, "_PrintStream", 0 , 0, 0);
+		Identifier printStreamIdentifier = new Identifier(printStreamToken);
+		SourcePosition dummy_Pos = new SourcePosition(0, 0, 0);
+		class_System_Fields.add(new FieldDecl(false, true, new ClassType(printStreamIdentifier, dummy_Pos), "out", dummy_Pos));
+		ClassDecl class_System = new ClassDecl("System", class_System_Fields, class_System_Methods, dummy_Pos);
+		table.addClass("System", class_System);
+		table.add("System", class_System);
+		table.classMethodDeclarations.put("System", class_System_Methods);
+		table.classVariableDeclarations.put("System", class_System_Fields);
+		
+		FieldDeclList printStreamFields = new FieldDeclList();
+		MethodDeclList printStreamMethods = new MethodDeclList();
+		ParameterDeclList pdl = new ParameterDeclList();
+		pdl.add(new ParameterDecl(new BaseType(TypeKind.INT, dummy_Pos), "n", dummy_Pos));
+		FieldDecl lhs = new FieldDecl(false, false, new BaseType(TypeKind.VOID, dummy_Pos), "println", dummy_Pos);
+		MethodDecl printDecl = new MethodDecl(lhs, pdl, new StatementList(), dummy_Pos);
+		printStreamMethods.add(printDecl);
+		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", printStreamFields, printStreamMethods, dummy_Pos);
+		table.addClass("_PrintStream", class_PrintStream);
+		table.add("_PrintStream", class_PrintStream);
+		table.classMethodDeclarations.put("_PrintStream", printStreamMethods);
+		table.classVariableDeclarations.put("_PrintStream", printStreamFields);
+		
+		ClassDecl class_String = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), dummy_Pos);
+		table.addClass("String", class_String);
+		table.add("String", class_String);
+		table.classMethodDeclarations.put("String", class_String.methodDeclList);
+		table.classVariableDeclarations.put("String", class_String.fieldDeclList);
+		
+		// todo need to do id + type checking for predefined classes
+		
 		ClassDeclList classes = prog.classDeclList;
 		for (int i = 0; i < classes.size(); i++) {
 			ClassDecl cd = classes.get(i);
 			String cn = cd.name;
 			table.addClass(cn, cd);
 			table.add(cn, cd);
+			table.classMethodDeclarations.put(cn, cd.methodDeclList);
+			table.classVariableDeclarations.put(cn, cd.fieldDeclList);
 		}
 
 		for (int i = 0; i < classes.size(); i++) {
@@ -42,10 +82,23 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		// Visit all the method declarations, make sure none are already defined
 		MethodDeclList methodDecls = cd.methodDeclList;
+		
+		// Record all method names
+		for (int i = 0; i < methodDecls.size(); i++) {
+			MethodDecl md = methodDecls.get(i);
+			// Make sure a variable/method with that name hasn't already been defined
+			if (table.containsKeyAtTopScope(md.name)) {
+				System.out
+						.println("*** line " + md.posn.getLineNumber() + ": Duplicate class field declaration error. Field "
+								+ md.name + " has already been defined. oops!");
+			}
+			table.add(md.name, md);
+		}
+		
+		
 		for (int i = 0; i < methodDecls.size(); i++) {
 			methodDecls.get(i).visit(this, arg);
 		}
-		table.print();
 
 		table.closeScope();
 		ctx.clearCurrentClass();
@@ -74,13 +127,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitMethodDecl(MethodDecl md, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class method declaration: " + md.name, 5);
-
-		// Make sure a variable/method with that name hasn't already been defined
-		if (table.containsKeyAtTopScope(md.name)) {
-			System.out
-					.println("*** line " + md.posn.getLineNumber() + ": Duplicate class field declaration error. Field "
-							+ md.name + " has already been defined. oops!");
-		}
 		
 		// Check if we are in a static method
 		if (md.isStatic) {
@@ -89,8 +135,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			ctx.setStatic(false);
 		}
 		
-		// Record the method name in the top scope level of the table
-		table.add(md.name, md);
+		// Check the return type
+		md.type.visit(this, null);
+		
 		table.openScope();
 		
 		// Ensure all of the parameters are correctly typed
@@ -276,8 +323,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		// Check if the expression is the right hand side of a local variable declaration statement.
 		if (ctx.inMethodVariableDeclaration()) {
 			
-			return null;
+			//return null;
 		}
+		expr.ref.visit(this, arg);
 		return null;
 	}
 
@@ -325,24 +373,18 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		}
 		
 		ref.setDeclaration(ctx.getCurrentClass());
-		// need to check for static TODO
 		return null;
 	}
 
 	@Override
 	public Object visitIdRef(IdRef ref, Object arg) {
+		System.out.println("X" + ref.id.spelling);
 		// Check that there is a corresponding declaration
 		if (this.table.find(ref.id.spelling) == null) {
 			System.out.println(
 					"*** line " + ref.posn.getLineNumber() + ": Unknown reference to identifier '" + ref.id.spelling + "'.");
 		}
-		// TODO not sure this will work
-		/*
-		 * class A {
-		 * 	int A;
-		 * 	void f() { int x = A; } how does it know which one to point to
-		 * }
-		 */
+
 		ref.setDeclaration(table.find(ref.id.spelling));
 		return null;
 	}
@@ -350,13 +392,92 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitQRef(QualRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		Reference lhs = ref.ref;
+		Identifier rhs = ref.id;
+	
+		// Check the reference first
+		lhs.visit(this, arg);
+
+		// If the reference is a function then we have an error
+		if (lhs.getDeclaration() instanceof MethodDecl) {
+			// TODO need to figure out if this is the correct way to check this
+			System.out.println(
+					"*** line " + ref.posn.getLineNumber() + ": cannot use a method name on left hand side of a qualified reference");
+		}
+		
+		// Visit right hand side, pass the LHS as context
+		ref.id.visit(this, ref.ref);
 		return null;
 	}
 
 	@Override
 	public Object visitIdentifier(Identifier id, Object arg) {
-		// TODO Auto-generated method stub
+		// Ensure you got a parameter
+		if (arg == null) {
+			ErrorReporter.get().reportError("Internal Identification Error"); // TODO
+		}
+
+		Reference r = (Reference) arg;
+		Declaration d = r.getDeclaration();
+
+		// Case 0: 'this' keyword
+		if (r instanceof ThisRef) {
+			return null;
+		}
+		// Case 1: Pointing to a Variable
+
+		// Case 2: Pointing to a Class (ClassName.classPropertyName)
+		if (d instanceof ClassDecl) {
+			MethodDeclList mds = table.classMethodDeclarations.get(d.name); // TODO check they exist in tables first
+			FieldDeclList fds = table.classVariableDeclarations.get(d.name);
+			//System.out.println();
+
+			for (MethodDecl md: mds) {
+
+				if (md.name.contentEquals(id.spelling)) {
+					// TODO check this,
+					
+					// Respect private keyword
+					if (md.isPrivate) {
+						if (ctx.getCurrentClass() != ((ClassDecl) d)) {
+							System.out.println(
+									"*** line " + id.posn.getLineNumber() + ": cannot reference private method outside of class.");
+						}
+						return null; // todo figure out exiting bc this yields 2 error lines if its private and non-static
+					}
+					
+					// Must be a static method in the class to reference it like this
+					if (!md.isStatic) {
+						System.out.println(
+								"*** line " + id.posn.getLineNumber() + ": cannot reference non-static method in a static manner");
+					}
+					
+					id.setDecalaration(md);
+					return null;
+				}
+			}
+			
+			for (FieldDecl fd : fds) {
+				if (fd.name.contentEquals(id.spelling)) {
+					if (fd.isPrivate && (ctx.getCurrentClass() != ((ClassDecl) d))) {
+						System.out.println(
+								"*** line " + id.posn.getLineNumber() + ": cannot reference private field outside of class.");
+						return null;
+					}
+					if (!fd.isStatic) {
+						System.out.println(
+								"*** line " + id.posn.getLineNumber() + ": cannot reference non-static variable in a static manner");
+					}
+					id.setDecalaration(fd);
+					return null;
+				}
+			}
+			// TODO error if we made it here
+			System.out.println(
+					"*** line " + id.posn.getLineNumber() + ": failed to identify");
+		}
+		
+		// Case 3: Pointing to a Methohd (should be error i believe at first guess)
 		return null;
 	}
 

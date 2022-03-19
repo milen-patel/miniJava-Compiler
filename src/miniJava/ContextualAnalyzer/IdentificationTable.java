@@ -8,16 +8,22 @@ import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
 import miniJava.AbstractSyntaxTrees.Declaration;
 import miniJava.AbstractSyntaxTrees.FieldDecl;
+import miniJava.AbstractSyntaxTrees.FieldDeclList;
 import miniJava.AbstractSyntaxTrees.MethodDecl;
+import miniJava.AbstractSyntaxTrees.MethodDeclList;
 
 public class IdentificationTable {
 	Stack<Map<String, Declaration>> table;
 	Map<String, ClassDecl> classesTable;
+	Map<String, FieldDeclList> classVariableDeclarations;
+	Map<String, MethodDeclList> classMethodDeclarations;
 	
 	public IdentificationTable() {
 		this.table = new Stack<Map<String, Declaration>>();
 		this.classesTable = new HashMap<String, ClassDecl>();
 		this.table.push(new HashMap<String, Declaration>());
+		this.classVariableDeclarations = new HashMap<String, FieldDeclList>();
+		this.classMethodDeclarations = new HashMap<String, MethodDeclList>();
 	}
 	
 	public void addClass(String className, ClassDecl decl) {
@@ -58,7 +64,7 @@ public class IdentificationTable {
 	}
 	
 	public Declaration find(String key) {
-		for (int i = this.table.size(); i >= 0; i--) {
+		for (int i = this.table.size()-1; i >= 0; i--) {
 			if (this.table.get(i).containsKey(key)) {
 				return this.table.get(i).get(key);
 			}
