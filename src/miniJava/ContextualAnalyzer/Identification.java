@@ -244,6 +244,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		stmt.initExp.visit(this, arg);
 		ctx.exitVariableInDeclaration();
 		
+		System.out.println("Finished processing vardeclstmt..." + stmt.posn.getLineNumber());
+		System.out.println(((RefExpr) stmt.initExp).ref.getDeclaration());
+		
 		return null;
 	}
 
@@ -350,6 +353,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitNewObjectExpr(NewObjectExpr expr, Object arg) {
 		// TODO Auto-generated method stub
+		// Check that the class exists
 		return null;
 	}
 
@@ -378,11 +382,18 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitIdRef(IdRef ref, Object arg) {
-		System.out.println("X" + ref.id.spelling);
 		// Check that there is a corresponding declaration
 		if (this.table.find(ref.id.spelling) == null) {
 			System.out.println(
 					"*** line " + ref.posn.getLineNumber() + ": Unknown reference to identifier '" + ref.id.spelling + "'.");
+		}
+		
+		// If we are defining a variable, we cannot reference that variable in the initializinig expression
+		if (ctx.inMethodVariableDeclaration()) {
+			if (ref.id.spelling.contentEquals(ctx.getVariableInDeclaration())) {
+				System.out.println(
+						"*** line " + ref.posn.getLineNumber() + ": cannot reference variable name '" + ref.id.spelling + "' in initializiing expression");
+			} // TODO check if theres another place this issue could happen
 		}
 
 		ref.setDeclaration(table.find(ref.id.spelling));
@@ -406,7 +417,10 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		}
 		
 		// Visit right hand side, pass the LHS as context
-		ref.id.visit(this, ref.ref);
+		rhs.visit(this, lhs);
+		
+		// TODO figure out if this is correct
+		ref.setDeclaration(rhs.getDeclaration());
 		return null;
 	}
 
@@ -422,10 +436,76 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		// Case 0: 'this' keyword
 		if (r instanceof ThisRef) {
+			// Check all class variables
+			for (FieldDecl fd : ctx.getCurrentClass().fieldDeclList) {
+				if (fd.name.contentEquals(id.spelling)) {
+					id.setDecalaration(fd);
+					return null; // TODO should check static here depending on piazza response
+				}
+			}
+			
+			// If no match, check class methods
+			for (MethodDecl md : ctx.getCurrentClass().methodDeclList) {
+				if (md.name.contentEquals(id.spelling)) {
+					id.setDecalaration(md);
+					return null;
+				}
+			}
+			
+			System.out.println(
+					"*** line " + id.posn.getLineNumber() + ": unknown identifier following 'this' keyword: '" + id.spelling +  "'.");
 			return null;
 		}
+		
 		// Case 1: Pointing to a Variable
-
+		if (d instanceof FieldDecl) {			
+			// TODO check if there could be an exception to do
+			// The variable must be a class type
+			if (!(d.type instanceof ClassType)) {
+				System.out.println(
+						"*** line " + id.posn.getLineNumber() + ": cannot use primititve/array type on left hand side of qualified reference");
+				return null;
+			}
+			
+			ClassType ct = (ClassType) d.type;
+			System.out.println(ct.className.spelling);
+			ClassDecl correspondingClass = this.table.classesTable.get(ct.className.spelling);
+			
+			if (correspondingClass == null) {
+				System.out.println(
+						"*** line " + id.posn.getLineNumber() + ": no such class"); // TODO figure out if its even possible to get here
+				return null;
+			}
+			
+			// Now go through and find the correct variable
+			MemberDecl match = null;
+			for (MethodDecl md : correspondingClass.methodDeclList) {
+				if (md.name.contentEquals(id.spelling)) {
+					match = md;
+					break;
+				}
+			}
+			for (FieldDecl fd: correspondingClass.fieldDeclList) {
+				if (fd.name.contentEquals(id.spelling)) {
+					match = fd;
+					break;
+				}
+			}
+			if (match == null) {
+				System.out.println(
+						"*** line " + id.posn.getLineNumber() + ": no match"); // TODO figure out if its even possible to get here
+				return null;
+			}
+			// Respect the private keyword
+						if (match.isPrivate && (table.getDefiningClassOfField((FieldDecl) d) != ctx.getCurrentClass())) { // TODO definetly needs some testing
+							System.out.println(
+									"*** line " + id.posn.getLineNumber() + ": cannot access private field from outside of class");
+							return null;
+						}
+			id.setDecalaration(match);
+			return null;
+		}
+		
 		// Case 2: Pointing to a Class (ClassName.classPropertyName)
 		if (d instanceof ClassDecl) {
 			MethodDeclList mds = table.classMethodDeclarations.get(d.name); // TODO check they exist in tables first
@@ -465,6 +545,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 						return null;
 					}
 					if (!fd.isStatic) {
+						System.out.println(d);
 						System.out.println(
 								"*** line " + id.posn.getLineNumber() + ": cannot reference non-static variable in a static manner");
 					}
@@ -473,12 +554,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 				}
 			}
 			// TODO error if we made it here
-			System.out.println(
-					"*** line " + id.posn.getLineNumber() + ": failed to identify");
+			//System.out.println(
+			//		"*** line " + id.posn.getLineNumber() + ": failed to identify '" + id.spelling + "'.");
 		}
-		
-		// Case 3: Pointing to a Methohd (should be error i believe at first guess)
-		return null;
+		System.out.println(
+				"*** line " + id.posn.getLineNumber() + ": failed to identify '" + id.spelling + "'.");
+		return null; // TODO error?
 	}
 
 	static int temp = 5;

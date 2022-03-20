@@ -1,5 +1,6 @@
 class messyReferenceShit {
 	A a;
+	int qq;
 	void func() {
 		//int x = this;
 		int x = Helpers.f1;
@@ -7,8 +8,12 @@ class messyReferenceShit {
 		int x3 = Helpers.f3;
 		int x4 = Helpers.f4;
 		int x5 = NonExistent.f3;
-		int x6 = func2.x;
+		int x6 = System.out2.println.invalid; 
+		int x7 = this.func2;
+		int x8 = this.qq.invalid;
 		System.out.println(5);
+		messyReferenceShit x9 = this;
+		int x10 = Helpers.xx.bb;
 	}
 	static void func2() {
 		messyReferenceShit mrs = this; // static method cannot reference 'this' keyword
@@ -17,7 +22,14 @@ class messyReferenceShit {
 
 
 class Helpers {
-	void f1() {}
+	private static A xx;
+	void f1() {
+		int x = this.xx.a.a;
+		int y = this.DOESNOTEXIST;
+		int z = Helpers.z;
+		int q = q;
+		int p = this.xx;
+	}
 	static void f2() {}
 	private static void f3() {}
 	private void f4() {}
@@ -31,6 +43,9 @@ class Helpers {
 /*
  *
  */
+class B {
+	B a;
+}
 class A {
 /*
  *
@@ -40,6 +55,7 @@ class A {
 	A[] x;
 	int a;
 	int f;
+	private static boolean bb;
 	// Duplicate Parameter
 	static void f2(int dupl, boolean dupl) {
 		A d = this;

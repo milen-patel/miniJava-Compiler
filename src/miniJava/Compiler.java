@@ -29,7 +29,7 @@ public class Compiler {
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			ASTDisplay display = new ASTDisplay();
 			System.out.println("Valid miniJava program");
-			display.showTree(tree);
+			//display.showTree(tree);
 			ErrorReporter.get().endWithSuccess();
 		} catch (Exception e) {
 			System.out.println(e.toString());

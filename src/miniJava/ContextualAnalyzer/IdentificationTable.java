@@ -95,6 +95,17 @@ public class IdentificationTable {
 		this.table.peek().put(key, val);	
 	}
 	
+	public ClassDecl getDefiningClassOfField(FieldDecl fd) {
+		for (ClassDecl cd : this.classesTable.values()) {
+			for (FieldDecl current_fd : cd.fieldDeclList) {
+				if (fd == current_fd) {
+					return cd;
+				}
+			}
+		}
+		return null; // TODO error out?
+	}
+	
 	public void print() {
 		System.out.println("==========================================");
 		String prefix = "";
