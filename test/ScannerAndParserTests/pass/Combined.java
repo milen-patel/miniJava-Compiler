@@ -5,6 +5,7 @@ class Id {
 	Context c;
 	void func() {
 		int p = Context.x;
+		int q = c.x;
 	}
 	void Id() {}
 }

@@ -505,11 +505,13 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 				return null;
 			}
 			// Respect the private keyword
-						if (match.isPrivate && (table.getDefiningClassOfField((FieldDecl) d) != ctx.getCurrentClass())) { // TODO definetly needs some testing
-							System.out.println(
-									"*** line " + id.posn.getLineNumber() + ": cannot access private field from outside of class");
-							return null;
-						}
+			FieldDecl fd = (FieldDecl) d;
+			ClassType classt = (ClassType) fd.type;
+			if (match.isPrivate && !classt.className.spelling.contentEquals(ctx.getCurrentClass().name)) { // TODO definetly needs some testing
+				System.out.println(
+						"*** line " + id.posn.getLineNumber() + ": cannot access private field from outside of class");
+				return null;
+			}
 			id.setDecalaration(match);
 			return null;
 		}
