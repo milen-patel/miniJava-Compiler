@@ -261,9 +261,10 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
-		// visit reference, visit index, visit expression
-		// make sure reference is an array type
+		ErrorReporter.get().log("Visiting Indexed Assign Statement on Line " + stmt.posn.getLineNumber(), 5);
+		stmt.ref.visit(this, arg);
+		stmt.ix.visit(this, arg);
+		stmt.exp.visit(this, arg); // TODO is ensuring reference an array a type checking issue
 		return null;
 	}
 
@@ -283,9 +284,13 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitReturnStmt(ReturnStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
-		// make sure we arent returning a function
-		return null;
+		ErrorReporter.get().log("Visiting Return Statement on Line " + stmt.posn.getLineNumber(), 5);
+		Expression e = stmt.returnExpr;
+		if (e != null) {
+			e.visit(this, arg);
+		}
+		return null; 		
+		// TOOD make sure we arent returning a function (type checking issue)
 	}
 
 	@Override

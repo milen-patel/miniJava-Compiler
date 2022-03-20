@@ -33,12 +33,14 @@ class Helpers {
 		int r = this.r;
 		int p = this.xx;
 		r = r.q;
+		r[5] = 55;
 		int j = tmp;
 		{
 			int inner = 5;
 			int d = inner;
 		}
 		int d = inner;
+		return pefw;
 	}
 	static void f2() {}
 	private static void f3() {}
