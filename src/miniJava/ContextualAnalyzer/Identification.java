@@ -244,16 +244,18 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		stmt.initExp.visit(this, arg);
 		ctx.exitVariableInDeclaration();
 		
-		System.out.println("Finished processing vardeclstmt..." + stmt.posn.getLineNumber());
-		System.out.println(((RefExpr) stmt.initExp).ref.getDeclaration());
+		//good for debuggnig System.out.println("Finished processing vardeclstmt..." + stmt.posn.getLineNumber());
+		//System.out.println(((RefExpr) stmt.initExp).ref.getDeclaration());
 		
 		return null;
 	}
 
 	@Override
 	public Object visitAssignStmt(AssignStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
-		// visit reference, visit expression
+		ErrorReporter.get().log("Visiting Assign Statement on Line " + stmt.posn.getLineNumber(), 5);
+		stmt.ref.visit(this, arg);
+		stmt.val.visit(this, arg);
+		ErrorReporter.get().log("Left Hand Side of assign statement points to: " + stmt.ref.getDeclaration(), 5);
 		return null;
 	}
 
@@ -468,7 +470,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			}
 			
 			ClassType ct = (ClassType) d.type;
-			System.out.println(ct.className.spelling);
 			ClassDecl correspondingClass = this.table.classesTable.get(ct.className.spelling);
 			
 			if (correspondingClass == null) {
@@ -562,12 +563,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		return null; // TODO error?
 	}
 
-	static int temp = 5;
 	@Override
-
 	public Object visitOperator(Operator op, Object arg) {
 		// TODO Auto-generated method stub
-		System.out.println(temp);
 		return null;
 	}
 

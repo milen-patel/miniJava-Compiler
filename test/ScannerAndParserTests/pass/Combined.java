@@ -23,12 +23,22 @@ class messyReferenceShit {
 
 class Helpers {
 	private static A xx;
+	static int tmp;
+	int r;
 	void f1() {
 		int x = this.xx.a.a;
 		int y = this.DOESNOTEXIST;
 		int z = Helpers.z;
-		int q = q;
+		int q = q+5;
+		int r = this.r;
 		int p = this.xx;
+		r = r.q;
+		int j = tmp;
+		{
+			int inner = 5;
+			int d = inner;
+		}
+		int d = inner;
 	}
 	static void f2() {}
 	private static void f3() {}
