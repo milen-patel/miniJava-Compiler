@@ -279,6 +279,10 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		 * check that the method isn't private if we are external to class
 		 * check we arent accessing a static method with 'this'
 		 */
+		stmt.methodRef.visit(this, arg);
+		for (Expression e : stmt.argList) {
+			e.visit(this, arg);
+		}
 		return null;
 	}
 
@@ -349,7 +353,10 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitCallExpr(CallExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		expr.functionRef.visit(this, arg);
+		for (Expression e : expr.argList) {
+			e.visit(this, arg); // TODO test this 
+		}
 		return null;
 	}
 
@@ -404,8 +411,25 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 						"*** line " + ref.posn.getLineNumber() + ": cannot reference variable name '" + ref.id.spelling + "' in initializiing expression");
 			} // TODO check if theres another place this issue could happen
 		}
+		
+		Declaration d = table.find(ref.id.spelling);
+		
+		// Respect static access TODO check this doesnt break anything
+		if (ctx.inStaticMethod()) {
+			if (d instanceof FieldDecl) {
+				if (!((FieldDecl) d).isStatic) {
+					System.out.println(
+							"*** line " + ref.posn.getLineNumber() + ": static methhod cannot reference non-static field");
+				}
+			} else if (d instanceof MethodDecl) {
+				if (!((MethodDecl) d).isStatic) {
+					System.out.println(
+							"*** line " + ref.posn.getLineNumber() + ": static methhod cannot reference non-static method");
+				}
+			}
+		}
 
-		ref.setDeclaration(table.find(ref.id.spelling));
+		ref.setDeclaration(d);
 		return null;
 	}
 	

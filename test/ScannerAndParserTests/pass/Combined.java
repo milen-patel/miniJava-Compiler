@@ -1,11 +1,25 @@
 class Context {
 	private static int x;
+	private int getX() {}
+	public static int getY() {}
 }
 class Id {
 	Context c;
+	static Context ctx;
 	void func() {
 		int p = Context.x;
 		int q = c.x;
+		int r = this.c.getX();
+		int s = c.getX();
+		int a = this.ctx.getY(); // check thhis one oout
+	}
+	static void testStatic() {
+		int a = this;
+		int b = c; // should err but doesnt
+		testStatic();
+		func(); // should err but doesnt
+		Context.getY();
+		ctx.getY();
 	}
 	void Id() {}
 }
