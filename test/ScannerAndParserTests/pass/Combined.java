@@ -1,3 +1,13 @@
+class Context {
+	private static int x;
+}
+class Id {
+	Context c;
+	void func() {
+		int p = Context.x;
+	}
+	void Id() {}
+}
 class messyReferenceShit {
 	A a;
 	int qq;
@@ -41,6 +51,15 @@ class Helpers {
 		}
 		int d = inner;
 		return pefw;
+		if (invalid)
+			ns =se;
+		else
+			fx = this;
+		int h = new NULL();
+		int k = new invalid();
+		int b = new invalid[5];
+		int o = new Helpers[5];
+		//int trytihs = (this).xx;
 	}
 	static void f2() {}
 	private static void f3() {}

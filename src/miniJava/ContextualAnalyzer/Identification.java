@@ -295,13 +295,18 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting If Statement on Line " + stmt.posn.getLineNumber(), 5);
+		stmt.cond.visit(this, arg);
+		stmt.thenStmt.visit(this, arg);
+		stmt.elseStmt.visit(this, arg);
 		return null;
 	}
 
 	@Override
 	public Object visitWhileStmt(WhileStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting While Statement on Line " + stmt.posn.getLineNumber(), 5);
+		stmt.cond.visit(this, arg);
+		stmt.body.visit(this, arg);
 		return null;
 	}
 
@@ -330,18 +335,15 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitRefExpr(RefExpr expr, Object arg) {
-		// Check if the expression is the right hand side of a local variable declaration statement.
-		if (ctx.inMethodVariableDeclaration()) {
-			
-			//return null;
-		}
 		expr.ref.visit(this, arg);
 		return null;
 	}
 
 	@Override
 	public Object visitIxExpr(IxExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		ErrorReporter.get().log("Visiting Indexed Expression on Line " + expr.posn.getLineNumber(), 5);
+		expr.ref.visit(this, arg); // TODO in type checking make sure this is an array
+		expr.ixExpr.visit(this, arg);
 		return null;
 	}
 
@@ -353,20 +355,20 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitLiteralExpr(LiteralExpr expr, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visitNewObjectExpr(NewObjectExpr expr, Object arg) {
-		// TODO Auto-generated method stub
 		// Check that the class exists
+		expr.classtype.visit(this, arg);
 		return null;
 	}
 
 	@Override
 	public Object visitNewArrayExpr(NewArrayExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		expr.eltType.visit(this, arg);
+		expr.sizeExpr.visit(this, arg);
 		return null;
 	}
 
@@ -570,25 +572,21 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitOperator(Operator op, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visitIntLiteral(IntLiteral num, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visitBooleanLiteral(BooleanLiteral bool, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visitNullLiteral(NullLiteral nullLiteral, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // TODO in type checking will ahle to verify null is being used correctly, see piazza post
 	}
 }
