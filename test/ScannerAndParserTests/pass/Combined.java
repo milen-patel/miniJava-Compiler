@@ -1,3 +1,34 @@
+class Foo { 
+	int x;
+	static void q() {int y = j();}
+	static void j() {int x = q();}
+	int p(int y) {
+			int a = 5+false;
+		if (p(p(x))) { 
+			int x = 10;
+			x = y; 
+			int q = this.p(q, q, 2*x);
+		} else {
+			x = y;
+		}
+		return x; 
+		return p(ClassA); // invalid
+	}
+}
+class ClassA {
+	private int a;
+	public int b;
+}
+
+class ClassB {
+	ClassA cA;
+	void someFunc() {
+		int cA = 5;
+		this.cA.a = 5; // error
+		this.cA.b = 6;
+		cA.a = 5;
+	}	
+}
 class Context {
 	private static int x;
 	private int getX() {}
@@ -130,6 +161,7 @@ class A {
 				{
 					int x = 5;
 					int noError = 5;
+					System.out.println(noError);
 				}
 				{
 					int x = 5;

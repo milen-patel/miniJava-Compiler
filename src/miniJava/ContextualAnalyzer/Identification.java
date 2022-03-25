@@ -302,7 +302,11 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		ErrorReporter.get().log("Visiting If Statement on Line " + stmt.posn.getLineNumber(), 5);
 		stmt.cond.visit(this, arg);
 		stmt.thenStmt.visit(this, arg);
-		stmt.elseStmt.visit(this, arg);
+		
+		if (stmt.elseStmt != null) {
+			stmt.elseStmt.visit(this, arg);
+		}
+		
 		return null;
 	}
 
@@ -419,12 +423,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			if (d instanceof FieldDecl) {
 				if (!((FieldDecl) d).isStatic) {
 					System.out.println(
-							"*** line " + ref.posn.getLineNumber() + ": static methhod cannot reference non-static field");
+							"*** line " + ref.posn.getLineNumber() + ": static method cannot reference non-static field");
 				}
 			} else if (d instanceof MethodDecl) {
 				if (!((MethodDecl) d).isStatic) {
 					System.out.println(
-							"*** line " + ref.posn.getLineNumber() + ": static methhod cannot reference non-static method");
+							"*** line " + ref.posn.getLineNumber() + ": static method cannot reference non-static method");
 				}
 			}
 		}
