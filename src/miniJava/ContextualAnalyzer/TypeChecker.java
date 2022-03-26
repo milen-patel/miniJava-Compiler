@@ -40,6 +40,7 @@ import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object, TypeDenoter> {
 	SourcePosition dummyPos = new SourcePosition(0,0,0);
+	
 	@Override
 	public TypeDenoter visitPackage(Package prog, Object arg) {
 		for (ClassDecl cd : prog.classDeclList) {
@@ -65,7 +66,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitMethodDecl(MethodDecl md, Object arg) {
 		for(Statement s : md.statementList) {
-			s.visit(this, arg);
+			s.visit(this, md);
 		}
 		return null;
 	}
@@ -183,7 +184,58 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitReturnStmt(ReturnStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		if (arg == null) {
+			System.out.println("Internal Error..."); // TODO
+		}
+		MethodDecl md = (MethodDecl) arg;
+		
+		
+		if (md.type.typeKind == TypeKind.VOID) {
+			if (stmt.returnExpr != null) {
+				System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": void methods cannot have a return value");
+			}
+			return null;
+		}
+		
+		if (stmt.returnExpr == null) {
+			System.out.println("*** line " + stmt.posn.getLineNumber() + ": non-void methods must return a value.");
+			return md.type;
+		}
+		
+		TypeDenoter rt = stmt.returnExpr.visit(this, null);
+ 		
+		// TODO this is a temp fix that deals with returning a class name need to investigate, visitRefExpr
+ 		if (rt == null) {
+			System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": unable to resolve type on return expression.");
+			return md.type;
+ 		}
+
+		if  (md.type.typeKind != rt.typeKind) {
+			System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": expected return type of " + md.type.typeKind + " but got " + rt.typeKind);
+			return md.type;
+		}
+		if (md.type.typeKind == TypeKind.CLASS) {
+			String l = ((ClassType) md.type).className.spelling;
+			String r = ((ClassType) rt).className.spelling;
+			if (!l.contentEquals(r)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected return type of '" + l + "' but got '" + r + "'.");
+			}
+		} else if (md.type.typeKind == TypeKind.ARRAY) {
+			ArrayType lhs = (ArrayType) md.type;
+			ArrayType rhs = (ArrayType) rt;
+			if (lhs.eltType.typeKind != rhs.eltType.typeKind) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected an array of type " + lhs.eltType.typeKind + " but got " + rhs.eltType.typeKind);
+				return md.type;
+			}
+			if (lhs.eltType.typeKind == TypeKind.CLASS) {
+				String l = ((ClassType) lhs.eltType).className.spelling;
+				String r = ((ClassType) rhs.eltType).className.spelling;
+				if (!l.contentEquals(r)) {
+					System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected an array of elements of type " + l + " but got " + r);
+				}
+			}
+		}
+		
 		return null;
 	}
 
@@ -312,6 +364,10 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitRefExpr(RefExpr expr, Object arg) {
+		// TODO something about thihs method is very wrong, how to deal with referecning classes statically
+		if (expr.ref.getDeclaration() instanceof ClassDecl) {
+		//	return new ClassType(new BaseType(TypeKind.CLASS, dummyPos), dummyPos);
+		}
 		return expr.ref.getDeclaration().type;//TODO double check
 	}
 
@@ -386,6 +442,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitIdentifier(Identifier id, Object arg) {
 		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
