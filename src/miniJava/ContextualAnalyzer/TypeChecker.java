@@ -216,7 +216,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			} else if (stmt.elseStmt instanceof BlockStmt) {
 				BlockStmt s = (BlockStmt) stmt.elseStmt;
 				if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-					System.out.println("*** line " + stmt.elseStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+					System.out.println("*** line " + s.sl.get(0).posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
 				}
 			}
 		}
@@ -225,7 +225,25 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitWhileStmt(WhileStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		// Check that the condition is a boolean type
+		TypeDenoter cond = stmt.cond.visit(this, arg);
+		if (cond.typeKind != TypeKind.BOOLEAN) {
+			System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected type BOOLEAN but got " + cond.typeKind);
+		}
+		
+		// TypeCheck the body
+		stmt.body.visit(this, arg);
+		
+		//A variable declaration cannot be the solitary statement in a branch of a conditional statement.
+		if (stmt.body instanceof VarDeclStmt) {
+			System.out.println("*** line " + stmt.body.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+		} else if (stmt.body instanceof BlockStmt) {
+			BlockStmt s = (BlockStmt) stmt.body;
+			if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
+				System.out.println("*** line " + s.sl.get(0).posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+			}
+		}
+			
 		return null;
 	}
 
