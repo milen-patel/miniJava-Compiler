@@ -13,7 +13,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	
 	@Override
 	public Object visitPackage(Package prog, Object arg) {
-		int y = ctx.x;
 		ErrorReporter.get().log("<Contextual Analysis> Starting contextual analysis", 5);
 		
 		// Add predefined classes

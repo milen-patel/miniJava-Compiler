@@ -78,8 +78,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitVarDecl(VarDecl decl, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		return decl.type;
 	}
 
 	@Override
@@ -109,7 +108,58 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitVardeclStmt(VarDeclStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
-		stmt.initExp.visit(this, arg);
+		TypeDenoter lhs = stmt.varDecl.visit(this, arg);
+		TypeDenoter rhs = stmt.initExp.visit(this, arg);
+		
+		if (lhs instanceof BaseType) {
+			if (!(rhs instanceof BaseType)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression type (" + rhs.typeKind + ") does not match base variable type!");
+				return null;
+			}
+			if (lhs.typeKind != rhs.typeKind) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression type (" + rhs.typeKind + ") does not match variable type (" + lhs.typeKind + ")!");
+				return null;
+			}
+		} else if (lhs instanceof ClassType) {
+			if (!(rhs instanceof ClassType)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression doesn't match expected type");
+				return null;
+			}
+			String l = ((ClassType) lhs).className.spelling;
+			String r = ((ClassType) rhs).className.spelling;
+			if (!l.contentEquals(r)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected '" + l + "' but got '" + r + "'.");
+			}
+		} else if (lhs instanceof ArrayType) {
+			// TODO
+			if (!(rhs instanceof ArrayType)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression needed to be of type ARRAY");
+				return null;
+			}
+			ArrayType l = (ArrayType) lhs;
+			ArrayType r = (ArrayType) rhs;
+			
+			if (l.eltType.typeKind == TypeKind.INT) {
+				if (r.eltType.typeKind != TypeKind.INT) {
+					System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression is not of expected type INT[]");
+				}
+				return null;
+			}
+			
+			if (!(r.eltType instanceof ClassType)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected array to be of class type element");
+				return null;
+			}
+			ClassType lt = (ClassType) l.eltType;
+			ClassType rt = (ClassType) r.eltType;
+			if (!lt.className.spelling.contentEquals(rt.className.spelling)) {
+				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected elements of type '" + lt.className.spelling + "' but got '" + rt.className.spelling + "'.");
+				return null;
+			}
+			
+		} else {
+			// TODO error out
+		}
 		return null;
 	}
 
@@ -139,7 +189,37 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitIfStmt(IfStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		TypeDenoter cond = stmt.cond.visit(this, arg);
+		if (cond.typeKind != TypeKind.BOOLEAN) {
+			System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected type BOOLEAN but got " + cond.typeKind);
+			return null;
+		}
+		stmt.thenStmt.visit(this, arg);
+		
+		//A variable declaration cannot be the solitary statement in a branch of a conditional statement.
+		if (stmt.thenStmt instanceof VarDeclStmt) {
+			System.out.println("*** line " + stmt.thenStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+
+		} else if (stmt.thenStmt instanceof BlockStmt) {
+			BlockStmt s = (BlockStmt) stmt.thenStmt;
+			if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
+				System.out.println("*** line " + stmt.thenStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+			}
+		}
+		
+		if (stmt.elseStmt != null) {
+			stmt.elseStmt.visit(this, arg);
+			
+			if (stmt.elseStmt instanceof VarDeclStmt) {
+				System.out.println("*** line " + stmt.elseStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+
+			} else if (stmt.elseStmt instanceof BlockStmt) {
+				BlockStmt s = (BlockStmt) stmt.elseStmt;
+				if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
+					System.out.println("*** line " + stmt.elseStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+				}
+			}
+		}
 		return null;
 	}
 
@@ -151,30 +231,70 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitUnaryExpr(UnaryExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		TypeDenoter et = expr.expr.visit(this, arg);
+		
+		if (expr.operator.spelling.contentEquals("-")) {
+			if (et.typeKind != TypeKind.INT) {
+				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected INT but got " + et.typeKind);
+			}
+			return new BaseType(TypeKind.INT, dummyPos);
+		}
+		
+		if (expr.operator.spelling.contentEquals("!")) {
+			if (et.typeKind != TypeKind.BOOLEAN) {
+				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected BOOLEAN but got " + et.typeKind);
+			}
+			return new BaseType(TypeKind.BOOLEAN, dummyPos);
+		}
+		
+		// TODO error out
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitBinaryExpr(BinaryExpr expr, Object arg) {
-		System.out.println("BINARY" + expr.posn.getLineNumber());
 		TypeDenoter lhs = expr.left.visit(this, arg);
-		TypeDenoter rhs = expr.right.visit(this, arg);               
+		TypeDenoter rhs = expr.right.visit(this, arg);         
+
+		// INT x INT -> INT
 		if (expr.operator.spelling.contentEquals("+") ||
 				expr.operator.spelling.contentEquals("-") || 
 				expr.operator.spelling.contentEquals("*") ||
 				expr.operator.spelling.contentEquals("/")) {
 			if (lhs.typeKind != TypeKind.INT || rhs.typeKind != TypeKind.INT) {
-				System.out.println("*** line " + expr.posn.getLineNumber() + " type error expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
+				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
+				// TODO so should we return a error type or just return the expected type
 			}
+			return new BaseType(TypeKind.INT, dummyPos);
 		}
+		
+		// INT x INT -> BOOLEAN
+		if (expr.operator.spelling.contentEquals("<") || 
+				expr.operator.spelling.contentEquals("<=")||
+				expr.operator.spelling.contentEquals(">") ||
+				expr.operator.spelling.contentEquals(">=")) {
+			if (lhs.typeKind != TypeKind.INT || rhs.typeKind != TypeKind.INT) {
+				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
+				// TODO so should we return a error type or just return the expected type
+			}
+			return new BaseType(TypeKind.BOOLEAN, dummyPos);
+		}
+		
+		// BOOLEAN x BOOLEAN -> BOOLEAN
+		if (expr.operator.spelling.contentEquals("||") || expr.operator.spelling.contentEquals("&&")) {
+			if (lhs.typeKind != TypeKind.BOOLEAN || rhs.typeKind != TypeKind.BOOLEAN) {
+				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected BOOLEAN X BOOLEAN but got " + lhs.typeKind + " X " + rhs.typeKind);
+			}
+			return new BaseType(TypeKind.BOOLEAN, dummyPos);
+		}
+		
+		
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitRefExpr(RefExpr expr, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		return expr.ref.getDeclaration().type;//TODO double check
 	}
 
 	@Override
@@ -191,19 +311,23 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitLiteralExpr(LiteralExpr expr, Object arg) {
-		return expr.lit.visit(this, arg); // TODO not sure if this is right
+		expr.type = expr.lit.visit(this, arg);
+		return expr.type; // TODO not sure if this is right
 	}
 
 	@Override
 	public TypeDenoter visitNewObjectExpr(NewObjectExpr expr, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		return expr.classtype;
+		// TODO figure out how to deal with this being used in a invalid context
 	}
 
 	@Override
 	public TypeDenoter visitNewArrayExpr(NewArrayExpr expr, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		TypeDenoter sizeEx = expr.sizeExpr.visit(this, arg);
+		if (!(sizeEx instanceof BaseType) || sizeEx.typeKind != TypeKind.INT) {
+			System.out.println("*** line " + expr.posn.getLineNumber() + ":  array size expression expected to be of type INT but got " + sizeEx.typeKind);
+		}
+		return new ArrayType(expr.eltType, dummyPos);
 	}
 
 	@Override
@@ -215,12 +339,29 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitIdRef(IdRef ref, Object arg) {
 		// TODO Auto-generated method stub
+		// Pointing to a Class
+		if (ref.getDeclaration() instanceof ClassDecl) {
+			ClassDecl cd = (ClassDecl) ref.getDeclaration();
+			return cd.type;
+		}
+		// Pointing to a Variable
+		if (ref.getDeclaration() instanceof FieldDecl) {
+			FieldDecl fd = (FieldDecl) ref.getDeclaration();
+			return fd.type;
+		}
+		// Pointing to a Method
+		if (ref.getDeclaration() instanceof MethodDecl) {
+			return new BaseType(TypeKind.METHOD, dummyPos);
+		}
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitQRef(QualRef ref, Object arg) {
 		// TODO Auto-generated method stub
+		
+		System.out.println(ref.getDeclaration());
+		System.out.println(ref.id.getDeclaration()); //chheck that these are the same
 		return null;
 	}
 
@@ -243,7 +384,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitBooleanLiteral(BooleanLiteral bool, Object arg) {
-		
 		return new BaseType(TypeKind.BOOLEAN, dummyPos);
 	}
 

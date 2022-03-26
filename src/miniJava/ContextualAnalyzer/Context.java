@@ -4,13 +4,11 @@ import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
 
 public class Context {
-	static int x = 5;
 	private ClassDecl currentClass;
 	private boolean inStaticMethod = false;
 	private String variableInDeclaration = null;
 	
 	public ClassDecl getCurrentClass() {
-		this.x = 5;
 		return this.currentClass;
 	}
 	
