@@ -102,7 +102,9 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitBlockStmt(BlockStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		for (Statement s : stmt.sl) {
+			s.visit(this, arg);
+		}
 		return null;
 	}
 
