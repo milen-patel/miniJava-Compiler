@@ -10,6 +10,7 @@ import miniJava.AbstractSyntaxTrees.CallExpr;
 import miniJava.AbstractSyntaxTrees.CallStmt;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
 import miniJava.AbstractSyntaxTrees.ClassType;
+import miniJava.AbstractSyntaxTrees.Declaration;
 import miniJava.AbstractSyntaxTrees.ExprList;
 import miniJava.AbstractSyntaxTrees.Expression;
 import miniJava.AbstractSyntaxTrees.FieldDecl;
@@ -111,7 +112,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitVardeclStmt(VarDeclStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
 		TypeDenoter lhs = stmt.varDecl.visit(this, arg);
 		TypeDenoter rhs = stmt.initExp.visit(this, lhs);
 		
@@ -169,7 +169,20 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitAssignStmt(AssignStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		Declaration d = stmt.ref.getDeclaration();
+		if (d instanceof MethodDecl) {
+			System.out.println("*** line " + stmt.ref.posn.getLineNumber() + ": cannot assign to a method");
+			return null;
+		}
+		if (d instanceof ClassDecl) {
+			System.out.println("*** line " + stmt.ref.posn.getLineNumber() + ": cannot assign to a class");
+			return null;
+		}
+		TypeDenoter expectedType = stmt.ref.visit(this, arg);
+		TypeDenoter actualType = stmt.val.visit(this, arg);
+		if (!this.typesAreEqual(expectedType, actualType)) {
+			System.out.println("*** line " + stmt.val.posn.getLineNumber() + ": expected type " + expectedType + " but got " + actualType);
+		}
 		return null;
 	}
 
