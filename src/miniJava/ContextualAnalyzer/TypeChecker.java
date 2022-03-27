@@ -78,8 +78,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitParameterDecl(ParameterDecl pd, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		return pd.type;
 	}
 
 	@Override
@@ -89,19 +88,16 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitBaseType(BaseType type, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitClassType(ClassType type, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitArrayType(ArrayType type, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -185,8 +181,29 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitCallStmt(CallStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!(stmt.methodRef.getDeclaration() instanceof MethodDecl)) {
+			System.out.println("*** line " + stmt.methodRef.posn.getLineNumber() + " reference in a call statement must point to a function.");
+			return (TypeDenoter) arg; // TODO this will cause some issues
+		}
+		MethodDecl md = (MethodDecl) stmt.methodRef.getDeclaration();
+		ParameterDeclList expectedArgs = md.parameterDeclList;
+		ExprList actualArgs = stmt.argList;
+		
+		if (expectedArgs.size()  != actualArgs.size()) {
+			System.out.println("*** line " + stmt.methodRef.posn.getLineNumber() + " expected " + expectedArgs.size() + " args but got " + actualArgs.size());
+			return stmt.methodRef.getDeclaration().type;
+		}
+		
+		// Type check each of the parameters
+		for (int i = 0; i < expectedArgs.size(); i++) {
+			TypeDenoter expect = expectedArgs.get(i).type;
+			TypeDenoter actual = actualArgs.get(i).visit(this, arg);
+			if (!this.typesAreEqual(expect, actual)) {
+				System.out.println("*** line " + actualArgs.get(i).posn.getLineNumber() + ": expected parameter of type " + expect.typeKind + " at position " + (i+1));
+			}
+		}
+		
+		return stmt.methodRef.getDeclaration().type;
 	}
 
 	@Override
