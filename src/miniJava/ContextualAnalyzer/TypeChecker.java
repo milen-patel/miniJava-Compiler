@@ -394,15 +394,26 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitIxExpr(IxExpr expr, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		TypeDenoter ref = expr.ref.visit(this, arg);
+		if (!(ref instanceof ArrayType)) {
+			System.out.println("*** line " + expr.ref.posn.getLineNumber() + ": cannot attempt to index a non-array structure.");
+			return (TypeDenoter) arg; // TODO test this case
+		}
+		
+		TypeDenoter idx = expr.ixExpr.visit(this, arg);
+		if (idx.typeKind != TypeKind.INT) {
+			System.out.println("*** line " + expr.ixExpr.posn.getLineNumber() + ": index to an array must be of type integer but got " + idx.typeKind + ".");
+			return ((ArrayType) ref).eltType; // TODO test this
+		}
+		
+		return ((ArrayType) ref).eltType;
 	}
 
 	@Override
 	public TypeDenoter visitCallExpr(CallExpr expr, Object arg) {
 		if (!(expr.functionRef.getDeclaration() instanceof MethodDecl)) {
 			// TODO should this be caught in identification
-			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + " reference in a call expression must point to a function.");
+			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + ": reference in a call expression must point to a function.");
 			return (TypeDenoter) arg; // TODO this will cause some issues
 		}
 		MethodDecl md = (MethodDecl) expr.functionRef.getDeclaration();
@@ -410,7 +421,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		ExprList actualArgs = expr.argList;
 		
 		if (expectedArgs.size()  != actualArgs.size()) {
-			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + " expected " + expectedArgs.size() + " args but got " + actualArgs.size());
+			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + ": expected " + expectedArgs.size() + " args but got " + actualArgs.size());
 			return expr.functionRef.getDeclaration().type;
 		}
 		
@@ -480,6 +491,10 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitQRef(QualRef ref, Object arg) {
 		if (ref.getDeclaration() != ref.id.getDeclaration()) {
 			System.out.println("WARNING WARNING WARNING TODO");
+		}
+		// Pointing to a Method
+		if (ref.getDeclaration() instanceof MethodDecl) {
+			return new BaseType(TypeKind.METHOD, dummyPos);
 		}
 		return ref.getDeclaration().type;
 	}
