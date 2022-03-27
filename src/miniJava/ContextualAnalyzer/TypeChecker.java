@@ -205,8 +205,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		}
 		
 		TypeDenoter rt = stmt.returnExpr.visit(this, null);
- 		
-		// TODO this is a temp fix that deals with returning a class name need to investigate, visitRefExpr
+ 		// TODO this is a temp fix that deals with returning a class name need to investigate, visitRefExpr
  		if (rt == null) {
 			System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": unable to resolve type on return expression.");
 			return md.type;
@@ -366,11 +365,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitRefExpr(RefExpr expr, Object arg) {
-		// TODO something about thihs method is very wrong, how to deal with referecning classes statically
-		if (expr.ref.getDeclaration() instanceof ClassDecl) {
-		//	return new ClassType(new BaseType(TypeKind.CLASS, dummyPos), dummyPos);
+		// Pointing to a Method
+		if (expr.ref.getDeclaration() instanceof MethodDecl) {
+			return new BaseType(TypeKind.METHOD, dummyPos);
 		}
-		return expr.ref.getDeclaration().type;//TODO double check
+		return expr.ref.visit(this, arg);
 	}
 
 	@Override
@@ -409,36 +408,37 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitThisRef(ThisRef ref, Object arg) {
 		// TODO Auto-generated method stub
+		System.out.println(ref.getDeclaration().type);
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitIdRef(IdRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		/*
 		// Pointing to a Class
 		if (ref.getDeclaration() instanceof ClassDecl) {
 			ClassDecl cd = (ClassDecl) ref.getDeclaration();
 			return cd.type;
 		}
-		// Pointing to a Variable
+		// Pointing to a Class Variable
 		if (ref.getDeclaration() instanceof FieldDecl) {
 			FieldDecl fd = (FieldDecl) ref.getDeclaration();
 			return fd.type;
 		}
-		// Pointing to a Method
-		if (ref.getDeclaration() instanceof MethodDecl) {
-			return new BaseType(TypeKind.METHOD, dummyPos);
+		// Pointing to a local variable
+		if (ref.getDeclaration() instanceof VarDecl) {
+			return ref.getDeclaration().type; // okay this means this whole method isnt necesary
 		}
-		return null;
+		*/
+		return ref.getDeclaration().type;
 	}
 
 	@Override
 	public TypeDenoter visitQRef(QualRef ref, Object arg) {
-		// TODO Auto-generated method stub
-		
-		System.out.println(ref.getDeclaration());
-		System.out.println(ref.id.getDeclaration()); //chheck that these are the same
-		return null;
+		if (ref.getDeclaration() != ref.id.getDeclaration()) {
+			System.out.println("WARNING WARNING WARNING TODO");
+		}
+		return ref.getDeclaration().type;
 	}
 
 	@Override
