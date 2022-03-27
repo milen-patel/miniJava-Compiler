@@ -10,6 +10,8 @@ import miniJava.AbstractSyntaxTrees.CallExpr;
 import miniJava.AbstractSyntaxTrees.CallStmt;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
 import miniJava.AbstractSyntaxTrees.ClassType;
+import miniJava.AbstractSyntaxTrees.ExprList;
+import miniJava.AbstractSyntaxTrees.Expression;
 import miniJava.AbstractSyntaxTrees.FieldDecl;
 import miniJava.AbstractSyntaxTrees.IdRef;
 import miniJava.AbstractSyntaxTrees.Identifier;
@@ -25,6 +27,7 @@ import miniJava.AbstractSyntaxTrees.NullLiteral;
 import miniJava.AbstractSyntaxTrees.Operator;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.AbstractSyntaxTrees.ParameterDecl;
+import miniJava.AbstractSyntaxTrees.ParameterDeclList;
 import miniJava.AbstractSyntaxTrees.QualRef;
 import miniJava.AbstractSyntaxTrees.RefExpr;
 import miniJava.AbstractSyntaxTrees.ReturnStmt;
@@ -114,7 +117,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitVardeclStmt(VarDeclStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
 		TypeDenoter lhs = stmt.varDecl.visit(this, arg);
-		TypeDenoter rhs = stmt.initExp.visit(this, arg);
+		TypeDenoter rhs = stmt.initExp.visit(this, lhs);
 		
 		if (lhs instanceof BaseType) {
 			if (!(rhs instanceof BaseType)) {
@@ -360,8 +363,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			}
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
 		}
-		
-		
 		return null;
 	}
 
@@ -382,8 +383,31 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitCallExpr(CallExpr expr, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!(expr.functionRef.getDeclaration() instanceof MethodDecl)) {
+			// TODO should this be caught in identification
+			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + " reference in a call expression must point to a function.");
+			return (TypeDenoter) arg; // TODO this will cause some issues
+		}
+		MethodDecl md = (MethodDecl) expr.functionRef.getDeclaration();
+		ParameterDeclList expectedArgs = md.parameterDeclList;
+		ExprList actualArgs = expr.argList;
+		
+		if (expectedArgs.size()  != actualArgs.size()) {
+			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + " expected " + expectedArgs.size() + " args but got " + actualArgs.size());
+			return expr.functionRef.getDeclaration().type;
+		}
+		
+		// Type check each of the parameters
+		for (int i = 0; i < expectedArgs.size(); i++) {
+
+			TypeDenoter expect = expectedArgs.get(i).type;
+			TypeDenoter actual = actualArgs.get(i).visit(this, arg);
+			if (!this.typesAreEqual(expect, actual)) {
+				System.out.println("*** line " + actualArgs.get(i).posn.getLineNumber() + ": expected parameter of type " + expect.typeKind + " at position " + (i+1));
+			}
+		}
+		
+		return expr.functionRef.getDeclaration().type;
 	}
 
 	@Override
@@ -473,5 +497,34 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	}
 
 	
+	private boolean typesAreEqual(TypeDenoter a, TypeDenoter b) {
+		if (a == null || b == null)
+			return false;
 
+		if  (a.typeKind != b.typeKind) {
+			return false;
+		}
+		
+		if (a.typeKind == TypeKind.CLASS) {
+			String l = ((ClassType) a).className.spelling;
+			String r = ((ClassType) b).className.spelling;
+			if (!l.contentEquals(r)) {
+				return false;
+			}
+		} else if (a.typeKind == TypeKind.ARRAY) {
+			ArrayType lhs = (ArrayType) a;
+			ArrayType rhs = (ArrayType) b;
+			if (lhs.eltType.typeKind != rhs.eltType.typeKind) {
+				return false;
+			}
+			if (lhs.eltType.typeKind == TypeKind.CLASS) {
+				String l = ((ClassType) lhs.eltType).className.spelling;
+				String r = ((ClassType) rhs.eltType).className.spelling;
+				if (!l.contentEquals(r)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 }
