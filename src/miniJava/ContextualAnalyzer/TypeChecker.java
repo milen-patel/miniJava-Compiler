@@ -188,8 +188,25 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitIxAssignStmt(IxAssignStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		TypeDenoter ref = stmt.ref.visit(this, arg);
+		
+		if (!(ref instanceof ArrayType)) {
+			System.out.println("*** line " + stmt.ref.posn.getLineNumber() + ": cannot attempt to index a non-array structure.");
+			return null;
+		}
+		
+		TypeDenoter idx = stmt.ix.visit(this, arg);
+		if (idx.typeKind != TypeKind.INT) {
+			System.out.println("*** line " + stmt.ix.posn.getLineNumber() + ": index to an array must be of type integer but got " + idx.typeKind + ".");
+			return null;
+		}
+		
+		TypeDenoter exprType = stmt.exp.visit(this, arg);
+		if (!this.typesAreEqual(((ArrayType) ref).eltType, exprType)) {
+			System.out.println("*** line " + stmt.posn.getLineNumber() + ": incompatible types for indexed assign statement");
+		}
+		
+		return null;		
 	}
 
 	@Override
