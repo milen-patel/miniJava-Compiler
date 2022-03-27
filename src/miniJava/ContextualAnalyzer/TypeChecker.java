@@ -37,6 +37,8 @@ import miniJava.AbstractSyntaxTrees.VarDecl;
 import miniJava.AbstractSyntaxTrees.VarDeclStmt;
 import miniJava.AbstractSyntaxTrees.WhileStmt;
 import miniJava.SyntacticAnalyzer.SourcePosition;
+import miniJava.SyntacticAnalyzer.Token;
+import miniJava.SyntacticAnalyzer.TokenKind;
 
 public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object, TypeDenoter> {
 	SourcePosition dummyPos = new SourcePosition(0,0,0);
@@ -407,9 +409,9 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitThisRef(ThisRef ref, Object arg) {
-		// TODO Auto-generated method stub
-		System.out.println(ref.getDeclaration().type);
-		return null;
+		// The type of a ClassDecl will always be null, test this workaround TODO
+		ClassDecl cd = (ClassDecl) ref.getDeclaration();
+		return new ClassType(new Identifier(new Token(TokenKind.IDENTIFIER, cd.name, null)), dummyPos);
 	}
 
 	@Override
