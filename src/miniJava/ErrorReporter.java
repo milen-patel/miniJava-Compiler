@@ -22,6 +22,10 @@ public class ErrorReporter {
 		System.exit(FAILURE_RETURN_CODE);
 	}
 	
+	public void typeError(int lineNumber, String reason) {
+		System.out.println("*** line " + lineNumber + ": " + reason);
+	}
+	
 	/*
 	 * Logs input to the user. Will become useful if we want to silence logging.
 	 */

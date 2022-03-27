@@ -1,5 +1,6 @@
 package miniJava.ContextualAnalyzer;
 
+import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.ArrayType;
 import miniJava.AbstractSyntaxTrees.AssignStmt;
 import miniJava.AbstractSyntaxTrees.BaseType;
@@ -117,11 +118,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		if (lhs instanceof BaseType) {
 			if (!(rhs instanceof BaseType)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression type (" + rhs.typeKind + ") does not match base variable type!");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "initializing expression type (" + rhs.typeKind + ") does not match base variable type!");
 				return null;
 			}
 			if (lhs.typeKind != rhs.typeKind) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression type (" + rhs.typeKind + ") does not match variable type (" + lhs.typeKind + ")!");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "initializing expression type (" + rhs.typeKind + ") does not match variable type (" + lhs.typeKind + ")!");
 				return null;
 			}
 		} else if (lhs instanceof ClassType) {
@@ -129,20 +130,20 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				return null;
 			}
 			if (!(rhs instanceof ClassType)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression doesn't match expected type");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "initializing expression doesn't match expected type");
 				return null;
 			}
 			String l = ((ClassType) lhs).className.spelling;
 			String r = ((ClassType) rhs).className.spelling;
 			if (!l.contentEquals(r)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected '" + l + "' but got '" + r + "'.");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected '" + l + "' but got '" + r + "'.");
 			}
 		} else if (lhs instanceof ArrayType) {
 			// TODO
 			if (rhs.typeKind == TypeKind.NULL)
 				return null;
 			if (!(rhs instanceof ArrayType)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression needed to be of type ARRAY");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "initializing expression needed to be of type ARRAY");
 				return null;
 			}
 			ArrayType l = (ArrayType) lhs;
@@ -150,19 +151,19 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			
 			if (l.eltType.typeKind == TypeKind.INT) {
 				if (r.eltType.typeKind != TypeKind.INT) {
-					System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression is not of expected type INT[]");
+					ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "initializing expression is not of expected type INT[]");
 				}
 				return null;
 			}
 			
 			if (!(r.eltType instanceof ClassType)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected array to be of class type element");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected array to be of class type element");
 				return null;
 			}
 			ClassType lt = (ClassType) l.eltType;
 			ClassType rt = (ClassType) r.eltType;
 			if (!lt.className.spelling.contentEquals(rt.className.spelling)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected elements of type '" + lt.className.spelling + "' but got '" + rt.className.spelling + "'.");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected elements of type '" + lt.className.spelling + "' but got '" + rt.className.spelling + "'.");
 				return null;
 			}
 			
@@ -176,11 +177,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitAssignStmt(AssignStmt stmt, Object arg) {
 		Declaration d = stmt.ref.getDeclaration();
 		if (d instanceof MethodDecl) {
-			System.out.println("*** line " + stmt.ref.posn.getLineNumber() + ": cannot assign to a method");
+			ErrorReporter.get().typeError(stmt.ref.posn.getLineNumber(), "cannot assign to a method");
 			return null;
 		}
 		if (d instanceof ClassDecl) {
-			System.out.println("*** line " + stmt.ref.posn.getLineNumber() + ": cannot assign to a class");
+			ErrorReporter.get().typeError(stmt.ref.posn.getLineNumber(), "cannot assign to a class");
 			return null;
 		}
 		TypeDenoter expectedType = stmt.ref.visit(this, arg);
@@ -188,7 +189,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		if ((expectedType instanceof ClassType || expectedType instanceof ArrayType) && actualType.typeKind == TypeKind.NULL)
 			return null;
 		if (!this.typesAreEqual(expectedType, actualType)) {
-			System.out.println("*** line " + stmt.val.posn.getLineNumber() + ": expected type " + expectedType + " but got " + actualType);
+			ErrorReporter.get().typeError(stmt.val.posn.getLineNumber(), "expected type " + expectedType + " but got " + actualType);
 		}
 		return null;
 	}
@@ -198,24 +199,25 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		TypeDenoter ref = stmt.ref.visit(this, arg);
 		
 		if (!(ref instanceof ArrayType)) {
-			System.out.println("*** line " + stmt.ref.posn.getLineNumber() + ": cannot attempt to index a non-array structure.");
+			ErrorReporter.get().typeError(stmt.ref.posn.getLineNumber(), "cannot attempt to index a non-array structure.");
 			return null;
 		}
 		
 		TypeDenoter idx = stmt.ix.visit(this, arg);
 		if (idx.typeKind != TypeKind.INT) {
-			System.out.println("*** line " + stmt.ix.posn.getLineNumber() + ": index to an array must be of type integer but got " + idx.typeKind + ".");
+			ErrorReporter.get().typeError(stmt.ix.posn.getLineNumber(), "index to an array must be of type integer but got " + idx.typeKind + ".");
 			return null;
 		}
 		
 		TypeDenoter exprType = stmt.exp.visit(this, arg);
+		// Null can be assigned
 		if (ref.typeKind == TypeKind.CLASS || ref.typeKind == TypeKind.ARRAY) {
 			if (exprType.typeKind == TypeKind.NULL)
 				return null;
 		}
 		
 		if (!this.typesAreEqual(((ArrayType) ref).eltType, exprType)) {
-			System.out.println("*** line " + stmt.posn.getLineNumber() + ": incompatible types for indexed assign statement");
+			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "incompatible types for indexed assign statement");
 		}
 		
 		return null;		
@@ -224,7 +226,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitCallStmt(CallStmt stmt, Object arg) {
 		if (!(stmt.methodRef.getDeclaration() instanceof MethodDecl)) {
-			System.out.println("*** line " + stmt.methodRef.posn.getLineNumber() + " reference in a call statement must point to a function.");
+			ErrorReporter.get().typeError(stmt.methodRef.posn.getLineNumber(), "reference in a call statement must point to a function.");
 			return (TypeDenoter) arg; // TODO this will cause some issues
 		}
 		MethodDecl md = (MethodDecl) stmt.methodRef.getDeclaration();
@@ -232,7 +234,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		ExprList actualArgs = stmt.argList;
 		
 		if (expectedArgs.size()  != actualArgs.size()) {
-			System.out.println("*** line " + stmt.methodRef.posn.getLineNumber() + " expected " + expectedArgs.size() + " args but got " + actualArgs.size());
+			ErrorReporter.get().typeError(stmt.methodRef.posn.getLineNumber(), "expected " + expectedArgs.size() + " args but got " + actualArgs.size());
 			return stmt.methodRef.getDeclaration().type;
 		}
 		
@@ -241,7 +243,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			TypeDenoter expect = expectedArgs.get(i).type;
 			TypeDenoter actual = actualArgs.get(i).visit(this, arg);
 			if (!this.typesAreEqual(expect, actual)) {
-				System.out.println("*** line " + actualArgs.get(i).posn.getLineNumber() + ": expected parameter of type " + expect.typeKind + " at position " + (i+1));
+				ErrorReporter.get().typeError(actualArgs.get(i).posn.getLineNumber(), "expected parameter of type " + expect.typeKind + " at position " + (i+1));
 			}
 		}
 		
@@ -258,45 +260,45 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		if (md.type.typeKind == TypeKind.VOID) {
 			if (stmt.returnExpr != null) {
-				System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": void methods cannot have a return value");
+				ErrorReporter.get().typeError(stmt.returnExpr.posn.getLineNumber(), "void methods cannot have a return value");
 			}
 			return null;
 		}
 		
 		if (stmt.returnExpr == null) {
-			System.out.println("*** line " + stmt.posn.getLineNumber() + ": non-void methods must return a value.");
+			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "non-void methods must return a value");
 			return md.type;
 		}
 		
 		TypeDenoter rt = stmt.returnExpr.visit(this, null);
  		// TODO this is a temp fix that deals with returning a class name need to investigate, visitRefExpr
  		if (rt == null) {
-			System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": unable to resolve type on return expression.");
+			ErrorReporter.get().typeError(stmt.returnExpr.posn.getLineNumber(), "unable to resolve type on return expression");
 			return md.type;
  		}
 
 		if  (md.type.typeKind != rt.typeKind) {
-			System.out.println("*** line " + stmt.returnExpr.posn.getLineNumber() + ": expected return type of " + md.type.typeKind + " but got " + rt.typeKind);
+			ErrorReporter.get().typeError(stmt.returnExpr.posn.getLineNumber(), "expected return type of " + md.type.typeKind + " but got " + rt.typeKind);
 			return md.type;
 		}
 		if (md.type.typeKind == TypeKind.CLASS) {
 			String l = ((ClassType) md.type).className.spelling;
 			String r = ((ClassType) rt).className.spelling;
 			if (!l.contentEquals(r)) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected return type of '" + l + "' but got '" + r + "'.");
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected return type of '" + l + "' but got '" + r + "'");
 			}
 		} else if (md.type.typeKind == TypeKind.ARRAY) {
 			ArrayType lhs = (ArrayType) md.type;
 			ArrayType rhs = (ArrayType) rt;
 			if (lhs.eltType.typeKind != rhs.eltType.typeKind) {
-				System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected an array of type " + lhs.eltType.typeKind + " but got " + rhs.eltType.typeKind);
+				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected an array of type " + lhs.eltType.typeKind + " but got " + rhs.eltType.typeKind);
 				return md.type;
 			}
 			if (lhs.eltType.typeKind == TypeKind.CLASS) {
 				String l = ((ClassType) lhs.eltType).className.spelling;
 				String r = ((ClassType) rhs.eltType).className.spelling;
 				if (!l.contentEquals(r)) {
-					System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected an array of elements of type " + l + " but got " + r);
+					ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected an array of elements of type " + l + " but got " + r);
 				}
 			}
 		}
@@ -308,19 +310,19 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitIfStmt(IfStmt stmt, Object arg) {
 		TypeDenoter cond = stmt.cond.visit(this, arg);
 		if (cond.typeKind != TypeKind.BOOLEAN) {
-			System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected type BOOLEAN but got " + cond.typeKind);
+			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected type BOOLEAN but got " + cond.typeKind);
 			return null;
 		}
 		stmt.thenStmt.visit(this, arg);
 		
 		//A variable declaration cannot be the solitary statement in a branch of a conditional statement.
 		if (stmt.thenStmt instanceof VarDeclStmt) {
-			System.out.println("*** line " + stmt.thenStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
-
+			ErrorReporter.get().typeError(stmt.thenStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
+			
 		} else if (stmt.thenStmt instanceof BlockStmt) {
 			BlockStmt s = (BlockStmt) stmt.thenStmt;
 			if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-				System.out.println("*** line " + stmt.thenStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+				ErrorReporter.get().typeError(stmt.thenStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
 			}
 		}
 		
@@ -328,12 +330,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			stmt.elseStmt.visit(this, arg);
 			
 			if (stmt.elseStmt instanceof VarDeclStmt) {
-				System.out.println("*** line " + stmt.elseStmt.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+				ErrorReporter.get().typeError(stmt.elseStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
 
 			} else if (stmt.elseStmt instanceof BlockStmt) {
 				BlockStmt s = (BlockStmt) stmt.elseStmt;
 				if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-					System.out.println("*** line " + s.sl.get(0).posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+					ErrorReporter.get().typeError(s.sl.get(0).posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
+
 				}
 			}
 		}
@@ -345,7 +348,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		// Check that the condition is a boolean type
 		TypeDenoter cond = stmt.cond.visit(this, arg);
 		if (cond.typeKind != TypeKind.BOOLEAN) {
-			System.out.println("*** line " + stmt.posn.getLineNumber() + ": expected type BOOLEAN but got " + cond.typeKind);
+			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected type BOOLEAN but got " + cond.typeKind);
 		}
 		
 		// TypeCheck the body
@@ -353,11 +356,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		//A variable declaration cannot be the solitary statement in a branch of a conditional statement.
 		if (stmt.body instanceof VarDeclStmt) {
-			System.out.println("*** line " + stmt.body.posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+			ErrorReporter.get().typeError(stmt.body.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
 		} else if (stmt.body instanceof BlockStmt) {
 			BlockStmt s = (BlockStmt) stmt.body;
 			if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-				System.out.println("*** line " + s.sl.get(0).posn.getLineNumber() + ": a variable declaration cannot be the solitary statement in a branch of a conditional statement.");
+				ErrorReporter.get().typeError(s.sl.get(0).posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
 			}
 		}
 			
@@ -370,14 +373,14 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		if (expr.operator.spelling.contentEquals("-")) {
 			if (et.typeKind != TypeKind.INT) {
-				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected INT but got " + et.typeKind);
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected INT but got " + et.typeKind);
 			}
 			return new BaseType(TypeKind.INT, dummyPos);
 		}
 		
 		if (expr.operator.spelling.contentEquals("!")) {
 			if (et.typeKind != TypeKind.BOOLEAN) {
-				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected BOOLEAN but got " + et.typeKind);
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected BOOLEAN but got " + et.typeKind);
 			}
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
 		}
@@ -397,7 +400,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				expr.operator.spelling.contentEquals("*") ||
 				expr.operator.spelling.contentEquals("/")) {
 			if (lhs.typeKind != TypeKind.INT || rhs.typeKind != TypeKind.INT) {
-				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
 				// TODO so should we return a error type or just return the expected type
 			}
 			return new BaseType(TypeKind.INT, dummyPos);
@@ -409,7 +412,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				expr.operator.spelling.contentEquals(">") ||
 				expr.operator.spelling.contentEquals(">=")) {
 			if (lhs.typeKind != TypeKind.INT || rhs.typeKind != TypeKind.INT) {
-				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
 				// TODO so should we return a error type or just return the expected type
 			}
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
@@ -418,7 +421,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		// BOOLEAN x BOOLEAN -> BOOLEAN
 		if (expr.operator.spelling.contentEquals("||") || expr.operator.spelling.contentEquals("&&")) {
 			if (lhs.typeKind != TypeKind.BOOLEAN || rhs.typeKind != TypeKind.BOOLEAN) {
-				System.out.println("*** line " + expr.posn.getLineNumber() + " type error for operator '" + expr.operator.spelling + "' expected BOOLEAN X BOOLEAN but got " + lhs.typeKind + " X " + rhs.typeKind);
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected BOOLEAN X BOOLEAN but got " + lhs.typeKind + " X " + rhs.typeKind);
 			}
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
 		}
@@ -438,13 +441,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitIxExpr(IxExpr expr, Object arg) {
 		TypeDenoter ref = expr.ref.visit(this, arg);
 		if (!(ref instanceof ArrayType)) {
-			System.out.println("*** line " + expr.ref.posn.getLineNumber() + ": cannot attempt to index a non-array structure.");
+			ErrorReporter.get().typeError(expr.ref.posn.getLineNumber(), "cannot attempt to index a non-array structure");
 			return (TypeDenoter) arg; // TODO test this case
 		}
 		
 		TypeDenoter idx = expr.ixExpr.visit(this, arg);
 		if (idx.typeKind != TypeKind.INT) {
-			System.out.println("*** line " + expr.ixExpr.posn.getLineNumber() + ": index to an array must be of type integer but got " + idx.typeKind + ".");
+			ErrorReporter.get().typeError(expr.ixExpr.posn.getLineNumber(), "index to an array must be of type integer but got " + idx.typeKind);
 			return ((ArrayType) ref).eltType; // TODO test this
 		}
 		
@@ -455,7 +458,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitCallExpr(CallExpr expr, Object arg) {
 		if (!(expr.functionRef.getDeclaration() instanceof MethodDecl)) {
 			// TODO should this be caught in identification
-			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + ": reference in a call expression must point to a function.");
+			ErrorReporter.get().typeError(expr.functionRef.posn.getLineNumber(), "reference in a call expression must point to a function");
 			return (TypeDenoter) arg; // TODO this will cause some issues
 		}
 		MethodDecl md = (MethodDecl) expr.functionRef.getDeclaration();
@@ -463,7 +466,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		ExprList actualArgs = expr.argList;
 		
 		if (expectedArgs.size()  != actualArgs.size()) {
-			System.out.println("*** line " + expr.functionRef.posn.getLineNumber() + ": expected " + expectedArgs.size() + " args but got " + actualArgs.size());
+			ErrorReporter.get().typeError(expr.functionRef.posn.getLineNumber(), "expected " + expectedArgs.size() + " args but got " + actualArgs.size());
 			return expr.functionRef.getDeclaration().type;
 		}
 		
@@ -473,7 +476,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			TypeDenoter expect = expectedArgs.get(i).type;
 			TypeDenoter actual = actualArgs.get(i).visit(this, arg);
 			if (!this.typesAreEqual(expect, actual)) {
-				System.out.println("*** line " + actualArgs.get(i).posn.getLineNumber() + ": expected parameter of type " + expect.typeKind + " at position " + (i+1));
+				ErrorReporter.get().typeError(actualArgs.get(i).posn.getLineNumber(), "expected parameter of type " + expect.typeKind + " at position " + (i+1));
 			}
 		}
 		
@@ -496,7 +499,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitNewArrayExpr(NewArrayExpr expr, Object arg) {
 		TypeDenoter sizeEx = expr.sizeExpr.visit(this, arg);
 		if (!(sizeEx instanceof BaseType) || sizeEx.typeKind != TypeKind.INT) {
-			System.out.println("*** line " + expr.posn.getLineNumber() + ":  array size expression expected to be of type INT but got " + sizeEx.typeKind);
+			ErrorReporter.get().typeError(expr.posn.getLineNumber(), "array size expression expected to be of type INT but got " + sizeEx.typeKind);
 		}
 		return new ArrayType(expr.eltType, dummyPos);
 	}
