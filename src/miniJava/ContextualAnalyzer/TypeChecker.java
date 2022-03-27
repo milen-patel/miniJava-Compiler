@@ -125,6 +125,9 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				return null;
 			}
 		} else if (lhs instanceof ClassType) {
+			if (rhs.typeKind == TypeKind.NULL) {
+				return null;
+			}
 			if (!(rhs instanceof ClassType)) {
 				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression doesn't match expected type");
 				return null;
@@ -136,6 +139,8 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			}
 		} else if (lhs instanceof ArrayType) {
 			// TODO
+			if (rhs.typeKind == TypeKind.NULL)
+				return null;
 			if (!(rhs instanceof ArrayType)) {
 				System.out.println("*** line " + stmt.posn.getLineNumber() + ": initializing expression needed to be of type ARRAY");
 				return null;
@@ -180,6 +185,8 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		}
 		TypeDenoter expectedType = stmt.ref.visit(this, arg);
 		TypeDenoter actualType = stmt.val.visit(this, arg);
+		if ((expectedType instanceof ClassType || expectedType instanceof ArrayType) && actualType.typeKind == TypeKind.NULL)
+			return null;
 		if (!this.typesAreEqual(expectedType, actualType)) {
 			System.out.println("*** line " + stmt.val.posn.getLineNumber() + ": expected type " + expectedType + " but got " + actualType);
 		}
@@ -202,6 +209,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		}
 		
 		TypeDenoter exprType = stmt.exp.visit(this, arg);
+		if (ref.typeKind == TypeKind.CLASS || ref.typeKind == TypeKind.ARRAY) {
+			if (exprType.typeKind == TypeKind.NULL)
+				return null;
+		}
+		
 		if (!this.typesAreEqual(((ArrayType) ref).eltType, exprType)) {
 			System.out.println("*** line " + stmt.posn.getLineNumber() + ": incompatible types for indexed assign statement");
 		}
@@ -554,15 +566,14 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitNullLiteral(NullLiteral nullLiteral, Object arg) {
-		// TODO Auto-generated method stub
-		return null;
+		return new BaseType(TypeKind.NULL, dummyPos);
 	}
 
 	
 	private boolean typesAreEqual(TypeDenoter a, TypeDenoter b) {
 		if (a == null || b == null)
 			return false;
-
+		
 		if  (a.typeKind != b.typeKind) {
 			return false;
 		}

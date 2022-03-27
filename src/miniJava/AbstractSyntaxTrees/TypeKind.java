@@ -13,5 +13,6 @@ public enum TypeKind {
         ARRAY,
         UNSUPPORTED,
         ERROR,
-        METHOD;
+        METHOD,
+        NULL;
 }
