@@ -79,7 +79,8 @@ public class IdentificationTable {
 	public void add(String key, Declaration val) {
 		// Check if declaration exists in most current scope
 		if (this.table.peek().containsKey(key)) {
-			System.out.println("*** line " + val.posn.getLineNumber() + ": Duplicate declaration error. Identifier '" + key + "' has already been used.");
+			System.out.println("*** line " + val.posn.getLineNumber() + ": ");
+			ErrorReporter.get().idError(val.posn.getLineNumber(), "duplicate declaration error. Identifier '" + key + "' has already been used.");
 			return;
 		}
 		
@@ -87,7 +88,7 @@ public class IdentificationTable {
 		if (this.getScopeLevel() >= 4) {
 			for (int i = 2; i < table.size(); i++) {
 				if (this.table.get(i).containsKey(key)) {
-					System.out.println("*** line " + val.posn.getLineNumber() + ": declarations at level 4 or higher cannot hide declarations at level 3 or higher");
+					ErrorReporter.get().idError(val.posn.getLineNumber(), "declarations at level 4 or higher cannot hide declarations at level 3 or higher");
 					break;
 				}
 			}

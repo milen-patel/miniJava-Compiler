@@ -8,6 +8,7 @@ public class ErrorReporter {
 	public static final int FAILURE_RETURN_CODE = 4;
 	private static ErrorReporter reporter;
 	private int reportingMinimum = 10;
+	private int typeErrors = 0;
 	
 	/*
 	 * Prints error to user and then ends program with failure code.
@@ -22,7 +23,19 @@ public class ErrorReporter {
 		System.exit(FAILURE_RETURN_CODE);
 	}
 	
+	/*
+	 * Reports an identification error and then stops the program.
+	 */
+	public void idError(int lineNumber, String reason) {
+		System.out.println("*** line " + lineNumber + ": " + reason);
+		System.exit(FAILURE_RETURN_CODE);
+	}
+	
+	/*
+	 * Reports a contextual analysis type checking error
+	 */
 	public void typeError(int lineNumber, String reason) {
+		this.typeErrors++;
 		System.out.println("*** line " + lineNumber + ": " + reason);
 	}
 	

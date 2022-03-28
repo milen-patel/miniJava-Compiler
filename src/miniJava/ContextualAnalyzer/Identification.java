@@ -87,9 +87,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			MethodDecl md = methodDecls.get(i);
 			// Make sure a variable/method with that name hasn't already been defined
 			if (table.containsKeyAtTopScope(md.name)) {
-				System.out
-						.println("*** line " + md.posn.getLineNumber() + ": Duplicate class field declaration error. Field "
-								+ md.name + " has already been defined. oops!");
+				ErrorReporter.get().idError(md.posn.getLineNumber(), "Duplicate class field declaration error. Field "
+								+ md.name + " has already been defined");
+				
 			}
 			table.add(md.name, md);
 		}
@@ -110,8 +110,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		// Check if variable already defined
 		String vName = decl.name;
 		if (table.containsKeyAtTopScope(vName)) {
-			System.out.println("*** line " + decl.posn.getLineNumber()
-					+ ": Duplicate class field declaration error. Variable " + vName + " has already been defined.");
+			ErrorReporter.get().idError(decl.posn.getLineNumber(), "Duplicate class field declaration error. Variable " + vName + " has already been defined");
 		}
 		
 		// Record the variable name
@@ -176,7 +175,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		
 		// See if the variable has already been defined
 		if (this.table.containsKeyAtNonCoverableScope(decl.name)) {
-			System.out.println("*** line " + decl.posn.getLineNumber() + ": Local variable '" + decl.name + "' declaration attempts to hide declaration at level 3+");
+			ErrorReporter.get().idError(decl.posn.getLineNumber(), "Local variable '" + decl.name + "' declaration attempts to hide declaration at level 3+");
 		} else {
 			this.table.add(decl.name, decl);
 		}
@@ -196,8 +195,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		
 		// Make sure the class exists
 		if (!this.table.classesTable.containsKey(declType.className.spelling)) {
-			System.out.println(
-					"*** line " + declType.posn.getLineNumber() + ": Unknown class type '" + declType.className.spelling + "'.");
+			ErrorReporter.get().idError(declType.posn.getLineNumber(), "Unknown class type '" + declType.className.spelling + "'.");
 		}
 
 		// If the class exists, make the declaration point to the class declaration
@@ -386,13 +384,11 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitThisRef(ThisRef ref, Object arg) {
 		ErrorReporter.get().log("Visiting a 'this' reference", 5);
 		if (!ctx.inClass()) {
-			System.out.println(
-					"*** line " + ref.posn.getLineNumber() + ": Invalid reference to this");
+			ErrorReporter.get().idError(ref.posn.getLineNumber(), "Invalid reference to this");
 		}
 		
 		if (ctx.inStaticMethod()) {
-			System.out.println(
-					"*** line " + ref.posn.getLineNumber() + ": static methods cannot use 'this' keyword");
+			ErrorReporter.get().idError(ref.posn.getLineNumber(), "static methods cannot use 'this' keyword");
 		}
 		
 		ref.setDeclaration(ctx.getCurrentClass());
@@ -403,15 +399,13 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitIdRef(IdRef ref, Object arg) {
 		// Check that there is a corresponding declaration
 		if (this.table.find(ref.id.spelling) == null) {
-			System.out.println(
-					"*** line " + ref.posn.getLineNumber() + ": Unknown reference to identifier '" + ref.id.spelling + "'.");
+			ErrorReporter.get().idError(ref.posn.getLineNumber(), "Unknown reference to identifier '" + ref.id.spelling + "'.");
 		}
 		
 		// If we are defining a variable, we cannot reference that variable in the initializinig expression
 		if (ctx.inMethodVariableDeclaration()) {
 			if (ref.id.spelling.contentEquals(ctx.getVariableInDeclaration())) {
-				System.out.println(
-						"*** line " + ref.posn.getLineNumber() + ": cannot reference variable name '" + ref.id.spelling + "' in initializiing expression");
+				ErrorReporter.get().idError(ref.posn.getLineNumber(), "cannot reference variable name '" + ref.id.spelling + "' in initializiing expression");
 			} // TODO check if theres another place this issue could happen
 		}
 		
@@ -421,13 +415,11 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		if (ctx.inStaticMethod()) {
 			if (d instanceof FieldDecl) {
 				if (!((FieldDecl) d).isStatic) {
-					System.out.println(
-							"*** line " + ref.posn.getLineNumber() + ": static method cannot reference non-static field");
+					ErrorReporter.get().idError(ref.posn.getLineNumber(), "static method cannot reference non-static field");
 				}
 			} else if (d instanceof MethodDecl) {
 				if (!((MethodDecl) d).isStatic) {
-					System.out.println(
-							"*** line " + ref.posn.getLineNumber() + ": static method cannot reference non-static method");
+					ErrorReporter.get().idError(ref.posn.getLineNumber(), "static method cannot reference non-static field");
 				}
 			}
 		}
@@ -448,8 +440,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		// If the reference is a function then we have an error
 		if (lhs.getDeclaration() instanceof MethodDecl) {
 			// TODO need to figure out if this is the correct way to check this
-			System.out.println(
-					"*** line " + ref.posn.getLineNumber() + ": cannot use a method name on left hand side of a qualified reference");
+			ErrorReporter.get().idError(ref.posn.getLineNumber(), "cannot use a method name on left hand side of a qualified reference");
 		}
 		
 		// Visit right hand side, pass the LHS as context
@@ -487,9 +478,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 					return null;
 				}
 			}
-			
-			System.out.println(
-					"*** line " + id.posn.getLineNumber() + ": unknown identifier following 'this' keyword: '" + id.spelling +  "'.");
+			ErrorReporter.get().idError(id.posn.getLineNumber(), "unknown identifier following 'this' keyword: '" + id.spelling +  "'.");
 			return null;
 		}
 		
@@ -498,8 +487,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			// TODO check if there could be an exception to do
 			// The variable must be a class type
 			if (!(d.type instanceof ClassType)) {
-				System.out.println(
-						"*** line " + id.posn.getLineNumber() + ": cannot use primititve/array type on left hand side of qualified reference");
+				ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot use primititve/array type on left hand side of qualified reference");
 				return null;
 			}
 			
@@ -507,8 +495,8 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			ClassDecl correspondingClass = this.table.classesTable.get(ct.className.spelling);
 			
 			if (correspondingClass == null) {
-				System.out.println(
-						"*** line " + id.posn.getLineNumber() + ": no such class"); // TODO figure out if its even possible to get here
+				// TODO figure out if its even possible to get here
+				ErrorReporter.get().idError(id.posn.getLineNumber(), "no such class");
 				return null;
 			}
 			
@@ -527,16 +515,14 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 				}
 			}
 			if (match == null) {
-				System.out.println(
-						"*** line " + id.posn.getLineNumber() + ": no match"); // TODO figure out if its even possible to get here
+				ErrorReporter.get().idError(id.posn.getLineNumber(), "no match"); // TODO figure out if its even possible to get here
 				return null;
 			}
 			// Respect the private keyword
 			FieldDecl fd = (FieldDecl) d;
 			ClassType classt = (ClassType) fd.type;
 			if (match.isPrivate && !classt.className.spelling.contentEquals(ctx.getCurrentClass().name)) { // TODO definetly needs some testing
-				System.out.println(
-						"*** line " + id.posn.getLineNumber() + ": cannot access private field from outside of class");
+				ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot access private field from outside of class");
 				return null;
 			}
 			id.setDecalaration(match);
@@ -557,16 +543,14 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 					// Respect private keyword
 					if (md.isPrivate) {
 						if (ctx.getCurrentClass() != ((ClassDecl) d)) {
-							System.out.println(
-									"*** line " + id.posn.getLineNumber() + ": cannot reference private method outside of class.");
+							ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference private method outside of class");
 						}
 						return null; // todo figure out exiting bc this yields 2 error lines if its private and non-static
 					}
 					
 					// Must be a static method in the class to reference it like this
 					if (!md.isStatic) {
-						System.out.println(
-								"*** line " + id.posn.getLineNumber() + ": cannot reference non-static method in a static manner");
+						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference non-static method in a static manner");
 					}
 					
 					id.setDecalaration(md);
@@ -577,14 +561,10 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			for (FieldDecl fd : fds) {
 				if (fd.name.contentEquals(id.spelling)) {
 					if (fd.isPrivate && (ctx.getCurrentClass() != ((ClassDecl) d))) {
-						System.out.println(
-								"*** line " + id.posn.getLineNumber() + ": cannot reference private field outside of class.");
-						return null;
+						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference private field outside of class");
 					}
 					if (!fd.isStatic) {
-						System.out.println(d);
-						System.out.println(
-								"*** line " + id.posn.getLineNumber() + ": cannot reference non-static variable in a static manner");
+						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference non-static variable in a static manner");
 					}
 					id.setDecalaration(fd);
 					return null;
@@ -594,8 +574,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			//System.out.println(
 			//		"*** line " + id.posn.getLineNumber() + ": failed to identify '" + id.spelling + "'.");
 		}
-		System.out.println(
-				"*** line " + id.posn.getLineNumber() + ": failed to identify '" + id.spelling + "'.");
+		ErrorReporter.get().idError(id.posn.getLineNumber(), "failed to identify '" + id.spelling + "'.");
 		return null; // TODO error?
 	}
 

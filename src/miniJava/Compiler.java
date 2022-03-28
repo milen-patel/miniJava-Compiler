@@ -24,17 +24,10 @@ public class Compiler {
 			InputReader reader = new InputReader(args[0]);
 			Scanner scnr = new Scanner(reader);
 			Parser p = new Parser(scnr);
-			System.out.println("Syntactic Analysis...");
-			Package tree = p.parseProgram();
-			System.out.println("Syntactic Analysis Complete");
-			
-			ASTDisplay.showPosition = true;			
+			Package tree = p.parseProgram();			
 			
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
-			ASTDisplay display = new ASTDisplay();
-			System.out.println("Valid miniJava program");
-			//display.showTree(tree);
 			ErrorReporter.get().endWithSuccess();
 		} catch (Exception e) {
 			System.out.println(e.toString());
