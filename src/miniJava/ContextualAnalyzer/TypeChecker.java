@@ -73,7 +73,14 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitMethodDecl(MethodDecl md, Object arg) {
 		for(Statement s : md.statementList) {
-			s.visit(this, md);
+			s.visit(this, md); 
+		}
+		
+		// If we have a non-void method, the last statement of the body must be a return statement
+		if (md.type.typeKind != TypeKind.VOID) {
+			if (md.statementList.size() == 0 || !(md.statementList.get(md.statementList.size()-1) instanceof ReturnStmt)) {
+				ErrorReporter.get().typeError(md.posn.getLineNumber(), "non-void methods must end with a return statement"); //TODO test this and figure out line number
+			}
 		}
 		return null;
 	}
@@ -424,6 +431,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected BOOLEAN X BOOLEAN but got " + lhs.typeKind + " X " + rhs.typeKind);
 			}
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
+		}
+		
+		// Overloaded
+		if (expr.operator.spelling.contentEquals("==") || expr.operator.spelling.contentEquals("!=")) {
+			// INT X INT -> BOOLEAN
+			// BOOLEAN x BOOLEAN -> BOOLEAN
+			// REFERENCE x REFERENCE -> BOOLEAN (Handle Array and Null)
 		}
 		return null;
 	}

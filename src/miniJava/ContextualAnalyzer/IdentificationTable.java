@@ -29,9 +29,7 @@ public class IdentificationTable {
 	public void addClass(String className, ClassDecl decl) {
 		// Check if class already exists
 		if (classesTable.containsKey(className)) {
-			// This logic is being replaced in the add function
-			//System.out.println("*** line " + decl.posn.getLineNumber() + ": Duplicate class error. Class " + className + " has already been defined.");
-			// TODO should we stop here
+			ErrorReporter.get().idError(decl.posn.getLineNumber(), "Duplicate class error. Class " + className + " has already been defined.");
 		}
 		this.classesTable.put(className, decl);
 	}
@@ -79,7 +77,6 @@ public class IdentificationTable {
 	public void add(String key, Declaration val) {
 		// Check if declaration exists in most current scope
 		if (this.table.peek().containsKey(key)) {
-			System.out.println("*** line " + val.posn.getLineNumber() + ": ");
 			ErrorReporter.get().idError(val.posn.getLineNumber(), "duplicate declaration error. Identifier '" + key + "' has already been used.");
 			return;
 		}
@@ -94,19 +91,5 @@ public class IdentificationTable {
 			}
 		}
 		this.table.peek().put(key, val);	
-	}
-	
-	public void print() {
-		System.out.println("==========================================");
-		String prefix = "";
-		for (int i = 0; i < this.table.size(); i++) {
-			System.out.println(prefix + "Scope " + (i+1));
-			Map<String, Declaration> hm = this.table.get(i);
-			for (String key : hm.keySet()) {
-				System.out.println(prefix + "\t" + key);
-			}
-			prefix += "\t";
-		}
-		System.out.println("==========================================");
 	}
 }

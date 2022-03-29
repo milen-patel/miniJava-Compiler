@@ -10,8 +10,10 @@ import miniJava.SyntacticAnalyzer.Scanner;
 import miniJava.SyntacticAnalyzer.Parser;
 
 public class Compiler {
+	public static void Compiler() {}
 	public static void main(String[] args) {
 		//runTests();
+		//args = new String[] {"/Users/milenpatel/git/miniJava-Compiler/test/ScannerAndParserTests/pass/Combined.java"};
 	
 		if (args == null || args.length != 1) {
 			System.out.println("Invalid Program Arguements");
@@ -20,7 +22,7 @@ public class Compiler {
 		if (!args[0].endsWith(".java") && !args[0].endsWith(".mjava"))
 			ErrorReporter.get().reportError("Input file has incorrect extension");
 		
-		try {
+	//	try {
 			InputReader reader = new InputReader(args[0]);
 			Scanner scnr = new Scanner(reader);
 			Parser p = new Parser(scnr);
@@ -29,10 +31,10 @@ public class Compiler {
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
 			ErrorReporter.get().endWithSuccess();
-		} catch (Exception e) {
-			System.out.println(e.toString());
-			ErrorReporter.get().reportError("Uncaught Exception");
-		} 
+		//} catch (Exception e) {
+		//	System.out.println(e.toString());
+		//	ErrorReporter.get().reportError("Uncaught Exception");
+		//} 
 		
 	}
 	

@@ -23,10 +23,10 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		SourcePosition dummy_Pos = new SourcePosition(0, 0, 0);
 		class_System_Fields.add(new FieldDecl(false, true, new ClassType(printStreamIdentifier, dummy_Pos), "out", dummy_Pos));
 		ClassDecl class_System = new ClassDecl("System", class_System_Fields, class_System_Methods, dummy_Pos);
-		table.addClass("System", class_System);
-		table.add("System", class_System);
-		table.classMethodDeclarations.put("System", class_System_Methods);
-		table.classVariableDeclarations.put("System", class_System_Fields);
+		//table.addClass("System", class_System);
+		//table.add("System", class_System);
+		//table.classMethodDeclarations.put("System", class_System_Methods);
+		//table.classVariableDeclarations.put("System", class_System_Fields);
 		
 		FieldDeclList printStreamFields = new FieldDeclList();
 		MethodDeclList printStreamMethods = new MethodDeclList();
@@ -36,17 +36,20 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		MethodDecl printDecl = new MethodDecl(lhs, pdl, new StatementList(), dummy_Pos);
 		printStreamMethods.add(printDecl);
 		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", printStreamFields, printStreamMethods, dummy_Pos);
-		table.addClass("_PrintStream", class_PrintStream);
-		table.add("_PrintStream", class_PrintStream);
-		table.classMethodDeclarations.put("_PrintStream", printStreamMethods);
-		table.classVariableDeclarations.put("_PrintStream", printStreamFields);
+		//table.addClass("_PrintStream", class_PrintStream);
+		//table.add("_PrintStream", class_PrintStream);
+		//table.classMethodDeclarations.put("_PrintStream", printStreamMethods);
+		//table.classVariableDeclarations.put("_PrintStream", printStreamFields);
 		
 		ClassDecl class_String = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), dummy_Pos);
-		table.addClass("String", class_String);
-		table.add("String", class_String);
-		table.classMethodDeclarations.put("String", class_String.methodDeclList);
-		table.classVariableDeclarations.put("String", class_String.fieldDeclList);
+		//table.addClass("String", class_String);
+		//table.add("String", class_String);
+		//table.classMethodDeclarations.put("String", class_String.methodDeclList);
+		//table.classVariableDeclarations.put("String", class_String.fieldDeclList);
 		
+		prog.classDeclList.add(class_String);
+		prog.classDeclList.add(class_PrintStream);
+		prog.classDeclList.add(class_System);
 		// todo need to do id + type checking for predefined classes
 		
 		ClassDeclList classes = prog.classDeclList;
@@ -460,6 +463,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		Reference r = (Reference) arg;
 		Declaration d = r.getDeclaration();
+		System.out.println(d);
 
 		// Case 0: 'this' keyword
 		if (r instanceof ThisRef) {
@@ -483,7 +487,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		}
 		
 		// Case 1: Pointing to a Variable
-		if (d instanceof FieldDecl) {			
+		if (d instanceof FieldDecl || d instanceof VarDecl || d instanceof ParameterDecl) {			
 			// TODO check if there could be an exception to do
 			// The variable must be a class type
 			if (!(d.type instanceof ClassType)) {
@@ -519,7 +523,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 				return null;
 			}
 			// Respect the private keyword
-			FieldDecl fd = (FieldDecl) d;
+			Declaration fd =  d;
 			ClassType classt = (ClassType) fd.type;
 			if (match.isPrivate && !classt.className.spelling.contentEquals(ctx.getCurrentClass().name)) { // TODO definetly needs some testing
 				ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot access private field from outside of class");
