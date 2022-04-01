@@ -234,7 +234,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitCallStmt(CallStmt stmt, Object arg) {
 		if (!(stmt.methodRef.getDeclaration() instanceof MethodDecl)) {
 			ErrorReporter.get().typeError(stmt.methodRef.posn.getLineNumber(), "reference in a call statement must point to a function.");
-			return (TypeDenoter) arg; // TODO this will cause some issues
+			return null;
 		}
 		MethodDecl md = (MethodDecl) stmt.methodRef.getDeclaration();
 		ParameterDeclList expectedArgs = md.parameterDeclList;
@@ -242,7 +242,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		if (expectedArgs.size()  != actualArgs.size()) {
 			ErrorReporter.get().typeError(stmt.methodRef.posn.getLineNumber(), "expected " + expectedArgs.size() + " args but got " + actualArgs.size());
-			return stmt.methodRef.getDeclaration().type;
+			return null;
 		}
 		
 		// Type check each of the parameters
@@ -254,7 +254,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			}
 		}
 		
-		return stmt.methodRef.getDeclaration().type;
+		return null;
 	}
 
 	@Override
@@ -435,9 +435,34 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		// Overloaded
 		if (expr.operator.spelling.contentEquals("==") || expr.operator.spelling.contentEquals("!=")) {
+			if (lhs == null || rhs == null || lhs.typeKind == TypeKind.METHOD || rhs.typeKind == TypeKind.METHOD) {
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Invalid use of operator " + expr.operator.spelling);
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			}
 			// INT X INT -> BOOLEAN
+			if (lhs.typeKind == TypeKind.INT) {
+				if (rhs.typeKind != TypeKind.INT) {
+					ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Expected INT x INT but got INT x " + rhs.typeKind);
+				}
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			}
 			// BOOLEAN x BOOLEAN -> BOOLEAN
-			// REFERENCE x REFERENCE -> BOOLEAN (Handle Array and Null)
+			if (lhs.typeKind == TypeKind.BOOLEAN) {
+				if (rhs.typeKind != TypeKind.BOOLEAN) {
+					ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Expected BOOLEAN x BOOLEAN but got BOOLEAN x " + rhs.typeKind);
+				}
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			}
+			
+			// REFERENCE x REFERENCE -> BOOLEAN
+			if (lhs.typeKind != TypeKind.CLASS && lhs.typeKind != TypeKind.ARRAY && lhs.typeKind != TypeKind.NULL) {
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Invalid use of operator " + expr.operator.spelling);
+			}
+			if (rhs.typeKind != TypeKind.CLASS && rhs.typeKind != TypeKind.ARRAY && rhs.typeKind != TypeKind.NULL) {
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Invalid use of operator " + expr.operator.spelling);
+			}
+			
+			return new BaseType(TypeKind.BOOLEAN, dummyPos);
 		}
 		return null;
 	}
@@ -585,7 +610,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	public TypeDenoter visitNullLiteral(NullLiteral nullLiteral, Object arg) {
 		return new BaseType(TypeKind.NULL, dummyPos);
 	}
-
 	
 	private boolean typesAreEqual(TypeDenoter a, TypeDenoter b) {
 		if (a == null || b == null)

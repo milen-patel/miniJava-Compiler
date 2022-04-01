@@ -23,10 +23,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		SourcePosition dummy_Pos = new SourcePosition(0, 0, 0);
 		class_System_Fields.add(new FieldDecl(false, true, new ClassType(printStreamIdentifier, dummy_Pos), "out", dummy_Pos));
 		ClassDecl class_System = new ClassDecl("System", class_System_Fields, class_System_Methods, dummy_Pos);
-		//table.addClass("System", class_System);
-		//table.add("System", class_System);
-		//table.classMethodDeclarations.put("System", class_System_Methods);
-		//table.classVariableDeclarations.put("System", class_System_Fields);
 		
 		FieldDeclList printStreamFields = new FieldDeclList();
 		MethodDeclList printStreamMethods = new MethodDeclList();
@@ -36,16 +32,8 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		MethodDecl printDecl = new MethodDecl(lhs, pdl, new StatementList(), dummy_Pos);
 		printStreamMethods.add(printDecl);
 		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", printStreamFields, printStreamMethods, dummy_Pos);
-		//table.addClass("_PrintStream", class_PrintStream);
-		//table.add("_PrintStream", class_PrintStream);
-		//table.classMethodDeclarations.put("_PrintStream", printStreamMethods);
-		//table.classVariableDeclarations.put("_PrintStream", printStreamFields);
 		
 		ClassDecl class_String = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), dummy_Pos);
-		//table.addClass("String", class_String);
-		//table.add("String", class_String);
-		//table.classMethodDeclarations.put("String", class_String.methodDeclList);
-		//table.classVariableDeclarations.put("String", class_String.fieldDeclList);
 		
 		prog.classDeclList.add(class_String);
 		prog.classDeclList.add(class_PrintStream);
@@ -68,8 +56,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		return null;
 	}
 
-	int VisitClassDecl = 5;
-
 	@Override
 	public Object visitClassDecl(ClassDecl cd, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class: " + cd.name, 5);
@@ -84,20 +70,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		// Visit all the method declarations, make sure none are already defined
 		MethodDeclList methodDecls = cd.methodDeclList;
-		
-		// Record all method names
 		for (int i = 0; i < methodDecls.size(); i++) {
 			MethodDecl md = methodDecls.get(i);
-			// Make sure a variable/method with that name hasn't already been defined
-			if (table.containsKeyAtTopScope(md.name)) {
-				ErrorReporter.get().idError(md.posn.getLineNumber(), "Duplicate class field declaration error. Field "
-								+ md.name + " has already been defined");
-				
-			}
 			table.add(md.name, md);
 		}
 		
-		
+		// Once we register all the methods, visit each method
 		for (int i = 0; i < methodDecls.size(); i++) {
 			methodDecls.get(i).visit(this, arg);
 		}
@@ -112,9 +90,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class variable declaration: " + decl.name, 5);
 		// Check if variable already defined
 		String vName = decl.name;
-		if (table.containsKeyAtTopScope(vName)) {
-			ErrorReporter.get().idError(decl.posn.getLineNumber(), "Duplicate class field declaration error. Variable " + vName + " has already been defined");
-		}
 		
 		// Record the variable name
 		table.add(vName, decl);
@@ -463,7 +438,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		Reference r = (Reference) arg;
 		Declaration d = r.getDeclaration();
-		System.out.println(d);
 
 		// Case 0: 'this' keyword
 		if (r instanceof ThisRef) {
@@ -487,7 +461,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		}
 		
 		// Case 1: Pointing to a Variable
-		if (d instanceof FieldDecl || d instanceof VarDecl || d instanceof ParameterDecl) {			
+		if (d instanceof FieldDecl || d instanceof VarDecl || d instanceof ParameterDecl) {	// TODO test this bug fix		
 			// TODO check if there could be an exception to do
 			// The variable must be a class type
 			if (!(d.type instanceof ClassType)) {

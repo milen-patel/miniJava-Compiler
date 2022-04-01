@@ -111,16 +111,7 @@ public class ASTDisplay implements Visitor<String,Object> {
        	show(arg, "(" + (f.isPrivate ? "private": "public") 
     			+ (f.isStatic ? " static) " :") ") + f.toString());
     	f.type.visit(this, indent(arg));
-    	
-    	String ptrLabel = "";
-    	if (f.type instanceof ClassType) {
-    		ClassType ct = (ClassType) f.type;
-    		ptrLabel = ". points to class " + ct.className.getDeclaration();
-    	} else if (f.type instanceof ArrayType) {
-    		
-    	}
-    	
-    	show(indent(arg), quote(f.name) + " fieldname " + ptrLabel);
+    	show(indent(arg), quote(f.name) + " fieldname");
         return null;
     }
     
@@ -376,7 +367,7 @@ public class ASTDisplay implements Visitor<String,Object> {
 
 	@Override
 	public Object visitNullLiteral(NullLiteral nullLiteral, String arg) {
-        show(arg, quote(nullLiteral.spelling) + " " + nullLiteral.toString());
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

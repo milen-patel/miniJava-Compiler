@@ -21,6 +21,7 @@ public class ErrorReporter {
 		}
 		System.out.println(reason);
 		System.exit(FAILURE_RETURN_CODE);
+		//throw new RuntimeException("STOP");
 	}
 	
 	/*
@@ -29,6 +30,7 @@ public class ErrorReporter {
 	public void idError(int lineNumber, String reason) {
 		System.out.println("*** line " + lineNumber + ": " + reason);
 		System.exit(FAILURE_RETURN_CODE);
+		//throw new RuntimeException("STOP");
 	}
 	
 	/*
