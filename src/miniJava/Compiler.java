@@ -10,10 +10,9 @@ import miniJava.SyntacticAnalyzer.Scanner;
 import miniJava.SyntacticAnalyzer.Parser;
 
 public class Compiler {
-	public static void Compiler() {}
 	public static void main(String[] args) {
-		//runTests();
-		
+		runTests();
+		/*
 		args = new String[] {"/Users/milenpatel/git/miniJava-Compiler/test/Contextual Analysis/fail20-equal-not-equal-to-operators.java"};
 	
 		if (args == null || args.length != 1) {
@@ -23,7 +22,7 @@ public class Compiler {
 		if (!args[0].endsWith(".java") && !args[0].endsWith(".mjava"))
 			ErrorReporter.get().reportError("Input file has incorrect extension");
 		
-	//	try {
+		try {
 			InputReader reader = new InputReader(args[0]);
 			Scanner scnr = new Scanner(reader);
 			Parser p = new Parser(scnr);
@@ -32,9 +31,9 @@ public class Compiler {
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
 			ErrorReporter.get().endWithSuccess();
-	//	} catch (Exception e) {
-	//		ErrorReporter.get().reportError("Uncaught Exception");
-	//	} 
+		} catch (Exception e) {
+			ErrorReporter.get().reportError("Uncaught Exception");
+		} */
 		
 	}
 	
@@ -58,6 +57,9 @@ public class Compiler {
 			Parser p = new Parser(scnr);
 			try {
 				Package tree = p.parseProgram();			
+				
+				//System.setOut(defaultPrintStream);
+				//System.out.println(listOfFiles[i].getPath().substring(38));
 				//(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 				//(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
 				(new ASTDisplay()).visitPackage(tree, "");
@@ -65,12 +67,12 @@ public class Compiler {
 				
 				// Once we finish AST Display, change the output stream back
 				System.setOut(defaultPrintStream);
-			
+
 				// Take the diff of the file with the expected output
 				Process pro = Runtime.getRuntime().exec(new String[]{"zsh","-c","diff " + listOfFiles[i].getAbsoluteFile().toString() + ".out /Users/milenpatel/Downloads/pa2_tests/text.txt"});
 				if (pro.waitFor() == 1) {
 					System.out.println("Different AST than what was expected for " + listOfFiles[i].getAbsolutePath().toString());
-				}
+				} else {  }
 			} catch (Exception e)  {
 				System.out.println("FAIL");
 			}

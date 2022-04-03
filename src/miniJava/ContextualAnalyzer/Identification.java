@@ -38,18 +38,21 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		prog.classDeclList.add(class_String);
 		prog.classDeclList.add(class_PrintStream);
 		prog.classDeclList.add(class_System);
-		// todo need to do id + type checking for predefined classes
 		
 		ClassDeclList classes = prog.classDeclList;
 		for (int i = 0; i < classes.size(); i++) {
 			ClassDecl cd = classes.get(i);
 			String cn = cd.name;
+			// For each class, record its name in the identificationTable
 			table.addClass(cn, cd);
 			table.add(cn, cd);
+			
+			// Also store its fields, will be used in handling Qualified References
 			table.classMethodDeclarations.put(cn, cd.methodDeclList);
 			table.classVariableDeclarations.put(cn, cd.fieldDeclList);
 		}
 
+		// Now we built out scope level 1, visit all the classes
 		for (int i = 0; i < classes.size(); i++) {
 			classes.get(i).visit(this, arg);
 		}
@@ -88,11 +91,8 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitFieldDecl(FieldDecl decl, Object arg) {
 		ErrorReporter.get().log("<Contextual Analysis> Visiting class variable declaration: " + decl.name, 5);
-		// Check if variable already defined
-		String vName = decl.name;
-		
-		// Record the variable name
-		table.add(vName, decl);
+		// Check if variable already defined and Record Name
+		table.add(decl.name, decl);
 		
 		// Check the type of the variable
 		decl.type.visit(this, arg);
@@ -127,6 +127,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		}
 		
 		table.closeScope();
+		ctx.setStatic(false);
 		return null;
 		
 		// TODO needs to do a separate check to make sure no instance variables are being used

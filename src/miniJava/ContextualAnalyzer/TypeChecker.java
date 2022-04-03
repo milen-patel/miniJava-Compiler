@@ -525,12 +525,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitLiteralExpr(LiteralExpr expr, Object arg) {
 		return expr.lit.visit(this, arg);
-		// TODO not sure if this is right
 	}
 
 	@Override
 	public TypeDenoter visitNewObjectExpr(NewObjectExpr expr, Object arg) {
-		return expr.classtype;
+		return expr.classtype;	
 		// TODO figure out how to deal with this being used in a invalid context
 	}
 

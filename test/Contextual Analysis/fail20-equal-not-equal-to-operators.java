@@ -1,8 +1,24 @@
+class testPredefinedNames {
+	System s;
+	String str;
+	void func() {
+		str = new String();
+		str = 5; //err
+		s.out.println(str);
+		s.out.println(this.s);
+		s.out.println(System);
+
+	}
+}
 class A {
+	A child;
 	void method() {
 		int x = 0;
 		x();
 		int j = x() + 5;
+		//int y = new x();
+		classA[] arr = new classA[5];
+		arr = new int[5];
 	}
 }
 class classA {
@@ -12,9 +28,12 @@ class classA {
 	boolean d;
 	classB e;
 	classB f;
+	A x;
 
 	int[] arrInt;
 	void testEqualityOperators() {
+		x.child.child.child = 5;
+		x.child.child.child.child = null;
 		boolean one = a == b;
 		int two = a == b;
 		boolean three = a != b;
