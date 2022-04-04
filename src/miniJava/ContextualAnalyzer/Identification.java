@@ -122,11 +122,14 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			md.parameterDeclList.get(i).visit(this, arg);
 		}
 		
+		table.openScope();
+		
 		// Visit each statement in the method body
 		for (int i = 0; i < md.statementList.size(); i++) {
 			md.statementList.get(i).visit(this, arg);
 		}
 		
+		table.closeScope();
 		table.closeScope();
 		ctx.setStatic(false);
 		return null;

@@ -79,7 +79,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		// If we have a non-void method, the last statement of the body must be a return statement
 		if (md.type.typeKind != TypeKind.VOID) {
 			if (md.statementList.size() == 0 || !(md.statementList.get(md.statementList.size()-1) instanceof ReturnStmt)) {
-				ErrorReporter.get().typeError(md.posn.getLineNumber(), "non-void methods must end with a return statement"); //TODO test this and figure out line number
+				ErrorReporter.get().typeError(md.posn.getLineNumber(), "non-void methods must end with a return statement");
 			}
 		}
 		return null;
@@ -146,7 +146,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected '" + l + "' but got '" + r + "'.");
 			}
 		} else if (lhs instanceof ArrayType) {
-			// TODO
 			if (rhs.typeKind == TypeKind.NULL)
 				return null;
 			if (!(rhs instanceof ArrayType)) {
@@ -172,10 +171,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			if (!lt.className.spelling.contentEquals(rt.className.spelling)) {
 				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected elements of type '" + lt.className.spelling + "' but got '" + rt.className.spelling + "'.");
 				return null;
-			}
-			
-		} else {
-			// TODO error out
+			}	
 		}
 		return null;
 	}
@@ -192,7 +188,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			return null;
 		}
 		TypeDenoter expectedType = stmt.ref.visit(this, arg);
-		TypeDenoter actualType = stmt.val.visit(this, arg);
+		TypeDenoter actualType = stmt.val.visit(this, expectedType);
 		if ((expectedType instanceof ClassType || expectedType instanceof ArrayType) && actualType.typeKind == TypeKind.NULL)
 			return null;
 		if (!this.typesAreEqual(expectedType, actualType)) {
@@ -216,7 +212,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			return null;
 		}
 		
-		TypeDenoter exprType = stmt.exp.visit(this, arg);
+		TypeDenoter exprType = stmt.exp.visit(this, ((ArrayType) ref).eltType);
 		// Null can be assigned
 		if (ref.typeKind == TypeKind.CLASS || ref.typeKind == TypeKind.ARRAY) {
 			if (exprType.typeKind == TypeKind.NULL)
@@ -248,7 +244,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		// Type check each of the parameters
 		for (int i = 0; i < expectedArgs.size(); i++) {
 			TypeDenoter expect = expectedArgs.get(i).type;
-			TypeDenoter actual = actualArgs.get(i).visit(this, arg);
+			TypeDenoter actual = actualArgs.get(i).visit(this, expect);
 			if (!this.typesAreEqual(expect, actual)) {
 				ErrorReporter.get().typeError(actualArgs.get(i).posn.getLineNumber(), "expected parameter of type " + expect.typeKind + " at position " + (i+1));
 			}
@@ -260,10 +256,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitReturnStmt(ReturnStmt stmt, Object arg) {
 		if (arg == null) {
-			System.out.println("Internal Error..."); // TODO
+			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "Internal Error...");
+			return null;
 		}
+	
 		MethodDecl md = (MethodDecl) arg;
-		
 		
 		if (md.type.typeKind == TypeKind.VOID) {
 			if (stmt.returnExpr != null) {
@@ -278,7 +275,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		}
 		
 		TypeDenoter rt = stmt.returnExpr.visit(this, null);
- 		// TODO this is a temp fix that deals with returning a class name need to investigate, visitRefExpr
  		if (rt == null) {
 			ErrorReporter.get().typeError(stmt.returnExpr.posn.getLineNumber(), "unable to resolve type on return expression");
 			return md.type;
@@ -315,7 +311,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitIfStmt(IfStmt stmt, Object arg) {
-		TypeDenoter cond = stmt.cond.visit(this, arg);
+		TypeDenoter cond = stmt.cond.visit(this, new BaseType(TypeKind.BOOLEAN, dummyPos));
 		if (cond.typeKind != TypeKind.BOOLEAN) {
 			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected type BOOLEAN but got " + cond.typeKind);
 			return null;
@@ -326,25 +322,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		if (stmt.thenStmt instanceof VarDeclStmt) {
 			ErrorReporter.get().typeError(stmt.thenStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
 			
-		} else if (stmt.thenStmt instanceof BlockStmt) {
-			BlockStmt s = (BlockStmt) stmt.thenStmt;
-			if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-				ErrorReporter.get().typeError(stmt.thenStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
-			}
 		}
 		
 		if (stmt.elseStmt != null) {
 			stmt.elseStmt.visit(this, arg);
-			
 			if (stmt.elseStmt instanceof VarDeclStmt) {
 				ErrorReporter.get().typeError(stmt.elseStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
 
-			} else if (stmt.elseStmt instanceof BlockStmt) {
-				BlockStmt s = (BlockStmt) stmt.elseStmt;
-				if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-					ErrorReporter.get().typeError(s.sl.get(0).posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
-
-				}
 			}
 		}
 		return null;
@@ -353,7 +337,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitWhileStmt(WhileStmt stmt, Object arg) {
 		// Check that the condition is a boolean type
-		TypeDenoter cond = stmt.cond.visit(this, arg);
+		TypeDenoter cond = stmt.cond.visit(this, new BaseType(TypeKind.BOOLEAN, dummyPos));
 		if (cond.typeKind != TypeKind.BOOLEAN) {
 			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected type BOOLEAN but got " + cond.typeKind);
 		}
@@ -364,11 +348,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		//A variable declaration cannot be the solitary statement in a branch of a conditional statement.
 		if (stmt.body instanceof VarDeclStmt) {
 			ErrorReporter.get().typeError(stmt.body.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
-		} else if (stmt.body instanceof BlockStmt) {
-			BlockStmt s = (BlockStmt) stmt.body;
-			if (s.sl.size() == 1 && s.sl.get(0) instanceof VarDeclStmt) {
-				ErrorReporter.get().typeError(s.sl.get(0).posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
-			}
 		}
 			
 		return null;
@@ -392,7 +371,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
 		}
 		
-		// TODO error out
 		return null;
 	}
 
@@ -408,7 +386,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				expr.operator.spelling.contentEquals("/")) {
 			if (lhs.typeKind != TypeKind.INT || rhs.typeKind != TypeKind.INT) {
 				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
-				// TODO so should we return a error type or just return the expected type
 			}
 			return new BaseType(TypeKind.INT, dummyPos);
 		}
@@ -420,7 +397,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				expr.operator.spelling.contentEquals(">=")) {
 			if (lhs.typeKind != TypeKind.INT || rhs.typeKind != TypeKind.INT) {
 				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "type error for operator '" + expr.operator.spelling + "' expected INT X INT but got " + lhs.typeKind + " X " + rhs.typeKind);
-				// TODO so should we return a error type or just return the expected type
 			}
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
 		}
@@ -481,13 +457,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		TypeDenoter ref = expr.ref.visit(this, arg);
 		if (!(ref instanceof ArrayType)) {
 			ErrorReporter.get().typeError(expr.ref.posn.getLineNumber(), "cannot attempt to index a non-array structure");
-			return (TypeDenoter) arg; // TODO test this case
+			return (TypeDenoter) arg; 
 		}
 		
 		TypeDenoter idx = expr.ixExpr.visit(this, arg);
 		if (idx.typeKind != TypeKind.INT) {
 			ErrorReporter.get().typeError(expr.ixExpr.posn.getLineNumber(), "index to an array must be of type integer but got " + idx.typeKind);
-			return ((ArrayType) ref).eltType; // TODO test this
+			return ((ArrayType) ref).eltType; 
 		}
 		
 		return ((ArrayType) ref).eltType;
@@ -496,9 +472,8 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitCallExpr(CallExpr expr, Object arg) {
 		if (!(expr.functionRef.getDeclaration() instanceof MethodDecl)) {
-			// TODO should this be caught in identification
 			ErrorReporter.get().typeError(expr.functionRef.posn.getLineNumber(), "reference in a call expression must point to a function");
-			return (TypeDenoter) arg; // TODO this will cause some issues
+			return (TypeDenoter) arg; 
 		}
 		MethodDecl md = (MethodDecl) expr.functionRef.getDeclaration();
 		ParameterDeclList expectedArgs = md.parameterDeclList;
@@ -511,9 +486,8 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		
 		// Type check each of the parameters
 		for (int i = 0; i < expectedArgs.size(); i++) {
-
 			TypeDenoter expect = expectedArgs.get(i).type;
-			TypeDenoter actual = actualArgs.get(i).visit(this, arg);
+			TypeDenoter actual = actualArgs.get(i).visit(this, expect);
 			if (!this.typesAreEqual(expect, actual)) {
 				ErrorReporter.get().typeError(actualArgs.get(i).posn.getLineNumber(), "expected parameter of type " + expect.typeKind + " at position " + (i+1));
 			}
@@ -530,7 +504,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitNewObjectExpr(NewObjectExpr expr, Object arg) {
 		return expr.classtype;	
-		// TODO figure out how to deal with this being used in a invalid context
 	}
 
 	@Override
@@ -544,37 +517,17 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitThisRef(ThisRef ref, Object arg) {
-		// The type of a ClassDecl will always be null, test this workaround TODO
 		ClassDecl cd = (ClassDecl) ref.getDeclaration();
 		return new ClassType(new Identifier(new Token(TokenKind.IDENTIFIER, cd.name, null)), dummyPos);
 	}
 
 	@Override
 	public TypeDenoter visitIdRef(IdRef ref, Object arg) {
-		/*
-		// Pointing to a Class
-		if (ref.getDeclaration() instanceof ClassDecl) {
-			ClassDecl cd = (ClassDecl) ref.getDeclaration();
-			return cd.type;
-		}
-		// Pointing to a Class Variable
-		if (ref.getDeclaration() instanceof FieldDecl) {
-			FieldDecl fd = (FieldDecl) ref.getDeclaration();
-			return fd.type;
-		}
-		// Pointing to a local variable
-		if (ref.getDeclaration() instanceof VarDecl) {
-			return ref.getDeclaration().type; // okay this means this whole method isnt necesary
-		}
-		*/
 		return ref.getDeclaration().type;
 	}
 
 	@Override
 	public TypeDenoter visitQRef(QualRef ref, Object arg) {
-		if (ref.getDeclaration() != ref.id.getDeclaration()) {
-			System.out.println("WARNING WARNING WARNING TODO");
-		}
 		// Pointing to a Method
 		if (ref.getDeclaration() instanceof MethodDecl) {
 			return new BaseType(TypeKind.METHOD, dummyPos);
@@ -583,15 +536,12 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	}
 
 	@Override
-	public TypeDenoter visitIdentifier(Identifier id, Object arg) {
-		// TODO Auto-generated method stub
-		
+	public TypeDenoter visitIdentifier(Identifier id, Object arg) {		
 		return null;
 	}
 
 	@Override
 	public TypeDenoter visitOperator(Operator op, Object arg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
