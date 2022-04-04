@@ -50,8 +50,12 @@ public class ErrorReporter {
 	
 	/*
 	 * Terminates program with successful return code.
+	 * However, if there were type errors, then exits with code 4.
 	 */
 	public void endWithSuccess() {
+		if (typeErrors > 0) {
+			System.exit(FAILURE_RETURN_CODE);
+		}
 		System.exit(SUCCESS_RETURN_CODE);
 	}
 	

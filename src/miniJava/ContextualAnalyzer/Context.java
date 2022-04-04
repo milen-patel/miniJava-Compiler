@@ -45,12 +45,10 @@ public class Context {
 	}
 	
 	public String getVariableInDeclaration() {
-		// TODO assert non null
 		return this.variableInDeclaration;
 	}
 	
 	public void exitVariableInDeclaration() {
-		// TODO need to assert that we are currently decalaring a variable already
 		this.variableInDeclaration = null;
 	}
 }

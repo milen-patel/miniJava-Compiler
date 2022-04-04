@@ -33,6 +33,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		printStreamMethods.add(printDecl);
 		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", printStreamFields, printStreamMethods, dummy_Pos);
 		
+		// TODO need to figure out what to do about string
 		ClassDecl class_String = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), dummy_Pos);
 		
 		prog.classDeclList.add(class_String);
@@ -129,10 +130,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		table.closeScope();
 		ctx.setStatic(false);
 		return null;
-		
-		// TODO needs to do a separate check to make sure no instance variables are being used
-	}
-	
+	}	
 
 	@Override
 	public Object visitParameterDecl(ParameterDecl pd, Object arg) {
@@ -152,13 +150,8 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		// Check that the type is valid
 		decl.type.visit(this, arg);
 		
-		// See if the variable has already been defined
-		if (this.table.containsKeyAtNonCoverableScope(decl.name)) {
-			ErrorReporter.get().idError(decl.posn.getLineNumber(), "Local variable '" + decl.name + "' declaration attempts to hide declaration at level 3+");
-		} else {
-			this.table.add(decl.name, decl);
-		}
-		
+		// Add the variable to the table, ensure it isn't illegally covering another variable
+		this.table.add(decl.name, decl);
 		return null;
 	}
 
@@ -215,14 +208,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		// Visit the Type+Id and then visit the initializing expression
 		stmt.varDecl.visit(this, arg);
 		
-		// TODO init expression cannoot reference the variable name
 		ctx.setVariableInDeclaration(stmt.varDecl.name);
 		stmt.initExp.visit(this, arg);
 		ctx.exitVariableInDeclaration();
-		
-		//good for debuggnig System.out.println("Finished processing vardeclstmt..." + stmt.posn.getLineNumber());
-		//System.out.println(((RefExpr) stmt.initExp).ref.getDeclaration());
-		
 		return null;
 	}
 
@@ -240,21 +228,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		ErrorReporter.get().log("Visiting Indexed Assign Statement on Line " + stmt.posn.getLineNumber(), 5);
 		stmt.ref.visit(this, arg);
 		stmt.ix.visit(this, arg);
-		stmt.exp.visit(this, arg); // TODO is ensuring reference an array a type checking issue
+		stmt.exp.visit(this, arg);
 		return null;
 	}
 
 	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
-		/*
-		 * should be same as visitCallExpr
-		 * Check if in static method, if so should only call other static methods and not use keywords (check params too)
-		 * check reference is a method
-		 * check parameters align with expected types - prolly type checking
-		 * check that the method isn't private if we are external to class
-		 * check we arent accessing a static method with 'this'
-		 */
 		stmt.methodRef.visit(this, arg);
 		for (Expression e : stmt.argList) {
 			e.visit(this, arg);
@@ -270,7 +249,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			e.visit(this, arg);
 		}
 		return null; 		
-		// TOOD make sure we arent returning a function (type checking issue)
 	}
 
 	@Override
@@ -326,7 +304,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitIxExpr(IxExpr expr, Object arg) {
 		ErrorReporter.get().log("Visiting Indexed Expression on Line " + expr.posn.getLineNumber(), 5);
-		expr.ref.visit(this, arg); // TODO in type checking make sure this is an array
+		expr.ref.visit(this, arg); 
 		expr.ixExpr.visit(this, arg);
 		return null;
 	}
@@ -335,7 +313,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	public Object visitCallExpr(CallExpr expr, Object arg) {
 		expr.functionRef.visit(this, arg);
 		for (Expression e : expr.argList) {
-			e.visit(this, arg); // TODO test this 
+			e.visit(this, arg);
 		}
 		return null;
 	}
@@ -381,16 +359,16 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			ErrorReporter.get().idError(ref.posn.getLineNumber(), "Unknown reference to identifier '" + ref.id.spelling + "'.");
 		}
 		
-		// If we are defining a variable, we cannot reference that variable in the initializinig expression
+		// If we are defining a variable, we cannot reference that variable in the initializing expression
 		if (ctx.inMethodVariableDeclaration()) {
 			if (ref.id.spelling.contentEquals(ctx.getVariableInDeclaration())) {
-				ErrorReporter.get().idError(ref.posn.getLineNumber(), "cannot reference variable name '" + ref.id.spelling + "' in initializiing expression");
-			} // TODO check if theres another place this issue could happen
+				ErrorReporter.get().idError(ref.posn.getLineNumber(), "cannot reference variable name '" + ref.id.spelling + "' in initializing expression");
+			}
 		}
 		
 		Declaration d = table.find(ref.id.spelling);
 		
-		// Respect static access TODO check this doesnt break anything
+		// Respect static access
 		if (ctx.inStaticMethod()) {
 			if (d instanceof FieldDecl) {
 				if (!((FieldDecl) d).isStatic) {
@@ -418,14 +396,12 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 		// If the reference is a function then we have an error
 		if (lhs.getDeclaration() instanceof MethodDecl) {
-			// TODO need to figure out if this is the correct way to check this
 			ErrorReporter.get().idError(ref.posn.getLineNumber(), "cannot use a method name on left hand side of a qualified reference");
 		}
 		
 		// Visit right hand side, pass the LHS as context
 		rhs.visit(this, lhs);
 		
-		// TODO figure out if this is correct
 		ref.setDeclaration(rhs.getDeclaration());
 		return null;
 	}
@@ -446,7 +422,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			for (FieldDecl fd : ctx.getCurrentClass().fieldDeclList) {
 				if (fd.name.contentEquals(id.spelling)) {
 					id.setDecalaration(fd);
-					return null; // TODO should check static here depending on piazza response
+					return null; 
 				}
 			}
 			
@@ -462,8 +438,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		}
 		
 		// Case 1: Pointing to a Variable
-		if (d instanceof FieldDecl || d instanceof VarDecl || d instanceof ParameterDecl) {	// TODO test this bug fix		
-			// TODO check if there could be an exception to do
+		if (d instanceof FieldDecl || d instanceof VarDecl || d instanceof ParameterDecl) {	
 			// The variable must be a class type
 			if (!(d.type instanceof ClassType)) {
 				ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot use primititve/array type on left hand side of qualified reference");
@@ -474,7 +449,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			ClassDecl correspondingClass = this.table.classesTable.get(ct.className.spelling);
 			
 			if (correspondingClass == null) {
-				// TODO figure out if its even possible to get here
 				ErrorReporter.get().idError(id.posn.getLineNumber(), "no such class");
 				return null;
 			}
@@ -493,14 +467,14 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 					break;
 				}
 			}
+			
 			if (match == null) {
-				ErrorReporter.get().idError(id.posn.getLineNumber(), "no match"); // TODO figure out if its even possible to get here
+				ErrorReporter.get().idError(id.posn.getLineNumber(), "no match"); 
 				return null;
 			}
+			
 			// Respect the private keyword
-			Declaration fd =  d;
-			ClassType classt = (ClassType) fd.type;
-			if (match.isPrivate && !classt.className.spelling.contentEquals(ctx.getCurrentClass().name)) { // TODO definetly needs some testing
+			if (match.isPrivate && !ct.className.spelling.contentEquals(ctx.getCurrentClass().name)) {
 				ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot access private field from outside of class");
 				return null;
 			}
@@ -510,26 +484,22 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		
 		// Case 2: Pointing to a Class (ClassName.classPropertyName)
 		if (d instanceof ClassDecl) {
-			MethodDeclList mds = table.classMethodDeclarations.get(d.name); // TODO check they exist in tables first
+			MethodDeclList mds = table.classMethodDeclarations.get(d.name); 
 			FieldDeclList fds = table.classVariableDeclarations.get(d.name);
-			//System.out.println();
-
+			
 			for (MethodDecl md: mds) {
-
-				if (md.name.contentEquals(id.spelling)) {
-					// TODO check this,
+				if (md.name.contentEquals(id.spelling)) {					
+					// Must be a static method in the class to reference it like this
+					if (!md.isStatic) {
+						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference non-static method in a static manner");
+					}
 					
 					// Respect private keyword
 					if (md.isPrivate) {
 						if (ctx.getCurrentClass() != ((ClassDecl) d)) {
 							ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference private method outside of class");
 						}
-						return null; // todo figure out exiting bc this yields 2 error lines if its private and non-static
-					}
-					
-					// Must be a static method in the class to reference it like this
-					if (!md.isStatic) {
-						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference non-static method in a static manner");
+						return null; 
 					}
 					
 					id.setDecalaration(md);
@@ -539,22 +509,23 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			
 			for (FieldDecl fd : fds) {
 				if (fd.name.contentEquals(id.spelling)) {
-					if (fd.isPrivate && (ctx.getCurrentClass() != ((ClassDecl) d))) {
-						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference private field outside of class");
-					}
+					// Must be a static field to access it like this
 					if (!fd.isStatic) {
 						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference non-static variable in a static manner");
 					}
+					
+					// Respect private keyword
+					if (fd.isPrivate && (ctx.getCurrentClass() != ((ClassDecl) d))) {
+						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference private field outside of class");
+					}
+					
 					id.setDecalaration(fd);
 					return null;
 				}
 			}
-			// TODO error if we made it here
-			//System.out.println(
-			//		"*** line " + id.posn.getLineNumber() + ": failed to identify '" + id.spelling + "'.");
 		}
 		ErrorReporter.get().idError(id.posn.getLineNumber(), "failed to identify '" + id.spelling + "'.");
-		return null; // TODO error?
+		return null;
 	}
 
 	@Override
@@ -574,6 +545,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitNullLiteral(NullLiteral nullLiteral, Object arg) {
-		return null; // TODO in type checking will ahle to verify null is being used correctly, see piazza post
+		return null;
 	}
 }

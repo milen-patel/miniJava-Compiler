@@ -51,16 +51,6 @@ public class IdentificationTable {
 		return this.table.peek().containsKey(key);
 	}
 	
-	public boolean containsKeyAtNonCoverableScope(String key) {
-		for (int i = 2; i < table.size(); i++) {
-			if (table.get(i).containsKey(key)) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
 	public Declaration find(String key) {
 		for (int i = this.table.size()-1; i >= 0; i--) {
 			if (this.table.get(i).containsKey(key)) {
