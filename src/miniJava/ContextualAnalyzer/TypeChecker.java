@@ -123,10 +123,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		TypeDenoter lhs = stmt.varDecl.visit(this, arg);
 		TypeDenoter rhs = stmt.initExp.visit(this, lhs);
 		
-		if (!this.typesAreEqual(lhs, rhs)) {
-			System.out.println("eRR");
-		}
-		
 		if (lhs == null || rhs == null) {
 			ErrorReporter.get().typeError(stmt.initExp.posn.getLineNumber(), "Invalid right hand side of variable declaration");
 			return null;
@@ -214,7 +210,6 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 	@Override
 	public TypeDenoter visitIxAssignStmt(IxAssignStmt stmt, Object arg) {
 		TypeDenoter ref = stmt.ref.visit(this, arg);
-		
 		if (!(ref instanceof ArrayType)) {
 			ErrorReporter.get().typeError(stmt.ref.posn.getLineNumber(), "cannot attempt to index a non-array structure.");
 			return null;
@@ -298,7 +293,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			return md.type;
 		}
 		
-		TypeDenoter rt = stmt.returnExpr.visit(this, null);
+		TypeDenoter rt = stmt.returnExpr.visit(this, md.type);
  		if (rt == null) {
 			ErrorReporter.get().typeError(stmt.returnExpr.posn.getLineNumber(), "unable to resolve type on return expression");
 			return md.type;
