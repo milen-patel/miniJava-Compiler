@@ -123,6 +123,15 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		TypeDenoter lhs = stmt.varDecl.visit(this, arg);
 		TypeDenoter rhs = stmt.initExp.visit(this, lhs);
 		
+		if (!this.typesAreEqual(lhs, rhs)) {
+			System.out.println("eRR");
+		}
+		
+		if (lhs == null || rhs == null) {
+			ErrorReporter.get().typeError(stmt.initExp.posn.getLineNumber(), "Invalid right hand side of variable declaration");
+			return null;
+		}
+		
 		if (lhs instanceof BaseType) {
 			if (!(rhs instanceof BaseType)) {
 				ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "initializing expression type (" + rhs.typeKind + ") does not match base variable type!");
@@ -189,6 +198,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		}
 		TypeDenoter expectedType = stmt.ref.visit(this, arg);
 		TypeDenoter actualType = stmt.val.visit(this, expectedType);
+		if (expectedType == null || actualType == null) {
+			ErrorReporter.get().typeError(stmt.val.posn.getLineNumber(), "Invalid right hand side of variable declaration");
+			return null;
+		}
+		
 		if ((expectedType instanceof ClassType || expectedType instanceof ArrayType) && actualType.typeKind == TypeKind.NULL)
 			return null;
 		if (!this.typesAreEqual(expectedType, actualType)) {
@@ -207,12 +221,22 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		}
 		
 		TypeDenoter idx = stmt.ix.visit(this, arg);
+		if (idx == null) {
+			ErrorReporter.get().typeError(stmt.ix.posn.getLineNumber(), "Invalid index of array");
+			return null;
+		}
 		if (idx.typeKind != TypeKind.INT) {
 			ErrorReporter.get().typeError(stmt.ix.posn.getLineNumber(), "index to an array must be of type integer but got " + idx.typeKind + ".");
 			return null;
 		}
 		
 		TypeDenoter exprType = stmt.exp.visit(this, ((ArrayType) ref).eltType);
+		
+		if (exprType == null) {
+			ErrorReporter.get().typeError(stmt.exp.posn.getLineNumber(), "Invalid right hand side of variable declaration");
+			return null;
+		}
+		
 		// Null can be assigned
 		if (ref.typeKind == TypeKind.CLASS || ref.typeKind == TypeKind.ARRAY) {
 			if (exprType.typeKind == TypeKind.NULL)
