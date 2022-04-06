@@ -238,6 +238,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg) {
 		stmt.methodRef.visit(this, arg);
+		if (!(stmt.methodRef.getDeclaration() instanceof MethodDecl)) {
+			ErrorReporter.get().idError(stmt.methodRef.posn.getLineNumber(), "Cannot call a non-function");
+		}
 		for (Expression e : stmt.argList) {
 			e.visit(this, arg);
 		}
@@ -315,6 +318,9 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 	@Override
 	public Object visitCallExpr(CallExpr expr, Object arg) {
 		expr.functionRef.visit(this, arg);
+		if (!(expr.functionRef.getDeclaration() instanceof MethodDecl)) {
+			ErrorReporter.get().idError(expr.functionRef.posn.getLineNumber(), "Cannot call a non-function");
+		}
 		for (Expression e : expr.argList) {
 			e.visit(this, arg);
 		}

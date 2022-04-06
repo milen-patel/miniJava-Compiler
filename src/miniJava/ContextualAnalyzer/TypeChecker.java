@@ -335,13 +335,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			ErrorReporter.get().typeError(stmt.posn.getLineNumber(), "expected type BOOLEAN but got " + cond.typeKind);
 			return null;
 		}
-		stmt.thenStmt.visit(this, arg);
 		
 		//A variable declaration cannot be the solitary statement in a branch of a conditional statement.
 		if (stmt.thenStmt instanceof VarDeclStmt) {
 			ErrorReporter.get().typeError(stmt.thenStmt.posn.getLineNumber(), "a variable declaration cannot be the solitary statement in a branch of a conditional statement");
-			
-		}
+		} 
+		stmt.thenStmt.visit(this, arg);
+
 		
 		if (stmt.elseStmt != null) {
 			stmt.elseStmt.visit(this, arg);
@@ -374,7 +374,13 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitUnaryExpr(UnaryExpr expr, Object arg) {
-		TypeDenoter et = expr.expr.visit(this, arg);
+		TypeDenoter expect = null;
+		if (expr.operator.spelling.contentEquals("-")) {
+			expect = new BaseType(TypeKind.INT, dummyPos);
+		} else {
+			expect = new BaseType(TypeKind.BOOLEAN, dummyPos);
+		}
+		TypeDenoter et = expr.expr.visit(this, expect == null ? arg : expect);
 		
 		if (expr.operator.spelling.contentEquals("-")) {
 			if (et.typeKind != TypeKind.INT) {
@@ -395,8 +401,31 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 
 	@Override
 	public TypeDenoter visitBinaryExpr(BinaryExpr expr, Object arg) {
-		TypeDenoter lhs = expr.left.visit(this, arg);
-		TypeDenoter rhs = expr.right.visit(this, arg);         
+		TypeDenoter expectedOperandType = new BaseType(TypeKind.INT, dummyPos);
+		String o = expr.operator.spelling;
+		if (o.contentEquals("+") || o.contentEquals("-") || o.contentEquals("*") || o.contentEquals("/")) {
+			expectedOperandType = new BaseType(TypeKind.INT, dummyPos);
+		} else if (o.contentEquals("<") || o.contentEquals("<=") || o.contentEquals(">") || o.contentEquals(">=")) {
+			expectedOperandType = new BaseType(TypeKind.INT, dummyPos);
+		} else if (o.contentEquals("||") || o.contentEquals("&&")) {
+			expectedOperandType = new BaseType(TypeKind.BOOLEAN, dummyPos);
+		}
+		
+		TypeDenoter lhs = expr.left.visit(this, expectedOperandType);
+		TypeDenoter rhs = expr.right.visit(this, expectedOperandType);     
+		
+		if (lhs == null || rhs == null) {
+			ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Unable to type check binary expr");
+			if (o.contentEquals("+") || o.contentEquals("-") || o.contentEquals("*") || o.contentEquals("/")) {
+				return new BaseType(TypeKind.INT, dummyPos);
+			} else if (o.contentEquals("<") || o.contentEquals("<=") || o.contentEquals(">") || o.contentEquals(">=")) {
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			} else if (o.contentEquals("||") || o.contentEquals("&&")) {
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			} else {
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			}
+		}
 
 		// INT x INT -> INT
 		if (expr.operator.spelling.contentEquals("+") ||
@@ -449,12 +478,23 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 				return new BaseType(TypeKind.BOOLEAN, dummyPos);
 			}
 			
+			
 			// REFERENCE x REFERENCE -> BOOLEAN
 			if (lhs.typeKind != TypeKind.CLASS && lhs.typeKind != TypeKind.ARRAY && lhs.typeKind != TypeKind.NULL) {
 				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Invalid use of operator " + expr.operator.spelling);
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
 			}
 			if (rhs.typeKind != TypeKind.CLASS && rhs.typeKind != TypeKind.ARRAY && rhs.typeKind != TypeKind.NULL) {
 				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Invalid use of operator " + expr.operator.spelling);
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			}
+			
+			if (lhs.typeKind == TypeKind.NULL || rhs.typeKind == TypeKind.NULL) {
+				return new BaseType(TypeKind.BOOLEAN, dummyPos);
+			}
+			
+			if (!this.typesAreEqual(lhs,rhs)) {
+				ErrorReporter.get().typeError(expr.posn.getLineNumber(), "Invalid Type Comparison for ==/!=");
 			}
 			
 			return new BaseType(TypeKind.BOOLEAN, dummyPos);
