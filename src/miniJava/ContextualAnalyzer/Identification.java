@@ -497,7 +497,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 			FieldDeclList fds = table.classVariableDeclarations.get(d.name);
 			
 			for (MethodDecl md: mds) {
-				if (md.name.contentEquals(id.spelling)) {					
+				if (md.name.contentEquals(id.spelling)) {
 					// Must be a static method in the class to reference it like this
 					if (!md.isStatic) {
 						ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference non-static method in a static manner");
@@ -508,7 +508,6 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 						if (ctx.getCurrentClass() != ((ClassDecl) d)) {
 							ErrorReporter.get().idError(id.posn.getLineNumber(), "cannot reference private method outside of class");
 						}
-						return null; 
 					}
 					
 					id.setDecalaration(md);

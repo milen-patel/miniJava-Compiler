@@ -6,7 +6,7 @@ import miniJava.SyntacticAnalyzer.Scanner;
 import miniJava.SyntacticAnalyzer.Parser;
 
 public class Compiler {
-	public static void main(String[] args) {			
+	public static void main(String[] args) {
 		if (args == null || args.length != 1) {
 			System.out.println("Invalid Program Arguements");
 			System.exit(3);
