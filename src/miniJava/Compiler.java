@@ -1,5 +1,8 @@
 package miniJava;
 
+import mJAM.Disassembler;
+import mJAM.Interpreter;
+import mJAM.ObjectFile;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.SyntacticAnalyzer.InputReader;
 import miniJava.SyntacticAnalyzer.Scanner;
@@ -24,6 +27,28 @@ public class Compiler {
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
 			(new miniJava.CodeGeneration.Generator()).generateCode(tree);
+			String name = args[0].substring(0, args[0].lastIndexOf('.')) + ".mJAM";
+			ObjectFile objF = new ObjectFile(name);
+			System.out.print("Writing object code file " + name + ".mJAM" + " ... ");
+			if (objF.write()) {
+				System.out.println("FAILED!");
+				return;
+			}
+			else
+				System.out.println("SUCCEEDED");
+			
+			String asmCodeFileName = name.replace(".mJAM",".asm");
+	        System.out.print("Writing assembly file " + asmCodeFileName + " ... ");
+	        Disassembler d = new Disassembler(name);
+	        if (d.disassemble()) {
+	                System.out.println("FAILED!");
+	                return;
+	        }
+	        else
+	                System.out.println("SUCCEEDED");
+	        Interpreter.main(new String[0]);
+			
+			
 			ErrorReporter.get().endWithSuccess();
 		//} catch (Exception e) {
 		//	ErrorReporter.get().reportError("Uncaught Exception");

@@ -1,5 +1,12 @@
 package miniJava.CodeGeneration;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import mJAM.Machine;
+import mJAM.Machine.Op;
+import mJAM.Machine.Prim;
+import mJAM.Machine.Reg;
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.ArrayType;
 import miniJava.AbstractSyntaxTrees.AssignStmt;
@@ -29,6 +36,7 @@ import miniJava.AbstractSyntaxTrees.ParameterDecl;
 import miniJava.AbstractSyntaxTrees.QualRef;
 import miniJava.AbstractSyntaxTrees.RefExpr;
 import miniJava.AbstractSyntaxTrees.ReturnStmt;
+import miniJava.AbstractSyntaxTrees.Statement;
 import miniJava.AbstractSyntaxTrees.ThisRef;
 import miniJava.AbstractSyntaxTrees.TypeKind;
 import miniJava.AbstractSyntaxTrees.UnaryExpr;
@@ -39,24 +47,97 @@ import miniJava.AbstractSyntaxTrees.WhileStmt;
 import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class Generator implements Visitor<Object, Object> {
-	
+	Set<UnknownFunctionAddressRequest> s = new HashSet<UnknownFunctionAddressRequest>();
+
 	public void generateCode(Package p) {
+		Machine.initCodeGen();
 		// First, verify existence of main method
 		MethodDecl main = this.findEntryMethod(p);
-		
+
 		// Ensure all void methods end in a return
 		this.appendReturnToVoidMethods(p);
+
+		// Reserve space for static class fields
+		int numStaticFields = 0;
+		for (ClassDecl cd : p.classDeclList) {
+			for (FieldDecl fd : cd.fieldDeclList) {
+				if (fd.isStatic) {
+					System.out.println("Static field " + fd.name + " of class " + cd.name + " assigned to address SB["
+							+ numStaticFields + "]");
+					fd.runtimeEntity = new RuntimeEntity(Reg.SB, numStaticFields);
+					numStaticFields++;
+				}
+			}
+		}
+		Machine.emit(Op.PUSH, numStaticFields);
+
+		// Emit Code to Call Main Function
+		// Generate String[] args
+		Machine.emit(Op.LOADL, 0);
+		Machine.emit(Prim.newarr);
+		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), main));
+		Machine.emit(Op.CALL, Reg.CB, -1); // Call main(String[] args)
+		Machine.emit(Op.POP, numStaticFields); // TODO is this needed
+		Machine.emit(Op.HALT);
+
+		// Generate Code for _PrintStream and System
+		ClassDecl printStream = null, system = null;
+		for (ClassDecl cd : p.classDeclList) {
+			if (cd.name.contentEquals("_PrintStream")) {
+				printStream = cd;
+			} else if (cd.name.contentEquals("System")) {
+				system = cd;
+			}
+		}
+
+		MethodDecl println = printStream.methodDeclList.get(0);
+		println.runtimeEntity = new RuntimeEntity(Reg.CB, Machine.nextInstrAddr());
+		Machine.emit(Op.LOAD, Reg.LB, -1);
+		Machine.emit(Prim.putintnl);
+		Machine.emit(Op.RETURN, 0, 0, 1);
+
+		p.visit(this, null);
+		
+		// Patch function call addresses
+		for (UnknownFunctionAddressRequest curr : s) {
+			curr.fix();
+		}
 	}
 
 	@Override
 	public Object visitPackage(Package prog, Object arg) {
-		// TODO Auto-generated method stub
+		for (ClassDecl cd : prog.classDeclList) {
+			if (cd.name.contentEquals("System"))
+				continue;
+			if (cd.name.contentEquals("_PrintStream"))
+				continue;
+
+			// Create Runtime Entities for each of the non-static class fields
+			int fieldDisplacement = 0;
+			for (FieldDecl fd : cd.fieldDeclList) {
+				if (fd.isStatic)
+					continue;
+				fd.runtimeEntity = new RuntimeEntity(Reg.OB, fieldDisplacement++);
+			}
+		}
+
+		// Now generate code for each of the class methods
+		for (ClassDecl cd : prog.classDeclList) {
+			if (cd.name.contentEquals("System"))
+				continue;
+			if (cd.name.contentEquals("_PrintStream"))
+				continue;
+
+			cd.visit(this, null);
+		}
 		return null;
 	}
 
 	@Override
 	public Object visitClassDecl(ClassDecl cd, Object arg) {
-		// TODO Auto-generated method stub
+		for (MethodDecl md : cd.methodDeclList) {
+			md.visit(this, null);
+		}
 		return null;
 	}
 
@@ -68,7 +149,23 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitMethodDecl(MethodDecl md, Object arg) {
-		// TODO Auto-generated method stub
+		// Assign an address to this function
+		md.runtimeEntity = new RuntimeEntity(Reg.CB, Machine.nextInstrAddr());
+		System.out.println("Assigned method " + md.name + " to CB[" + md.runtimeEntity.displacement + "]");
+		
+		// Assign addresses to each of its parameters
+		int disp = -1;
+		for (int i = md.parameterDeclList.size()-1; i >= 0; i--) {
+			md.parameterDeclList.get(i).runtimeEntity = new RuntimeEntity(Reg.LB, disp--);
+		}
+		
+		// Generate code for the method body
+		for (Statement s : md.statementList) {
+			s.visit(this, null);
+		}
+		
+		// Generate a return statement
+		Machine.emit(Op.RETURN, md.type.typeKind == TypeKind.VOID ? 0 : 1, 0, md.parameterDeclList.size());
 		return null;
 	}
 
@@ -129,6 +226,13 @@ public class Generator implements Visitor<Object, Object> {
 	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg) {
 		// TODO Auto-generated method stub
+		QualRef q = (QualRef) stmt.methodRef;
+		RuntimeEntity re = q.ref.getDeclaration().runtimeEntity;
+		stmt.argList.get(0).visit(this, null);
+		Machine.emit(Op.LOAD, re.baseRegister, re.displacement);
+
+		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), (MethodDecl) stmt.methodRef.getDeclaration()));
+		Machine.emit(Op.CALLI, Reg.CB,-1);
 		return null;
 	}
 
@@ -182,7 +286,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitLiteralExpr(LiteralExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		expr.lit.visit(this, null);
 		return null;
 	}
 
@@ -230,7 +334,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitIntLiteral(IntLiteral num, Object arg) {
-		// TODO Auto-generated method stub
+		Machine.emit(Op.LOADL, Integer.parseInt(num.spelling));
 		return null;
 	}
 
@@ -245,7 +349,7 @@ public class Generator implements Visitor<Object, Object> {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	private MethodDecl findEntryMethod(Package p) {
 		ErrorReporter.get().log("Searching for main method", 7);
 		MethodDecl mainMethod = null;
@@ -275,21 +379,21 @@ public class Generator implements Visitor<Object, Object> {
 			}
 		}
 		if (mainMethod == null) {
-			ErrorReporter.get().reportError("Failed to find entry method of signature 'public static void main(String[] args)'");
+			ErrorReporter.get()
+					.reportError("Failed to find entry method of signature 'public static void main(String[] args)'");
 		}
 		return mainMethod;
 	}
-	
-	
+
 	private void appendReturnToVoidMethods(Package p) {
 		for (ClassDecl c : p.classDeclList) {
 			for (MethodDecl m : c.methodDeclList) {
 				if (m.type.typeKind != TypeKind.VOID)
 					continue;
 				if (m.statementList.size() == 0) {
-					m.statementList.add(new ReturnStmt(null, new SourcePosition(0,0,0)));
-				} else if (!(m.statementList.get(m.statementList.size() - 1) instanceof ReturnStmt)){
-					m.statementList.add(new ReturnStmt(null, new SourcePosition(0,0,0)));
+					m.statementList.add(new ReturnStmt(null, new SourcePosition(0, 0, 0)));
+				} else if (!(m.statementList.get(m.statementList.size() - 1) instanceof ReturnStmt)) {
+					m.statementList.add(new ReturnStmt(null, new SourcePosition(0, 0, 0)));
 				}
 			}
 		}
