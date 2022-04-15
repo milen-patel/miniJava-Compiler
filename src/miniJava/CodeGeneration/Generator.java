@@ -244,7 +244,29 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitIfStmt(IfStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		// Form 1: if E then C1 else C2
+		if (stmt.elseStmt != null) {
+			stmt.cond.visit(this, null);
+			int jumpToElse = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMPIF, 0, Reg.CB,0);
+			stmt.thenStmt.visit(this, null);
+			int jumpToExit = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMP, Reg.CB, 0);
+			Machine.patch(jumpToElse, Machine.nextInstrAddr());
+			stmt.elseStmt.visit(this, null);
+			Machine.patch(jumpToExit, Machine.nextInstrAddr());
+			return null;
+		}
+		
+		// Form 2: if E then C1
+		if (stmt.elseStmt == null) {
+			stmt.cond.visit(this, null);
+			int jumpToExit = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMPIF, 0, Reg.CB, 0);
+			stmt.thenStmt.visit(this, null);
+			Machine.patch(jumpToExit, Machine.nextInstrAddr());
+		}
+		
 		return null;
 	}
 
@@ -256,13 +278,66 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		switch (expr.operator.spelling) {
+			case "!":
+				expr.expr.visit(this, null);
+				Machine.emit(Prim.not);
+				break;
+			case "-":
+				Machine.emit(Op.LOADL, 0);
+				expr.expr.visit(this, null);
+				Machine.emit(Prim.sub);
+				break;
+			default:
+				System.out.println("TODO");
+		}
 		return null;
 	}
 
 	@Override
 	public Object visitBinaryExpr(BinaryExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		expr.left.visit(this, null);
+		expr.right.visit(this, null);
+		switch (expr.operator.spelling) {
+			case "+":
+				Machine.emit(Prim.add);
+				break;
+			case "-":
+				Machine.emit(Prim.sub);
+				break;
+			case "*":
+				Machine.emit(Prim.mult);
+				break;
+			case "/":
+				Machine.emit(Prim.div);
+				break;
+			case "<":
+				Machine.emit(Prim.lt);
+				break;
+			case "<=":
+				Machine.emit(Prim.le);
+				break;
+			case ">":
+				Machine.emit(Prim.gt);
+				break;
+			case ">=":
+				Machine.emit(Prim.ge);
+				break;
+			case "==":
+				Machine.emit(Prim.eq);
+				break; // TODO is this right instruction
+			case "!=":
+				Machine.emit(Prim.ne);
+				break;
+			case "&&":
+				Machine.emit(Prim.and);
+				break;
+			case "||":
+				Machine.emit(Prim.or);
+				break;
+			default:
+				System.out.println("TODO");
+		}
 		return null;
 	}
 
@@ -340,7 +415,17 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitBooleanLiteral(BooleanLiteral bool, Object arg) {
-		// TODO Auto-generated method stub
+		switch (bool.spelling) {
+			case "true": // TODO are these the right truth values
+				Machine.emit(Op.LOADL, 1);
+				break;
+			case "false":
+				Machine.emit(Op.LOADL, 0);
+				break;
+			default:
+				System.out.println("TODO");
+				break;
+		}
 		return null;
 	}
 
