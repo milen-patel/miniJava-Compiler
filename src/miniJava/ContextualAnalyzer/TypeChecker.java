@@ -53,6 +53,7 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		for (ClassDecl cd : prog.classDeclList) {
 			cd.visit(this, null);
 		}
+		
 		return null;
 	}
 
@@ -192,6 +193,16 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			ErrorReporter.get().typeError(stmt.ref.posn.getLineNumber(), "cannot assign to a class");
 			return null;
 		}
+		
+		// Cannot reassign array length
+		if (stmt.ref instanceof QualRef) {
+			QualRef ref= (QualRef) stmt.ref;
+			if (ref.ref.getDeclaration().type instanceof ArrayType) {
+				if (ref.id.spelling.contentEquals("length"))
+					ErrorReporter.get().typeError(ref.posn.getLineNumber(), "Cannot reassign the length property of an array");
+			}
+		}
+		
 		TypeDenoter expectedType = stmt.ref.visit(this, arg);
 		TypeDenoter actualType = stmt.val.visit(this, expectedType);
 		if (expectedType == null || actualType == null) {
@@ -590,6 +601,11 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 		// Pointing to a Method
 		if (ref.getDeclaration() instanceof MethodDecl) {
 			return new BaseType(TypeKind.METHOD, dummyPos);
+		}
+		
+		// Attempting to access array length
+		if (ref.ref.getDeclaration().type instanceof ArrayType) {
+			return new BaseType(TypeKind.INT, dummyPos);
 		}
 		return ref.getDeclaration().type;
 	}

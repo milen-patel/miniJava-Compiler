@@ -5,6 +5,7 @@
  */
 package miniJava.AbstractSyntaxTrees;
 
+import miniJava.CodeGeneration.RuntimeEntity;
 import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public abstract class AST {
@@ -24,4 +25,6 @@ public abstract class AST {
   public abstract <A,R> R visit(Visitor<A,R> v, A o);
 
   public SourcePosition posn;
+  public RuntimeEntity runtimeEntity;
+
 }

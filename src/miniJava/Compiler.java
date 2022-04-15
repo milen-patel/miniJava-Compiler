@@ -15,7 +15,7 @@ public class Compiler {
 		if (!args[0].endsWith(".java") && !args[0].endsWith(".mjava"))
 			ErrorReporter.get().reportError("Input file has incorrect extension");
 		
-		try {
+		//try {
 			InputReader reader = new InputReader(args[0]);
 			Scanner scnr = new Scanner(reader);
 			Parser p = new Parser(scnr);
@@ -23,9 +23,10 @@ public class Compiler {
 			
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
+			(new miniJava.CodeGeneration.Generator()).generateCode(tree, args[0].substring(0, args[0].lastIndexOf('.')));
 			ErrorReporter.get().endWithSuccess();
-		} catch (Exception e) {
-			ErrorReporter.get().reportError("Uncaught Exception");
-		}	
+		//} catch (Exception e) {
+		//	ErrorReporter.get().reportError("Uncaught Exception");
+		//}	
 	}
 }
