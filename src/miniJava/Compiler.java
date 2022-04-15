@@ -23,7 +23,7 @@ public class Compiler {
 			
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
-			(new miniJava.CodeGeneration.Generator()).generateCode(tree, args[0].substring(0, args[0].lastIndexOf('.')));
+			(new miniJava.CodeGeneration.Generator()).generateCode(tree);
 			ErrorReporter.get().endWithSuccess();
 		//} catch (Exception e) {
 		//	ErrorReporter.get().reportError("Uncaught Exception");
