@@ -48,6 +48,7 @@ import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class Generator implements Visitor<Object, Object> {
 	Set<UnknownFunctionAddressRequest> s = new HashSet<UnknownFunctionAddressRequest>();
+	MethodDecl currMethod = null;
 
 	public void generateCode(Package p) {
 		Machine.initCodeGen();
@@ -149,6 +150,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitMethodDecl(MethodDecl md, Object arg) {
+		this.currMethod = md;
 		// Assign an address to this function
 		md.runtimeEntity = new RuntimeEntity(Reg.CB, Machine.nextInstrAddr());
 		System.out.println("Assigned method " + md.name + " to CB[" + md.runtimeEntity.displacement + "]");
@@ -164,8 +166,7 @@ public class Generator implements Visitor<Object, Object> {
 			s.visit(this, null);
 		}
 		
-		// Generate a return statement
-		Machine.emit(Op.RETURN, md.type.typeKind == TypeKind.VOID ? 0 : 1, 0, md.parameterDeclList.size());
+		this.currMethod = null;
 		return null;
 	}
 
@@ -238,7 +239,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitReturnStmt(ReturnStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		Machine.emit(Op.RETURN, stmt.returnExpr == null ? 0 : 1, 0, this.currMethod.parameterDeclList.size());
 		return null;
 	}
 
@@ -272,7 +273,6 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitWhileStmt(WhileStmt stmt, Object arg) {
-		System.out.println("WETEWTET");
 		int jumpToConditionCheck = Machine.nextInstrAddr();
 		Machine.emit(Op.JUMP, Reg.CB, 0);
 		int bodyExecutionStart = Machine.nextInstrAddr();
