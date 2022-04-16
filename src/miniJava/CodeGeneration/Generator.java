@@ -219,7 +219,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitVardeclStmt(VarDeclStmt stmt, Object arg) {
-		stmt.varDecl.runtimeEntity = new RuntimeEntity(Reg.LB, this.varDecls++);
+		stmt.varDecl.runtimeEntity = new RuntimeEntity(Reg.LB, this.nextLocalVarPos++);
 		Machine.emit(Op.PUSH, 1);
 		stmt.initExp.visit(this, null);
 		Machine.emit(Op.STORE, 1, Reg.LB, stmt.varDecl.runtimeEntity.displacement);
