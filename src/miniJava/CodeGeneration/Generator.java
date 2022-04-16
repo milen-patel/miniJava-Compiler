@@ -272,7 +272,14 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitWhileStmt(WhileStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		System.out.println("WETEWTET");
+		int jumpToConditionCheck = Machine.nextInstrAddr();
+		Machine.emit(Op.JUMP, Reg.CB, 0);
+		int bodyExecutionStart = Machine.nextInstrAddr();
+		stmt.body.visit(this, null);
+		Machine.patch(jumpToConditionCheck, Machine.nextInstrAddr());
+		stmt.cond.visit(this, null);
+		Machine.emit(Op.JUMPIF, 1, Reg.CB, bodyExecutionStart);
 		return null;
 	}
 
