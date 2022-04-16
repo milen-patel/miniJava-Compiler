@@ -50,8 +50,9 @@ import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class Generator implements Visitor<Object, Object> {
 	Set<UnknownFunctionAddressRequest> s = new HashSet<UnknownFunctionAddressRequest>();
-	Map<String, ClassDecl> progClasses = new HashMap();
+	Map<String, ClassDecl> progClasses = new HashMap<String, ClassDecl>();
 	MethodDecl currMethod = null;
+	int nextLocalVarPos = 3;
 
 	public void generateCode(Package p) {
 		Machine.initCodeGen();
@@ -60,7 +61,7 @@ public class Generator implements Visitor<Object, Object> {
 
 		// Ensure all void methods end in a return
 		this.appendReturnToVoidMethods(p);
-		
+
 		// Populate class map, needed for newObjectExpr
 		for (ClassDecl c : p.classDeclList) {
 			progClasses.put(c.name, c);
@@ -106,7 +107,7 @@ public class Generator implements Visitor<Object, Object> {
 		Machine.emit(Op.RETURN, 0, 0, 1);
 
 		p.visit(this, null);
-		
+
 		// Patch function call addresses
 		for (UnknownFunctionAddressRequest curr : s) {
 			curr.fix();
@@ -159,22 +160,24 @@ public class Generator implements Visitor<Object, Object> {
 	@Override
 	public Object visitMethodDecl(MethodDecl md, Object arg) {
 		this.currMethod = md;
+		this.nextLocalVarPos = 3;
 		// Assign an address to this function
 		md.runtimeEntity = new RuntimeEntity(Reg.CB, Machine.nextInstrAddr());
 		System.out.println("Assigned method " + md.name + " to CB[" + md.runtimeEntity.displacement + "]");
-		
+
 		// Assign addresses to each of its parameters
 		int disp = -1;
-		for (int i = md.parameterDeclList.size()-1; i >= 0; i--) {
+		for (int i = md.parameterDeclList.size() - 1; i >= 0; i--) {
 			md.parameterDeclList.get(i).runtimeEntity = new RuntimeEntity(Reg.LB, disp--);
 		}
-		
+
 		// Generate code for the method body
 		for (Statement s : md.statementList) {
 			s.visit(this, null);
 		}
-		
+
 		this.currMethod = null;
+		// TODO figure out if we need to pop vardecls via nextLocalVarPos downto 3
 		return null;
 	}
 
@@ -216,7 +219,10 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitVardeclStmt(VarDeclStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		stmt.varDecl.runtimeEntity = new RuntimeEntity(Reg.LB, this.varDecls++);
+		Machine.emit(Op.PUSH, 1);
+		stmt.initExp.visit(this, null);
+		Machine.emit(Op.STORE, 1, Reg.LB, stmt.varDecl.runtimeEntity.displacement);
 		return null;
 	}
 
@@ -235,13 +241,15 @@ public class Generator implements Visitor<Object, Object> {
 	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg) {
 		// TODO this is rigged to just work for printing, need to fix
+		// TODO make sure you pop off value if there is a return or else itll just waste
+		// stack space and throw off subsequent vardeclstmt's
 		QualRef q = (QualRef) stmt.methodRef;
 		RuntimeEntity re = q.ref.getDeclaration().runtimeEntity;
 		stmt.argList.get(0).visit(this, null);
 		Machine.emit(Op.LOAD, re.baseRegister, re.displacement);
 
 		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), (MethodDecl) stmt.methodRef.getDeclaration()));
-		Machine.emit(Op.CALLI, Reg.CB,-1);
+		Machine.emit(Op.CALLI, Reg.CB, -1);
 		return null;
 	}
 
@@ -257,7 +265,7 @@ public class Generator implements Visitor<Object, Object> {
 		if (stmt.elseStmt != null) {
 			stmt.cond.visit(this, null);
 			int jumpToElse = Machine.nextInstrAddr();
-			Machine.emit(Op.JUMPIF, 0, Reg.CB,0);
+			Machine.emit(Op.JUMPIF, 0, Reg.CB, 0);
 			stmt.thenStmt.visit(this, null);
 			int jumpToExit = Machine.nextInstrAddr();
 			Machine.emit(Op.JUMP, Reg.CB, 0);
@@ -266,7 +274,7 @@ public class Generator implements Visitor<Object, Object> {
 			Machine.patch(jumpToExit, Machine.nextInstrAddr());
 			return null;
 		}
-		
+
 		// Form 2: if E then C1
 		if (stmt.elseStmt == null) {
 			stmt.cond.visit(this, null);
@@ -275,7 +283,7 @@ public class Generator implements Visitor<Object, Object> {
 			stmt.thenStmt.visit(this, null);
 			Machine.patch(jumpToExit, Machine.nextInstrAddr());
 		}
-		
+
 		return null;
 	}
 
@@ -294,17 +302,17 @@ public class Generator implements Visitor<Object, Object> {
 	@Override
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg) {
 		switch (expr.operator.spelling) {
-			case "!":
-				expr.expr.visit(this, null);
-				Machine.emit(Prim.not);
-				break;
-			case "-":
-				Machine.emit(Op.LOADL, 0);
-				expr.expr.visit(this, null);
-				Machine.emit(Prim.sub);
-				break;
-			default:
-				System.out.println("TODO");
+		case "!":
+			expr.expr.visit(this, null);
+			Machine.emit(Prim.not);
+			break;
+		case "-":
+			Machine.emit(Op.LOADL, 0);
+			expr.expr.visit(this, null);
+			Machine.emit(Prim.sub);
+			break;
+		default:
+			System.out.println("TODO");
 		}
 		return null;
 	}
@@ -314,44 +322,44 @@ public class Generator implements Visitor<Object, Object> {
 		expr.left.visit(this, null);
 		expr.right.visit(this, null);
 		switch (expr.operator.spelling) {
-			case "+":
-				Machine.emit(Prim.add);
-				break;
-			case "-":
-				Machine.emit(Prim.sub);
-				break;
-			case "*":
-				Machine.emit(Prim.mult);
-				break;
-			case "/":
-				Machine.emit(Prim.div);
-				break;
-			case "<":
-				Machine.emit(Prim.lt);
-				break;
-			case "<=":
-				Machine.emit(Prim.le);
-				break;
-			case ">":
-				Machine.emit(Prim.gt);
-				break;
-			case ">=":
-				Machine.emit(Prim.ge);
-				break;
-			case "==":
-				Machine.emit(Prim.eq);
-				break; // TODO is this right instruction
-			case "!=":
-				Machine.emit(Prim.ne);
-				break;
-			case "&&":
-				Machine.emit(Prim.and);
-				break;
-			case "||":
-				Machine.emit(Prim.or);
-				break;
-			default:
-				System.out.println("TODO");
+		case "+":
+			Machine.emit(Prim.add);
+			break;
+		case "-":
+			Machine.emit(Prim.sub);
+			break;
+		case "*":
+			Machine.emit(Prim.mult);
+			break;
+		case "/":
+			Machine.emit(Prim.div);
+			break;
+		case "<":
+			Machine.emit(Prim.lt);
+			break;
+		case "<=":
+			Machine.emit(Prim.le);
+			break;
+		case ">":
+			Machine.emit(Prim.gt);
+			break;
+		case ">=":
+			Machine.emit(Prim.ge);
+			break;
+		case "==":
+			Machine.emit(Prim.eq);
+			break; // TODO is this right instruction
+		case "!=":
+			Machine.emit(Prim.ne);
+			break;
+		case "&&":
+			Machine.emit(Prim.and);
+			break;
+		case "||":
+			Machine.emit(Prim.or);
+			break;
+		default:
+			System.out.println("TODO");
 		}
 		return null;
 	}
@@ -439,15 +447,15 @@ public class Generator implements Visitor<Object, Object> {
 	@Override
 	public Object visitBooleanLiteral(BooleanLiteral bool, Object arg) {
 		switch (bool.spelling) {
-			case "true": // TODO are these the right truth values
-				Machine.emit(Op.LOADL, 1);
-				break;
-			case "false":
-				Machine.emit(Op.LOADL, 0);
-				break;
-			default:
-				System.out.println("TODO");
-				break;
+		case "true": // TODO are these the right truth values
+			Machine.emit(Op.LOADL, 1);
+			break;
+		case "false":
+			Machine.emit(Op.LOADL, 0);
+			break;
+		default:
+			System.out.println("TODO");
+			break;
 		}
 		return null;
 	}
