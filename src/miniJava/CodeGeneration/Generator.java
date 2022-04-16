@@ -1,6 +1,8 @@
 package miniJava.CodeGeneration;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import mJAM.Machine;
@@ -48,6 +50,7 @@ import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class Generator implements Visitor<Object, Object> {
 	Set<UnknownFunctionAddressRequest> s = new HashSet<UnknownFunctionAddressRequest>();
+	Map<String, ClassDecl> progClasses = new HashMap();
 	MethodDecl currMethod = null;
 
 	public void generateCode(Package p) {
@@ -57,6 +60,11 @@ public class Generator implements Visitor<Object, Object> {
 
 		// Ensure all void methods end in a return
 		this.appendReturnToVoidMethods(p);
+		
+		// Populate class map, needed for newObjectExpr
+		for (ClassDecl c : p.classDeclList) {
+			progClasses.put(c.name, c);
+		}
 
 		// Reserve space for static class fields
 		int numStaticFields = 0;
@@ -226,7 +234,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		// TODO this is rigged to just work for printing, need to fix
 		QualRef q = (QualRef) stmt.methodRef;
 		RuntimeEntity re = q.ref.getDeclaration().runtimeEntity;
 		stmt.argList.get(0).visit(this, null);
@@ -374,7 +382,15 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitNewObjectExpr(NewObjectExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		ClassDecl cd = this.progClasses.get(expr.classtype.className.spelling);
+		int numFields = 0;
+		for (FieldDecl fd : cd.fieldDeclList) {
+			if (!fd.isStatic)
+				numFields++;
+		}
+		Machine.emit(Op.LOADL, -1);
+		Machine.emit(Op.LOADL, numFields);
+		Machine.emit(Prim.newobj);
 		return null;
 	}
 
