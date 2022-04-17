@@ -420,23 +420,24 @@ public class Generator implements Visitor<Object, Object> {
 	}
 
 	@Override
-	public Object visitCallExpr(CallExpr expr, Object arg) {
+	public Object visitCallExpr(CallExpr expr, Object arg) {		
+		// Put args onto stack
+		for (Expression e : expr.argList)
+			e.visit(this, null);
+		
 		expr.functionRef.visit(this, null);
-		MethodDecl md = (MethodDecl) expr.functionRef.getDeclaration();
-		// Case 1: Static Function
-		if (md.isStatic) {
-			// Put args on stack
-			for (Expression e : expr.argList)
-				e.visit(this, null);
-			s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), md));
+
+		
+		MethodDecl callee = (MethodDecl) expr.functionRef.getDeclaration();
+		if (callee.isStatic) {
+			s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
 			Machine.emit(Op.CALL, Reg.CB, -1);
 			return null;
 		}
 		
-		// Case 2: Instance Function
-		if (!md.isStatic) {
-			return null;
-		}
+		// Push instance address onto stack
+		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+		Machine.emit(Op.CALLI, Reg.CB, 0);
 		return null;
 	}
 
@@ -521,9 +522,8 @@ public class Generator implements Visitor<Object, Object> {
 				return null;
 			}
 			if (!md.isStatic) {
-				//Machine.emit(Op.LOADA, Reg.OB, 0); // TODO not sure if syntax right
-				//s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), md));
-				//Machine.emit(Op.CALLI, Reg.CB, 0);
+				// Need to put object instance on the stack
+				Machine.emit(Op.LOADA, Reg.OB, 0);
 				return null;
 			}
 			return null;
@@ -562,6 +562,8 @@ public class Generator implements Visitor<Object, Object> {
 				return null;
 			}
 		}
+		
+		// If its a field, then we stop since visiting the left child of qual ref has put the object instance on
 		return null;
 	}
 
