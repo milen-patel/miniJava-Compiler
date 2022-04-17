@@ -14,4 +14,8 @@ public class RuntimeEntity {
 	public String toString() {
 		return "[Register: " + baseRegister + ", Displacement: " + displacement + "]";
 	}
+	
+	public RuntimeEntity duplicate() {
+		return new RuntimeEntity(this.baseRegister, this.displacement);
+	}
 }

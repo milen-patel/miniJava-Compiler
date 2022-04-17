@@ -26,6 +26,10 @@ public class Compiler {
 			
 			(new miniJava.ContextualAnalyzer.Identification()).visitPackage(tree, null);
 			(new miniJava.ContextualAnalyzer.TypeChecker()).visitPackage(tree, null);
+			
+			if (ErrorReporter.get().typeErrors > 0)
+				System.exit(ErrorReporter.FAILURE_RETURN_CODE);
+			
 			(new miniJava.CodeGeneration.Generator()).generateCode(tree);
 			String name = args[0].substring(0, args[0].lastIndexOf('.')) + ".mJAM";
 			ObjectFile objF = new ObjectFile(name);

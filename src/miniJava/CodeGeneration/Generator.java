@@ -20,6 +20,8 @@ import miniJava.AbstractSyntaxTrees.CallExpr;
 import miniJava.AbstractSyntaxTrees.CallStmt;
 import miniJava.AbstractSyntaxTrees.ClassDecl;
 import miniJava.AbstractSyntaxTrees.ClassType;
+import miniJava.AbstractSyntaxTrees.Declaration;
+import miniJava.AbstractSyntaxTrees.Expression;
 import miniJava.AbstractSyntaxTrees.FieldDecl;
 import miniJava.AbstractSyntaxTrees.IdRef;
 import miniJava.AbstractSyntaxTrees.Identifier;
@@ -28,6 +30,7 @@ import miniJava.AbstractSyntaxTrees.IntLiteral;
 import miniJava.AbstractSyntaxTrees.IxAssignStmt;
 import miniJava.AbstractSyntaxTrees.IxExpr;
 import miniJava.AbstractSyntaxTrees.LiteralExpr;
+import miniJava.AbstractSyntaxTrees.LocalDecl;
 import miniJava.AbstractSyntaxTrees.MethodDecl;
 import miniJava.AbstractSyntaxTrees.NewArrayExpr;
 import miniJava.AbstractSyntaxTrees.NewObjectExpr;
@@ -213,7 +216,8 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitBlockStmt(BlockStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		for (Statement s : stmt.sl)
+			s.visit(this, null); // TODO bs impl for now
 		return null;
 	}
 
@@ -223,12 +227,30 @@ public class Generator implements Visitor<Object, Object> {
 		Machine.emit(Op.PUSH, 1);
 		stmt.initExp.visit(this, null);
 		Machine.emit(Op.STORE, 1, Reg.LB, stmt.varDecl.runtimeEntity.displacement);
+		System.out.println("Assigning local variable " + stmt.varDecl.name + " to LB[" + stmt.varDecl.runtimeEntity.displacement + "]");
 		return null;
 	}
 
 	@Override
 	public Object visitAssignStmt(AssignStmt stmt, Object arg) {
-		// TODO Auto-generated method stub
+		if (stmt.ref.getDeclaration() instanceof FieldDecl && ((FieldDecl) stmt.ref.getDeclaration()).isStatic) {
+			FieldDecl fd = (FieldDecl) stmt.ref.getDeclaration();
+			stmt.val.visit(this, null);
+			Machine.emit(Op.STORE, 1, fd.runtimeEntity.baseRegister, fd.runtimeEntity.displacement);
+			return null;
+		}
+		if (stmt.ref.getDeclaration() instanceof VarDecl) { // or param prolly too
+			stmt.val.visit(this, null);
+			Machine.emit(Op.STORE, 1, stmt.ref.getDeclaration().runtimeEntity.baseRegister, stmt.ref.getDeclaration().runtimeEntity.displacement);
+			return null;
+		}
+		if (stmt.ref.getDeclaration() instanceof FieldDecl) {
+			stmt.ref.visit(this, null);
+			Machine.CT--; // TOO HACKY TODO
+			stmt.val.visit(this, null);
+			Machine.emit(Prim.fieldupd);
+		}
+
 		return null;
 	}
 
@@ -243,18 +265,39 @@ public class Generator implements Visitor<Object, Object> {
 		// TODO this is rigged to just work for printing, need to fix
 		// TODO make sure you pop off value if there is a return or else itll just waste
 		// stack space and throw off subsequent vardeclstmt's
+		/*
 		QualRef q = (QualRef) stmt.methodRef;
 		RuntimeEntity re = q.ref.getDeclaration().runtimeEntity;
 		stmt.argList.get(0).visit(this, null);
-		Machine.emit(Op.LOAD, re.baseRegister, re.displacement);
+		try {
+			Machine.emit(Op.LOAD, re.baseRegister, re.displacement);
+		} catch (Exception e) {}
 
 		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), (MethodDecl) stmt.methodRef.getDeclaration()));
 		Machine.emit(Op.CALLI, Reg.CB, -1);
+		*/
+		// Put args onto stack
+		for (Expression e : stmt.argList)
+			e.visit(this, null);
+		
+		MethodDecl callee = (MethodDecl) stmt.methodRef.getDeclaration();
+		if (callee.isStatic) {
+			s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+			Machine.emit(Op.CALL, Reg.CB, -1);
+			return null;
+		}
+		
+		// Push instance address onto stack
+		stmt.methodRef.visit(this, null);
+		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+		Machine.emit(Op.CALLI, Reg.CB, 0);
 		return null;
 	}
 
 	@Override
 	public Object visitReturnStmt(ReturnStmt stmt, Object arg) {
+		if (stmt.returnExpr != null)
+			stmt.returnExpr.visit(this, null);
 		Machine.emit(Op.RETURN, stmt.returnExpr == null ? 0 : 1, 0, this.currMethod.parameterDeclList.size());
 		return null;
 	}
@@ -366,7 +409,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitRefExpr(RefExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		expr.ref.visit(this, null);
 		return null;
 	}
 
@@ -378,7 +421,22 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitCallExpr(CallExpr expr, Object arg) {
-		// TODO Auto-generated method stub
+		expr.functionRef.visit(this, null);
+		MethodDecl md = (MethodDecl) expr.functionRef.getDeclaration();
+		// Case 1: Static Function
+		if (md.isStatic) {
+			// Put args on stack
+			for (Expression e : expr.argList)
+				e.visit(this, null);
+			s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), md));
+			Machine.emit(Op.CALL, Reg.CB, -1);
+			return null;
+		}
+		
+		// Case 2: Instance Function
+		if (!md.isStatic) {
+			return null;
+		}
 		return null;
 	}
 
@@ -410,25 +468,100 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitThisRef(ThisRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		Machine.emit(Op.LOADA, Reg.OB, 0);
 		return null;
 	}
 
 	@Override
 	public Object visitIdRef(IdRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		Declaration d = ref.getDeclaration();
+		// Case 0: Class Name
+		if (d instanceof ClassDecl) {
+			return null;
+		}
+
+		// Case 1: Local Variable
+		if (d instanceof VarDecl) {
+			ref.runtimeEntity = d.runtimeEntity.duplicate();
+			Machine.emit(Op.LOAD, 1, ref.runtimeEntity.baseRegister, ref.runtimeEntity.displacement);
+			return null;
+		}
+		// Case 2: Parameter Decl
+		if (d instanceof ParameterDecl) {
+			ref.runtimeEntity = d.runtimeEntity.duplicate();
+			Machine.emit(Op.LOAD, 1, ref.runtimeEntity.baseRegister, ref.runtimeEntity.displacement);
+			return null;
+		}
+		
+		// Case 3: Class Field(TODO could be static)
+		if (d instanceof FieldDecl) {
+			FieldDecl fd = (FieldDecl) d;
+			if (fd.isStatic) {
+				ref.runtimeEntity = fd.runtimeEntity.duplicate();
+				Machine.emit(Op.LOAD, 1, ref.runtimeEntity.baseRegister, ref.runtimeEntity.displacement);
+				return null;
+			}
+			if (!fd.isStatic) {
+				Machine.emit(Op.LOADA, Reg.OB, 0); // TODO not sure if syntax right
+				Machine.emit(Op.LOADL, fd.runtimeEntity.displacement);
+				Machine.emit(Prim.fieldref);
+				return null; 
+			}
+			return null;
+		}
+		
+		// Case 4: Method (could be static) TODO
+		if (d instanceof MethodDecl) {
+			// RE will be null if we havent already processed the function but that is fine since callStmt/callExpr will make the patch request
+			ref.runtimeEntity = d.runtimeEntity;
+			MethodDecl md = (MethodDecl) d;
+			if (md.isStatic) {
+				//s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), md));
+				//Machine.emit(Op.CALL, Reg.CB, 0);
+				return null;
+			}
+			if (!md.isStatic) {
+				//Machine.emit(Op.LOADA, Reg.OB, 0); // TODO not sure if syntax right
+				//s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), md));
+				//Machine.emit(Op.CALLI, Reg.CB, 0);
+				return null;
+			}
+			return null;
+		}
 		return null;
 	}
 
 	@Override
 	public Object visitQRef(QualRef ref, Object arg) {
-		// TODO Auto-generated method stub
+		/*
+		if (ref.getDeclaration() instanceof FieldDecl && ((FieldDecl) ref.getDeclaration()).isStatic) {
+			FieldDecl fd = (FieldDecl) ref.getDeclaration();
+			Machine.emit(Op.LOAD, 1, fd.runtimeEntity.baseRegister, fd.runtimeEntity.displacement);
+			return null;
+		} */
+		ref.ref.visit(this, null);
+		ref.id.visit(this, null);
 		return null;
 	}
 
 	@Override
 	public Object visitIdentifier(Identifier id, Object arg) {
-		// TODO Auto-generated method stub
+		// I believe this either has to be a method/field of a class 
+		Declaration d = id.getDeclaration();
+		if (d instanceof FieldDecl) {
+			FieldDecl fd = (FieldDecl) d;
+			if (fd.isStatic) {
+				Machine.emit(Op.LOAD, 1, fd.runtimeEntity.baseRegister, fd.runtimeEntity.displacement);
+				id.runtimeEntity = fd.runtimeEntity;
+				return null;
+			}
+			if (!fd.isStatic) {
+				Machine.emit(Op.LOADL, fd.runtimeEntity.displacement);
+				Machine.emit(Prim.fieldref);
+				id.runtimeEntity = fd.runtimeEntity;
+				return null;
+			}
+		}
 		return null;
 	}
 
@@ -462,7 +595,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitNullLiteral(NullLiteral nullLiteral, Object arg) {
-		// TODO Auto-generated method stub
+		Machine.emit(Op.LOADL, 0);
 		return null;
 	}
 
