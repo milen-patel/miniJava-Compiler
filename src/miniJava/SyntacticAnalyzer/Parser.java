@@ -111,7 +111,7 @@ public class Parser {
 			
 			return new MethodDecl(new FieldDecl(isPrivate, isStatic, memberType, iden.spelling, pos),params, sl, pos);
 		} else {
-			ErrorReporter.get().reportError("<Parser> Invalid class body. Failed to parse field or method declaration. Expected ';' or '('.");
+			ErrorReporter.get().reportError("<Parser> Invalid class body. Failed to parse field or method declaration. Expected ';' or '('." +  pos);
 		}
 		return null;
 	}

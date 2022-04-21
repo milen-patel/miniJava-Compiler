@@ -450,7 +450,7 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		if (d instanceof FieldDecl || d instanceof VarDecl || d instanceof ParameterDecl) {	
 			if (d.type instanceof ArrayType) {
 				if (!id.spelling.contentEquals("length")) {
-					System.out.println("OOOPS");
+					ErrorReporter.get().idError(id.posn.getLineNumber(), "Only field access allowed on arrays is 'length'");
 				}
 				return null;
 			}
