@@ -52,7 +52,7 @@ import miniJava.AbstractSyntaxTrees.WhileStmt;
 import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class Generator implements Visitor<Object, Object> {
-	Set<UnknownFunctionAddressRequest> s = new HashSet<UnknownFunctionAddressRequest>();
+	Set<PatchRequest> s = new HashSet<PatchRequest>();
 	Map<String, ClassDecl> progClasses = new HashMap<String, ClassDecl>();
 	MethodDecl currMethod = null;
 	int nextLocalVarPos = 3;
@@ -89,21 +89,13 @@ public class Generator implements Visitor<Object, Object> {
 		// Generate String[] args
 		Machine.emit(Op.LOADL, 0);
 		Machine.emit(Prim.newarr);
-		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), main));
+		s.add(new PatchRequest(Machine.nextInstrAddr(), main));
 		Machine.emit(Op.CALL, Reg.CB, -1); // Call main(String[] args)
 		Machine.emit(Op.POP, numStaticFields); // TODO is this needed
 		Machine.emit(Op.HALT);
 
-		// Generate Code for _PrintStream and System
-		ClassDecl printStream = null, system = null;
-		for (ClassDecl cd : p.classDeclList) {
-			if (cd.name.contentEquals("_PrintStream")) {
-				printStream = cd;
-			} else if (cd.name.contentEquals("System")) {
-				system = cd;
-			}
-		}
-
+		// Generate Code for _PrintStream 
+		ClassDecl printStream = this.getClassWithName("_PrintStream", p);
 		MethodDecl println = printStream.methodDeclList.get(0);
 		println.runtimeEntity = new RuntimeEntity(Reg.CB, Machine.nextInstrAddr());
 		Machine.emit(Op.LOAD, Reg.LB, -1);
@@ -113,7 +105,7 @@ public class Generator implements Visitor<Object, Object> {
 		p.visit(this, null);
 
 		// Patch function call addresses
-		for (UnknownFunctionAddressRequest curr : s) {
+		for (PatchRequest curr : s) {
 			curr.fix();
 		}
 	}
@@ -290,13 +282,13 @@ public class Generator implements Visitor<Object, Object> {
 		
 		MethodDecl callee = (MethodDecl) stmt.methodRef.getDeclaration(); // TODO this migth alloow foor NPEs to pass
 		if (callee.isStatic) {
-			s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+			s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
 			Machine.emit(Op.CALL, Reg.CB, -1);
 			return null;
 		}
 		
 		// Push instance address onto stack
-		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+		s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
 		Machine.emit(Op.CALLI, Reg.CB, 0);
 		
 		// We dont want to leave a return value on the stack
@@ -444,13 +436,13 @@ public class Generator implements Visitor<Object, Object> {
 		
 		MethodDecl callee = (MethodDecl) expr.functionRef.getDeclaration();
 		if (callee.isStatic) {
-			s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+			s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
 			Machine.emit(Op.CALL, Reg.CB, -1);
 			return null;
 		}
 		
 		// Push instance address onto stack
-		s.add(new UnknownFunctionAddressRequest(Machine.nextInstrAddr(), callee));
+		s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
 		Machine.emit(Op.CALLI, Reg.CB, 0);
 		return null;
 	}
@@ -673,5 +665,14 @@ public class Generator implements Visitor<Object, Object> {
 				}
 			}
 		}
+	}
+	
+	private ClassDecl getClassWithName(String name, Package p) {
+		for (ClassDecl cd: p.classDeclList) {
+			if (cd.name.contentEquals(name)) {
+				return cd;
+			}
+		}
+		return null;
 	}
 }
