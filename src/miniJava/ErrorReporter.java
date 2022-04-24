@@ -7,7 +7,7 @@ public class ErrorReporter {
 	public static final int SUCCESS_RETURN_CODE = 0;
 	public static final int FAILURE_RETURN_CODE = 4;
 	private static ErrorReporter reporter;
-	private int reportingMinimum = 10;
+	private int reportingMinimum = 100;
 	public int typeErrors = 0;
 	
 	/*
@@ -20,8 +20,8 @@ public class ErrorReporter {
 			System.out.println("\t" + trace[i]);
 		}
 		System.out.println(reason);
-		throw new RuntimeException("E");
-		//System.exit(FAILURE_RETURN_CODE);
+		//throw new RuntimeException("E");
+		System.exit(FAILURE_RETURN_CODE);
 	}
 	
 	/*
@@ -29,8 +29,8 @@ public class ErrorReporter {
 	 */
 	public void idError(int lineNumber, String reason) {
 		System.out.println("*** line " + lineNumber + ": " + reason);
-		throw new RuntimeException("E");
-		//System.exit(FAILURE_RETURN_CODE);
+		//throw new RuntimeException("E");
+		System.exit(FAILURE_RETURN_CODE);
 	}
 	
 	/*
@@ -39,7 +39,7 @@ public class ErrorReporter {
 	public void typeError(int lineNumber, String reason) {
 		this.typeErrors++;
 		System.out.println("*** line " + lineNumber + ": " + reason);
-		throw new RuntimeException("E");
+		//throw new RuntimeException("E");
 	}
 	
 	/*

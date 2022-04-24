@@ -852,14 +852,14 @@ public class Interpreter {
 		if (args.length >= 1)
 			objectFileName = args[0];
 		else
-			objectFileName = "/Users/milenpatel/Desktop/HelloWorld.mJAM";
+			objectFileName = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/BinaryTree.java";
 
 		String sourceFileName;
 		if (args.length >= 2) {
 			sourceFileName = args[1];
 			debug(objectFileName, sourceFileName);
 		} else {
-			debug(objectFileName, "/Users/milenpatel/Desktop/HelloWorld.asm");
+			debug(objectFileName, "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/BinaryTree.asm");
 		}
 	}
 

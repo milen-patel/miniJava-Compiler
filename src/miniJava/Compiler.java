@@ -60,7 +60,7 @@ public class Compiler {
 	}
 	
 	public static void main(String[] args) {
-		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/BlockStatements.java";
+		args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/BlockStatements.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/CallStatementStackUsage.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/Arrays.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/References.java";
@@ -70,9 +70,14 @@ public class Compiler {
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/Quicksort.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/StaticCall.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/Recursion.java";
-		args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/AssignStatements.java";
+		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/AssignStatements.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/GeneralChecks.java";
 		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/ArrayConcatenation.java";
+		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/MultipleClasses.java";
+		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/GenericPass2.java";
+		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/GenericPass3.java";
+		//args[0] = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/GenericPass4.java";
+
 		//runPA3Tests();
 		//System.exit(3);
 		

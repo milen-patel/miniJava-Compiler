@@ -52,11 +52,14 @@ import miniJava.AbstractSyntaxTrees.WhileStmt;
 import miniJava.SyntacticAnalyzer.SourcePosition;
 
 public class Generator implements Visitor<Object, Object> {
-	Set<PatchRequest> s = new HashSet<PatchRequest>();
+	// Keeps track of function calls so that we can patch addresses after code generation is complete
+	Set<PatchRequest> patchRequests = new HashSet<PatchRequest>();
+	// Needed in NewObjectExpr to determine class type being instantiated
 	Map<String, ClassDecl> progClasses = new HashMap<String, ClassDecl>();
+	// Needed for return statements to know how many parameters to push off the stack
 	MethodDecl currMethod = null;
+	// Needed for VarDecl's to keep track of position relative to Local Base register
 	int nextLocalVarPos = 3;
-	boolean inAssignStmt = false;
 
 	public void generateCode(Package p) {
 		Machine.initCodeGen();
@@ -76,22 +79,19 @@ public class Generator implements Visitor<Object, Object> {
 		for (ClassDecl cd : p.classDeclList) {
 			for (FieldDecl fd : cd.fieldDeclList) {
 				if (fd.isStatic) {
-					ErrorReporter.get().log("Static field " + fd.name + " of class " + cd.name + " assigned to address SB["
-							+ numStaticFields + "]", 9);
-					fd.runtimeEntity = new RuntimeEntity(Reg.SB, numStaticFields);
-					numStaticFields++;
+					ErrorReporter.get().log("Static field " + fd.name + " of class " + cd.name + " assigned to address SB[" + numStaticFields + "]", 9);
+					fd.runtimeEntity = new RuntimeEntity(Reg.SB, numStaticFields++);
 				}
 			}
 		}
 		Machine.emit(Op.PUSH, numStaticFields);
 
-		// Emit Code to Call Main Function
-		// Generate String[] args
+		// Generate String[] args and call main
 		Machine.emit(Op.LOADL, 0);
 		Machine.emit(Prim.newarr);
-		s.add(new PatchRequest(Machine.nextInstrAddr(), main));
-		Machine.emit(Op.CALL, Reg.CB, -1); // Call main(String[] args)
-		Machine.emit(Op.POP, numStaticFields); // TODO is this needed
+		patchRequests.add(new PatchRequest(Machine.nextInstrAddr(), main));
+		Machine.emit(Op.CALL, Reg.CB, -1); 
+		Machine.emit(Op.POP, numStaticFields); 
 		Machine.emit(Op.HALT);
 
 		// Generate Code for _PrintStream 
@@ -102,10 +102,11 @@ public class Generator implements Visitor<Object, Object> {
 		Machine.emit(Prim.putintnl);
 		Machine.emit(Op.RETURN, 0, 0, 1);
 
+		// Generate code for all other methods
 		p.visit(this, null);
 
 		// Patch function call addresses
-		for (PatchRequest curr : s) {
+		for (PatchRequest curr : patchRequests) {
 			curr.fix();
 		}
 	}
@@ -113,6 +114,7 @@ public class Generator implements Visitor<Object, Object> {
 	@Override
 	public Object visitPackage(Package prog, Object arg) {
 		for (ClassDecl cd : prog.classDeclList) {
+			// Skip Reserved Classes
 			if (cd.name.contentEquals("System"))
 				continue;
 			if (cd.name.contentEquals("_PrintStream"))
@@ -129,6 +131,7 @@ public class Generator implements Visitor<Object, Object> {
 
 		// Now generate code for each of the class methods
 		for (ClassDecl cd : prog.classDeclList) {
+			// Skip Reserved Classes
 			if (cd.name.contentEquals("System"))
 				continue;
 			if (cd.name.contentEquals("_PrintStream"))
@@ -173,7 +176,6 @@ public class Generator implements Visitor<Object, Object> {
 		}
 
 		this.currMethod = null;
-		// TODO figure out if we need to pop vardecls via nextLocalVarPos downto 3
 		return null;
 	}
 
@@ -209,12 +211,15 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitBlockStmt(BlockStmt stmt, Object arg) {
+		// Keep track of new variables declared
 		int varDecls = 0;
 		for (Statement s : stmt.sl) {
 			s.visit(this, null);
 			if (s instanceof VarDeclStmt)
 				varDecls++;
 		}
+		
+		// Now that block scope closed, remove variables local to that block
 		if (varDecls > 0) 
 			Machine.emit(Op.POP, varDecls);
 		this.nextLocalVarPos -= varDecls;
@@ -265,7 +270,7 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object arg) {
-		stmt.ref.visit(this, null); // TODO make sure ref can handle this
+		stmt.ref.visit(this, null); 
 		stmt.ix.visit(this, null);
 		stmt.exp.visit(this, null);
 		Machine.emit(Prim.arrayupd);
@@ -280,18 +285,21 @@ public class Generator implements Visitor<Object, Object> {
 		
 		stmt.methodRef.visit(this, null);
 		
-		MethodDecl callee = (MethodDecl) stmt.methodRef.getDeclaration(); // TODO this migth alloow foor NPEs to pass
+		MethodDecl callee = (MethodDecl) stmt.methodRef.getDeclaration();
+		
+		// Case 1: Static Method
 		if (callee.isStatic) {
-			s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
-			Machine.emit(Op.CALL, Reg.CB, -1);
-			return null;
+			patchRequests.add(new PatchRequest(Machine.nextInstrAddr(), callee));
+			Machine.emit(Op.CALL, Reg.CB, 0);
 		}
 		
-		// Push instance address onto stack
-		s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
-		Machine.emit(Op.CALLI, Reg.CB, 0);
-		
-		// We dont want to leave a return value on the stack
+		// Case 2: Instance Method
+		if (!callee.isStatic) {
+			patchRequests.add(new PatchRequest(Machine.nextInstrAddr(), callee));
+			Machine.emit(Op.CALLI, Reg.CB, 0);
+		}
+
+		// We don't want to leave a return value on the stack
 		if (stmt.methodRef.getDeclaration().type.typeKind != TypeKind.VOID) {
 			Machine.emit(Op.POP, 1);
 		}
@@ -348,15 +356,14 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg) {
+		expr.expr.visit(this, null);
+
 		switch (expr.operator.spelling) {
 		case "!":
-			expr.expr.visit(this, null);
 			Machine.emit(Prim.not);
 			break;
 		case "-":
-			Machine.emit(Op.LOADL, 0);
-			expr.expr.visit(this, null);
-			Machine.emit(Prim.sub); //TODO
+			Machine.emit(Prim.neg);
 			break;
 		default:
 			System.out.println("TODO");
@@ -395,7 +402,7 @@ public class Generator implements Visitor<Object, Object> {
 			break;
 		case "==":
 			Machine.emit(Prim.eq);
-			break; // TODO is this right instruction
+			break;
 		case "!=":
 			Machine.emit(Prim.ne);
 			break;
@@ -419,14 +426,14 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitIxExpr(IxExpr expr, Object arg) {
-		expr.ref.visit(this, null); // TODO need to make sure reference can handle this
+		expr.ref.visit(this, null); 
 		expr.ixExpr.visit(this, null);
 		Machine.emit(Prim.arrayref);
 		return null;
 	}
 
 	@Override
-	public Object visitCallExpr(CallExpr expr, Object arg) {		
+	public Object visitCallExpr(CallExpr expr, Object arg) {
 		// Put args onto stack
 		for (Expression e : expr.argList)
 			e.visit(this, null);
@@ -435,15 +442,18 @@ public class Generator implements Visitor<Object, Object> {
 
 		
 		MethodDecl callee = (MethodDecl) expr.functionRef.getDeclaration();
+		// Case 1: Static Method
 		if (callee.isStatic) {
-			s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
+			patchRequests.add(new PatchRequest(Machine.nextInstrAddr(), callee));
 			Machine.emit(Op.CALL, Reg.CB, -1);
 			return null;
 		}
 		
-		// Push instance address onto stack
-		s.add(new PatchRequest(Machine.nextInstrAddr(), callee));
-		Machine.emit(Op.CALLI, Reg.CB, 0);
+		// Case 2: Instance Method
+		if (!callee.isStatic) {
+			patchRequests.add(new PatchRequest(Machine.nextInstrAddr(), callee));
+			Machine.emit(Op.CALLI, Reg.CB, 0);
+		}
 		return null;
 	}
 
