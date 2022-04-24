@@ -14,8 +14,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import mJAM.Machine.Reg;
-
 // import mJAM.Machine.Reg;
 
 public class Interpreter {
@@ -81,7 +79,6 @@ public class Interpreter {
 	// PROGRAM STATUS
 
 	static void dump() {
-		System.out.println(OB);
 		// Writes a summary of the machine state.
 		int addr, dynamicLink;
 		System.out.println("");
@@ -852,14 +849,14 @@ public class Interpreter {
 		if (args.length >= 1)
 			objectFileName = args[0];
 		else
-			objectFileName = "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/BinaryTree.java";
+			objectFileName = "obj.mJAM";
 
 		String sourceFileName;
 		if (args.length >= 2) {
 			sourceFileName = args[1];
 			debug(objectFileName, sourceFileName);
 		} else {
-			debug(objectFileName, "/Users/milenpatel/git/miniJava-Compiler/test/Code Generation/BinaryTree.asm");
+			interpret(objectFileName);
 		}
 	}
 

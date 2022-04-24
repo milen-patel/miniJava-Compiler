@@ -93,43 +93,46 @@
  92         CALL         add     
  93         LOAD         4[SB]
  94         CALLI        L10
- 95         LOADL        -1
- 96         LOADL        1
- 97         CALL         newobj  
- 98         STORE        0[SB]
- 99         LOAD         0[SB]
-100         LOAD         3[LB]
-101         POP          1
-102         LOAD         0[SB]
-103         CALL         eq      
-104         JUMPIF (0)   L12
-105         LOADL        4
-106         LOAD         4[SB]
-107         CALLI        L10
-108  L12:   RETURN (0)   1
-109  L13:   PUSH         1
-110         LOADL        -1
-111         LOADL        1
-112         CALL         newobj  
-113         STORE        3[LB]
-114         LOAD         3[LB]
-115         LOADL        0
-116         LOAD         3[SB]
-117         CALL         fieldupd
-118         LOAD         3[SB]
-119         LOADL        1
-120         CALL         add     
-121         STORE        3[SB]
-122         LOAD         2[SB]
-123         LOADL        1
-124         CALL         add     
-125         STORE        2[SB]
-126         LOAD         3[LB]
-127         RETURN (1)   0
-128  L14:   PUSH         1
-129         LOADA        0[OB]
-130         LOADL        0
-131         CALL         fieldref
-132         STORE        3[LB]
-133         LOAD         3[LB]
-134         RETURN (1)   0
+ 95         LOAD         0[SB]
+ 96         LOADL        -1
+ 97         LOADL        1
+ 98         CALL         newobj  
+ 99         STORE        0[SB]
+100         LOAD         0[SB]
+101         LOAD         3[LB]
+102         POP          1
+103         LOAD         0[SB]
+104         CALL         eq      
+105         JUMPIF (0)   L12
+106         LOADL        4
+107         LOAD         4[SB]
+108         CALLI        L10
+109  L12:   RETURN (0)   1
+110  L13:   PUSH         1
+111         LOADL        -1
+112         LOADL        1
+113         CALL         newobj  
+114         STORE        3[LB]
+115         LOAD         3[LB]
+116         LOADL        0
+117         LOAD         3[SB]
+118         CALL         fieldupd
+119         LOAD         3[SB]
+120         LOAD         3[SB]
+121         LOADL        1
+122         CALL         add     
+123         STORE        3[SB]
+124         LOAD         2[SB]
+125         LOAD         2[SB]
+126         LOADL        1
+127         CALL         add     
+128         STORE        2[SB]
+129         LOAD         3[LB]
+130         RETURN (1)   0
+131  L14:   PUSH         1
+132         LOADA        0[OB]
+133         LOADL        0
+134         CALL         fieldref
+135         STORE        3[LB]
+136         LOAD         3[LB]
+137         RETURN (1)   0

@@ -1,7 +1,7 @@
   0         PUSH         1
   1         LOADL        0
   2         CALL         newarr  
-  3         CALL         L36
+  3         CALL         L37
   4         POP          1
   5         HALT   (0)   
   6  L10:   LOAD         -1[LB]
@@ -232,82 +232,84 @@
 231  L33:   LOAD         -2[LB]
 232         LOADL        0
 233         CALL         eq      
-234         LOAD         -2[LB]
-235         LOADL        0
-236         CALL         fieldref
-237         LOAD         -1[LB]
-238         CALL         eq      
-239         CALL         or      
-240         JUMPIF (0)   L34
-241         LOAD         -2[LB]
-242         RETURN (1)   2
-243  L34:   LOAD         -2[LB]
-244         LOADL        0
-245         CALL         fieldref
-246         LOAD         -1[LB]
-247         CALL         gt      
-248         JUMPIF (0)   L35
-249         LOAD         -2[LB]
-250         LOADL        1
-251         CALL         fieldref
-252         LOAD         -1[LB]
-253         LOADA        0[OB]
-254         CALLI        L33
-255         RETURN (1)   2
-256  L35:   LOAD         -2[LB]
-257         LOADL        2
-258         CALL         fieldref
-259         LOAD         -1[LB]
-260         LOADA        0[OB]
-261         CALLI        L33
-262         RETURN (1)   2
-263  L36:   PUSH         1
-264         LOADL        -1
-265         LOADL        1
-266         CALL         newobj  
-267         STORE        3[LB]
-268         LOADL        45
-269         LOAD         3[LB]
-270         CALLI        L23
-271         LOADL        10
-272         LOAD         3[LB]
-273         CALLI        L23
-274         LOADL        7
-275         LOAD         3[LB]
-276         CALLI        L23
-277         LOADL        12
-278         LOAD         3[LB]
-279         CALLI        L23
-280         LOADL        90
-281         LOAD         3[LB]
-282         CALLI        L23
-283         LOADL        50
-284         LOAD         3[LB]
-285         CALLI        L23
+234         JUMPIF (0)   L34
+235         LOAD         -2[LB]
+236         RETURN (1)   2
+237  L34:   LOAD         -2[LB]
+238         LOADL        0
+239         CALL         fieldref
+240         LOAD         -1[LB]
+241         CALL         eq      
+242         JUMPIF (0)   L35
+243         LOAD         -2[LB]
+244         RETURN (1)   2
+245  L35:   LOAD         -2[LB]
+246         LOADL        0
+247         CALL         fieldref
+248         LOAD         -1[LB]
+249         CALL         gt      
+250         JUMPIF (0)   L36
+251         LOAD         -2[LB]
+252         LOADL        1
+253         CALL         fieldref
+254         LOAD         -1[LB]
+255         LOADA        0[OB]
+256         CALLI        L33
+257         RETURN (1)   2
+258  L36:   LOAD         -2[LB]
+259         LOADL        2
+260         CALL         fieldref
+261         LOAD         -1[LB]
+262         LOADA        0[OB]
+263         CALLI        L33
+264         RETURN (1)   2
+265  L37:   PUSH         1
+266         LOADL        -1
+267         LOADL        1
+268         CALL         newobj  
+269         STORE        3[LB]
+270         LOADL        45
+271         LOAD         3[LB]
+272         CALLI        L23
+273         LOADL        10
+274         LOAD         3[LB]
+275         CALLI        L23
+276         LOADL        7
+277         LOAD         3[LB]
+278         CALLI        L23
+279         LOADL        12
+280         LOAD         3[LB]
+281         CALLI        L23
+282         LOADL        90
+283         LOAD         3[LB]
+284         CALLI        L23
+285         LOADL        50
 286         LOAD         3[LB]
-287         CALLI        L28
-288         LOADL        12
-289         LOAD         3[LB]
-290         CALLI        L12
+287         CALLI        L23
+288         LOAD         3[LB]
+289         CALLI        L28
+290         LOADL        12
 291         LOAD         3[LB]
-292         CALLI        L28
-293         LOADL        90
-294         LOAD         3[LB]
-295         CALLI        L12
+292         CALLI        L12
+293         LOAD         3[LB]
+294         CALLI        L28
+295         LOADL        90
 296         LOAD         3[LB]
-297         CALLI        L28
-298         LOADL        45
-299         LOAD         3[LB]
-300         CALLI        L12
+297         CALLI        L12
+298         LOAD         3[LB]
+299         CALLI        L28
+300         LOADL        45
 301         LOAD         3[LB]
-302         CALLI        L28
-303         PUSH         1
-304         LOADL        50
-305         LOAD         3[LB]
-306         CALLI        L31
-307         STORE        4[LB]
-308         LOADL        12
-309         LOAD         3[LB]
-310         CALLI        L31
-311         STORE        4[LB]
-312         RETURN (0)   1
+302         CALLI        L12
+303         LOAD         3[LB]
+304         CALLI        L28
+305         PUSH         1
+306         LOADL        50
+307         LOAD         3[LB]
+308         CALLI        L31
+309         STORE        4[LB]
+310         LOADL        12
+311         LOAD         3[LB]
+312         CALLI        L31
+313         STORE        4[LB]
+314         RETURN (0)   1

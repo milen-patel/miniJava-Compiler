@@ -20,8 +20,7 @@ public class ErrorReporter {
 			System.out.println("\t" + trace[i]);
 		}
 		System.out.println(reason);
-		throw new RuntimeException("E");
-	//	System.exit(FAILURE_RETURN_CODE);
+		System.exit(FAILURE_RETURN_CODE);
 	}
 	
 	/*
@@ -29,8 +28,7 @@ public class ErrorReporter {
 	 */
 	public void idError(int lineNumber, String reason) {
 		System.out.println("*** line " + lineNumber + ": " + reason);
-		throw new RuntimeException("E");
-		//System.exit(FAILURE_RETURN_CODE);
+		System.exit(FAILURE_RETURN_CODE);
 	}
 	
 	/*
@@ -39,7 +37,6 @@ public class ErrorReporter {
 	public void typeError(int lineNumber, String reason) {
 		this.typeErrors++;
 		System.out.println("*** line " + lineNumber + ": " + reason);
-		throw new RuntimeException("E");
 	}
 	
 	/*
