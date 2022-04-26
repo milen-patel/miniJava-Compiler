@@ -373,6 +373,52 @@ public class Generator implements Visitor<Object, Object> {
 
 	@Override
 	public Object visitBinaryExpr(BinaryExpr expr, Object arg) {
+		// Special Operators
+		if (expr.operator.spelling.contentEquals("||")) {
+			/*
+			expr.left.visit(this, null);
+			int patchAddressA = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMPIF, Machine.trueRep, Reg.CB,-1);
+		
+			expr.right.visit(this, null);
+			int patchAddressB = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMPIF, Machine.trueRep, Reg.CB,-1);
+			
+			Machine.emit(Op.LOADL, Machine.falseRep); // known false
+			int patchExit = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMP, Reg.CB, -1);
+			
+			Machine.patch(patchAddressA, Machine.nextInstrAddr());
+			Machine.patch(patchAddressB, Machine.nextInstrAddr());
+			Machine.emit(Op.LOADL, Machine.trueRep);
+			Machine.patch(patchExit, Machine.nextInstrAddr());
+			*/
+			expr.left.visit(this, null);
+			int stopWithTrue = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMPIF, 1, Reg.CB, -1);
+			expr.right.visit(this, null);
+			int exit = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMP, -1);
+			Machine.patch(stopWithTrue, Machine.nextInstrAddr());
+			Machine.emit(Op.LOADL, Machine.trueRep);
+			Machine.patch(exit, Machine.nextInstrAddr());
+			return null;
+		}
+		
+		if (expr.operator.spelling.contentEquals("&&")) {
+			expr.left.visit(this, null);
+			int stopChecking = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMPIF, Machine.falseRep, Reg.CB, -1);
+			expr.right.visit(this, null);
+			int exit = Machine.nextInstrAddr();
+			Machine.emit(Op.JUMP, -1);
+			Machine.patch(stopChecking, Machine.nextInstrAddr());
+			Machine.emit(Op.LOADL, Machine.falseRep);
+			Machine.patch(exit, Machine.nextInstrAddr());
+			return null;
+		}
+		
+		
 		expr.left.visit(this, null);
 		expr.right.visit(this, null);
 		switch (expr.operator.spelling) {
@@ -405,12 +451,6 @@ public class Generator implements Visitor<Object, Object> {
 			break;
 		case "!=":
 			Machine.emit(Prim.ne);
-			break;
-		case "&&":
-			Machine.emit(Prim.and);
-			break;
-		case "||":
-			Machine.emit(Prim.or);
 			break;
 		default:
 			System.out.println("TODO");
