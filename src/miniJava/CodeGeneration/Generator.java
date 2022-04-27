@@ -375,24 +375,6 @@ public class Generator implements Visitor<Object, Object> {
 	public Object visitBinaryExpr(BinaryExpr expr, Object arg) {
 		// Special Operators
 		if (expr.operator.spelling.contentEquals("||")) {
-			/*
-			expr.left.visit(this, null);
-			int patchAddressA = Machine.nextInstrAddr();
-			Machine.emit(Op.JUMPIF, Machine.trueRep, Reg.CB,-1);
-		
-			expr.right.visit(this, null);
-			int patchAddressB = Machine.nextInstrAddr();
-			Machine.emit(Op.JUMPIF, Machine.trueRep, Reg.CB,-1);
-			
-			Machine.emit(Op.LOADL, Machine.falseRep); // known false
-			int patchExit = Machine.nextInstrAddr();
-			Machine.emit(Op.JUMP, Reg.CB, -1);
-			
-			Machine.patch(patchAddressA, Machine.nextInstrAddr());
-			Machine.patch(patchAddressB, Machine.nextInstrAddr());
-			Machine.emit(Op.LOADL, Machine.trueRep);
-			Machine.patch(patchExit, Machine.nextInstrAddr());
-			*/
 			expr.left.visit(this, null);
 			int stopWithTrue = Machine.nextInstrAddr();
 			Machine.emit(Op.JUMPIF, 1, Reg.CB, -1);
