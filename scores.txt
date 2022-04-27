@@ -1,0 +1,402 @@
+pa1 results for milen
+
+pa1 scoring:
+1 point  for exit(4) termination in a fail1xx test with xx < 70
+3 points for exit(4) termination in a fail1xx test with xx = 70 or 71
+1 point  for exit(0) termination in a pass1xx test with xx < 70
+3 points for exit(0) termination in a pass1xx test with xx = 70 or 71
+
+miniJava compiler build succeeded.
+
+Test fail101: correctly rejected.     Points = 1
+Test fail102: correctly rejected.     Points = 1
+Test fail103: correctly rejected.     Points = 1
+Test fail104: correctly rejected.     Points = 1
+Test fail105: correctly rejected.     Points = 1
+Test fail117: correctly rejected.     Points = 1
+Test fail118: correctly rejected.     Points = 1
+Test fail119: correctly rejected.     Points = 1
+Test fail120: correctly rejected.     Points = 1
+Test fail121: correctly rejected.     Points = 1
+Test fail125: correctly rejected.     Points = 1
+Test fail126: correctly rejected.     Points = 1
+Test fail127: correctly rejected.     Points = 1
+Test fail128: correctly rejected.     Points = 1
+Test fail130: correctly rejected.     Points = 1
+Test fail131: correctly rejected.     Points = 1
+Test fail132: correctly rejected.     Points = 1
+Test fail133: correctly rejected.     Points = 1
+Test fail140: correctly rejected.     Points = 1
+Test fail141: correctly rejected.     Points = 1
+Test fail142: correctly rejected.     Points = 1
+Test fail143: correctly rejected.     Points = 1
+Test fail144: correctly rejected.     Points = 1
+Test fail145: correctly rejected.     Points = 1
+Test fail146: correctly rejected.     Points = 1
+Test fail147: correctly rejected.     Points = 1
+Test fail148: correctly rejected.     Points = 1
+Test fail149: correctly rejected.     Points = 1
+Test fail150: correctly rejected.     Points = 1
+Test fail151: correctly rejected.     Points = 1
+Test fail152: correctly rejected.     Points = 1
+Test fail153: correctly rejected.     Points = 1
+Test fail154: correctly rejected.     Points = 1
+Test fail155: correctly rejected.     Points = 1
+Test fail156: correctly rejected.     Points = 1
+Test fail157: correctly rejected.     Points = 1
+Test fail158: correctly rejected.     Points = 1
+Test fail159: correctly rejected.     Points = 1
+Test fail160: correctly rejected.     Points = 1
+Test fail161: correctly rejected.     Points = 1
+Test fail162: correctly rejected.     Points = 1
+Test fail163: correctly rejected.     Points = 1
+Test fail164: correctly rejected.     Points = 1
+Test fail165: correctly rejected.     Points = 1
+Test fail166: correctly rejected.     Points = 1
+Test fail167: correctly rejected.     Points = 1
+Test fail168: correctly rejected.     Points = 1
+Test fail169: correctly rejected.     Points = 1
+Test fail170: correctly rejected.     Points = 3
+Test fail171: correctly rejected.     Points = 3
+Test pass100: correctly accepted.     Points = 1
+Test pass101: correctly accepted.     Points = 1
+Test pass102: correctly accepted.     Points = 1
+Test pass103: correctly accepted.     Points = 1
+Test pass105: correctly accepted.     Points = 1
+Test pass110: correctly accepted.     Points = 1
+Test pass113: correctly accepted.     Points = 1
+Test pass117: correctly accepted.     Points = 1
+Test pass118: correctly accepted.     Points = 1
+Test pass119: correctly accepted.     Points = 1
+Test pass120: correctly accepted.     Points = 1
+Test pass121: correctly accepted.     Points = 1
+Test pass123: correctly accepted.     Points = 1
+Test pass124: correctly accepted.     Points = 1
+Test pass126: correctly accepted.     Points = 1
+Test pass127: correctly accepted.     Points = 1
+Test pass128: correctly accepted.     Points = 1
+Test pass129: correctly accepted.     Points = 1
+Test pass130: correctly accepted.     Points = 1
+Test pass131: correctly accepted.     Points = 1
+Test pass132: correctly accepted.     Points = 1
+Test pass133: correctly accepted.     Points = 1
+Test pass134: correctly accepted.     Points = 1
+Test pass135: correctly accepted.     Points = 1
+Test pass137: correctly accepted.     Points = 1
+Test pass140: correctly accepted.     Points = 1
+Test pass141: correctly accepted.     Points = 1
+Test pass142: correctly accepted.     Points = 1
+Test pass143: correctly accepted.     Points = 1
+Test pass144: correctly accepted.     Points = 1
+Test pass145: correctly accepted.     Points = 1
+Test pass146: correctly accepted.     Points = 1
+Test pass147: correctly accepted.     Points = 1
+Test pass148: correctly accepted.     Points = 1
+Test pass150: correctly accepted.     Points = 1
+Test pass151: correctly accepted.     Points = 1
+Test pass152: correctly accepted.     Points = 1
+Test pass153: correctly accepted.     Points = 1
+Test pass154: correctly accepted.     Points = 1
+Test pass155: correctly accepted.     Points = 1
+Test pass156: correctly accepted.     Points = 1
+Test pass157: correctly accepted.     Points = 1
+Test pass158: correctly accepted.     Points = 1
+Test pass159: correctly accepted.     Points = 1
+Test pass160: correctly accepted.     Points = 1
+Test pass161: correctly accepted.     Points = 1
+Test pass162: correctly accepted.     Points = 1
+Test pass163: correctly accepted.     Points = 1
+Test pass164: correctly accepted.     Points = 1
+Test pass165: correctly accepted.     Points = 1
+Test pass166: correctly accepted.     Points = 1
+Test pass167: correctly accepted.     Points = 1
+Test pass168: correctly accepted.     Points = 1
+Test pass169: correctly accepted.     Points = 1
+Test pass170: correctly accepted.     Points = 3
+Test pass171: your compiler did not terminate on the test input!
+
+
+Runtime failures: 1  (0 errors and 1 hangs)
+Fail testcases:   Correct: 50   Incorrect: 0
+Pass testcases:   Correct: 55   Incorrect: 0
+
+Total Points Earned: 111
+===========================================================================================================
+
+pa2 results for milen
+
+SCORING:
+1 point  for exit(4) termination in fail1xx test
+2 points for exit(4) termination in fail2xx test
+
+1 point  for exit(0) termination and correct AST in pass1xx test
+2 points for exit(0) termination and correct AST in pass2xx test (xx <  90)
+4 points for exit(0) termination and correct AST in passxxx test (xx >= 90)
+
+miniJava compiler build successful! 
+
+Test fail120: was correctly rejected.                Points = 1
+Test fail143: FAILED to be rejected.                 Points = 0
+Test fail151: was correctly rejected.                Points = 1
+Test fail152: was correctly rejected.                Points = 1
+Test fail153: was correctly rejected.                Points = 1
+Test fail154: was correctly rejected.                Points = 1
+Test fail155: was correctly rejected.                Points = 1
+Test fail157: was correctly rejected.                Points = 1
+Test fail159: was correctly rejected.                Points = 1
+Test fail170: was correctly rejected.                Points = 1
+Test fail171: was correctly rejected.                Points = 1
+Test fail200: was correctly rejected.                Points = 2
+Test fail201: FAILED to be rejected.                 Points = 0
+Test fail202: was correctly rejected.                Points = 2
+Test fail205: was correctly rejected.                Points = 2
+Test fail206: was correctly rejected.                Points = 2
+Test fail217: was correctly rejected.                Points = 2
+Test fail222: was correctly rejected.                Points = 2
+Test fail224: was correctly rejected.                Points = 2
+Test fail230: was correctly rejected.                Points = 2
+Test fail231: was correctly rejected.                Points = 2
+Test fail233: was correctly rejected.                Points = 2
+Test fail234: was correctly rejected.                Points = 2
+Test fail235: was correctly rejected.                Points = 2
+Test fail236: was correctly rejected.                Points = 2
+Test fail237: was correctly rejected.                Points = 2
+Test fail238: was correctly rejected.                Points = 2
+Test fail239: was correctly rejected.                Points = 2
+Test pass119: accepted and correct AST constructed.  Points = 1
+Test pass121: accepted and correct AST constructed.  Points = 1
+Test pass123: accepted and correct AST constructed.  Points = 1
+Test pass124: accepted and correct AST constructed.  Points = 1
+Test pass128: accepted and correct AST constructed.  Points = 1
+Test pass129: accepted and correct AST constructed.  Points = 1
+Test pass130: accepted and correct AST constructed.  Points = 1
+Test pass131: accepted and correct AST constructed.  Points = 1
+Test pass150: accepted and correct AST constructed.  Points = 1
+Test pass152: accepted and correct AST constructed.  Points = 1
+Test pass153: accepted and correct AST constructed.  Points = 1
+Test pass154: accepted and correct AST constructed.  Points = 1
+Test pass155: accepted and correct AST constructed.  Points = 1
+Test pass158: accepted and correct AST constructed.  Points = 1
+Test pass159: accepted and correct AST constructed.  Points = 1
+Test pass160: accepted and correct AST constructed.  Points = 1
+Test pass162: accepted and correct AST constructed.  Points = 1
+Test pass163: accepted and correct AST constructed.  Points = 1
+Test pass164: accepted and correct AST constructed.  Points = 1
+Test pass165: accepted and correct AST constructed.  Points = 1
+Test pass166: accepted and correct AST constructed.  Points = 1
+Test pass167: accepted and correct AST constructed.  Points = 1
+Test pass168: accepted and correct AST constructed.  Points = 1
+Test pass169: accepted and correct AST constructed.  Points = 1
+Test pass201: accepted and correct AST constructed.  Points = 2
+Test pass202: accepted and correct AST constructed.  Points = 2
+Test pass203: accepted and correct AST constructed.  Points = 2
+Test pass204: accepted and correct AST constructed.  Points = 2
+Test pass205: accepted and correct AST constructed.  Points = 2
+Test pass206: accepted and correct AST constructed.  Points = 2
+Test pass207: accepted and correct AST constructed.  Points = 2
+Test pass208: accepted and correct AST constructed.  Points = 2
+Test pass209: accepted and correct AST constructed.  Points = 2
+Test pass210: accepted and correct AST constructed.  Points = 2
+Test pass211: accepted and correct AST constructed.  Points = 2
+Test pass212: accepted and correct AST constructed.  Points = 2
+Test pass213: accepted and correct AST constructed.  Points = 2
+Test pass214: accepted and correct AST constructed.  Points = 2
+Test pass215: accepted and correct AST constructed.  Points = 2
+Test pass217: accepted and correct AST constructed.  Points = 2
+Test pass218: accepted and correct AST constructed.  Points = 2
+Test pass219: accepted and correct AST constructed.  Points = 2
+Test pass220: accepted and correct AST constructed.  Points = 2
+Test pass237: accepted and correct AST constructed.  Points = 2
+Test pass252: accepted and correct AST constructed.  Points = 2
+Test pass253: accepted and correct AST constructed.  Points = 2
+Test pass254: accepted and correct AST constructed.  Points = 2
+Test pass255: accepted and correct AST constructed.  Points = 2
+Test pass256: accepted and correct AST constructed.  Points = 2
+Test pass257: accepted and correct AST constructed.  Points = 2
+Test pass258: accepted and correct AST constructed.  Points = 2
+Test pass259: accepted and correct AST constructed.  Points = 2
+Test pass260: accepted and correct AST constructed.  Points = 2
+Test pass261: accepted and correct AST constructed.  Points = 2
+Test pass262: accepted and correct AST constructed.  Points = 2
+Test pass263: accepted and correct AST constructed.  Points = 2
+Test pass264: accepted and correct AST constructed.  Points = 2
+Test pass265: accepted and correct AST constructed.  Points = 2
+Test pass266: accepted and correct AST constructed.  Points = 2
+Test pass290: accepted and correct AST constructed.  Points = 4
+Test pass291: accepted and correct AST constructed.  Points = 4
+Test pass292: accepted and correct AST constructed.  Points = 4
+Test pass293: accepted and correct AST constructed.  Points = 4
+
+
+Runtime failures: 0
+Fail testcases:   Correct: 26   Incorrect: 2
+Pass testcases:   Correct: 63   Incorrect: 0
+
+Total Points Earned: 152
+
+===========================================================================================================
+
+pa3 results for milen
+
+PA3 fail3xx tests xx <  90 earn 1 point for exit(4)
+PA3 fail3xx tests xx >= 90 earn 1 point for exit(4)
+PA3 pass3xx tests xx <  90 earn 1 point  for exit(0)
+PA3 pass3xx tests xx >= 90 earn 3 points for exit(0)
+
+miniJava compiler build succeeded. 
+
+Test fail302: was correctly rejected.                          Points = 1
+Test fail304: was correctly rejected.                          Points = 1
+Test fail306: was correctly rejected.                          Points = 1
+Test fail307: was correctly rejected.                          Points = 1
+Test fail308: was correctly rejected.                          Points = 1
+Test fail309: was correctly rejected.                          Points = 1
+Test fail310: was correctly rejected.                          Points = 1
+Test fail311: was correctly rejected.                          Points = 1
+Test fail312: was correctly rejected.                          Points = 1
+Test fail313: was correctly rejected.                          Points = 1
+Test fail320: was correctly rejected.                          Points = 1
+Test fail321: was correctly rejected.                          Points = 1
+Test fail322: was correctly rejected.                          Points = 1
+Test fail323: was correctly rejected.                          Points = 1
+Test fail324: was correctly rejected.                          Points = 1
+Test fail325: was correctly rejected.                          Points = 1
+Test fail327: was correctly rejected.                          Points = 1
+Test fail328: was correctly rejected.                          Points = 1
+Test fail329: was correctly rejected.                          Points = 1
+Test fail330: was correctly rejected.                          Points = 1
+Test fail331: was correctly rejected.                          Points = 1
+Test fail332: was correctly rejected.                          Points = 1
+Test fail333: was correctly rejected.                          Points = 1
+Test fail334: was correctly rejected.                          Points = 1
+Test fail335: was correctly rejected.                          Points = 1
+Test fail336: was correctly rejected.                          Points = 1
+Test fail337: was correctly rejected.                          Points = 1
+Test fail340: was correctly rejected.                          Points = 1
+Test fail342: was correctly rejected.                          Points = 1
+Test fail348: was correctly rejected.                          Points = 1
+Test fail349: was correctly rejected.                          Points = 1
+Test fail350: was correctly rejected.                          Points = 1
+Test fail351: was correctly rejected.                          Points = 1
+Test fail352: was correctly rejected.                          Points = 1
+Test fail354: was correctly rejected.                          Points = 1
+Test fail355: was correctly rejected.                          Points = 1
+Test fail390: was correctly rejected.                          Points = 1
+Test fail391: was correctly rejected.                          Points = 1
+Test fail392: was correctly rejected.                          Points = 1
+Test fail393: was correctly rejected.                          Points = 1
+Test fail394: was correctly rejected.                          Points = 1
+Test fail395: was correctly rejected.                          Points = 1
+Test fail396: was correctly rejected.                          Points = 1
+Test fail397: was correctly rejected.                          Points = 1
+Test pass301: was correctly accepted.                          Points = 1
+Test pass302: was correctly accepted.                          Points = 1
+Test pass303: was correctly accepted.                          Points = 1
+Test pass304: was correctly accepted.                          Points = 1
+Test pass305: was correctly accepted.                          Points = 1
+Test pass306: was correctly accepted.                          Points = 1
+Test pass307: was correctly accepted.                          Points = 1
+Test pass308: was correctly accepted.                          Points = 1
+Test pass309: was correctly accepted.                          Points = 1
+Test pass310: was correctly accepted.                          Points = 1
+Test pass311: was correctly accepted.                          Points = 1
+Test pass312: was correctly accepted.                          Points = 1
+Test pass321: was correctly accepted.                          Points = 1
+Test pass322: was correctly accepted.                          Points = 1
+Test pass323: was correctly accepted.                          Points = 1
+Test pass324: was correctly accepted.                          Points = 1
+Test pass325: was correctly accepted.                          Points = 1
+Test pass327: was correctly accepted.                          Points = 1
+Test pass328: was correctly accepted.                          Points = 1
+Test pass330: was correctly accepted.                          Points = 1
+Test pass331: was correctly accepted.                          Points = 1
+Test pass332: was correctly accepted.                          Points = 1
+Test pass337: was correctly accepted.                          Points = 1
+Test pass343: was correctly accepted.                          Points = 1
+Test pass347: was correctly accepted.                          Points = 1
+Test pass349: was correctly accepted.                          Points = 1
+Test pass351: was correctly accepted.                          Points = 1
+Test pass354: was correctly accepted.                          Points = 1
+Test pass355: was correctly accepted.                          Points = 1
+Test pass359: was correctly accepted.                          Points = 1
+Test pass362: was correctly accepted.                          Points = 1
+Test pass363: was correctly accepted.                          Points = 1
+Test pass364: was correctly accepted.                          Points = 1
+Test pass365: was correctly accepted.                          Points = 1
+Test pass366: was correctly accepted.                          Points = 1
+Test pass367: was correctly accepted.                          Points = 1
+Test pass372: was correctly accepted.                          Points = 1
+Test pass373: was correctly accepted.                          Points = 1
+Test pass374: was correctly accepted.                          Points = 1
+Test pass375: was correctly accepted.                          Points = 1
+Test pass376: was correctly accepted.                          Points = 1
+Test pass377: FAILED to be accepted.                           Points = 0
+Test pass378: was correctly accepted.                          Points = 1
+Test pass379: was correctly accepted.                          Points = 1
+Test pass380: was correctly accepted.                          Points = 1
+Test pass381: FAILED to be accepted.                           Points = 0
+Test pass382: was correctly accepted.                          Points = 1
+Test pass383: was correctly accepted.                          Points = 1
+Test pass390: was correctly accepted.                          Points = 3
+Test pass392: was correctly accepted.                          Points = 3
+
+
+Runtime failures: 0
+Fail testcases:   Correct: 44   Incorrect: 0
+Pass testcases:   Correct: 48   Incorrect: 2
+
+Total Points Earned: 96
+
+===========================================================================================================
+
+PA4 results for milen
+
+PA4 scoring:
+fail4yy tests earn 1 point for exit(4)
+pass4xx tests (xx <  20) earn 1 point for compilation, plus 2 points for
+        correct execution of generated mJAM program.
+pass4xx tests (xx >= 20) earn 1 point for compilation, plus 4 points for
+        correct execution of generated mJAM program
+
+Test fail401: was correctly rejected.                          Points = 1
+Test fail402: was correctly rejected.                          Points = 1
+Test fail403: was correctly rejected.                          Points = 1
+Test fail404: was correctly rejected.                          Points = 1
+Test fail405: was correctly rejected.                          Points = 1
+Test fail406: was correctly rejected.                          Points = 1
+Test fail407: was correctly rejected.                          Points = 1
+Test fail410: was correctly rejected.                          Points = 1
+Test fail411: was correctly rejected.                          Points = 1
+Test fail412: was correctly rejected.                          Points = 1
+Test pass401: mJAM program yields correct result!              Points = 3
+Test pass402: mJAM program yields correct result!              Points = 3
+Test pass403: mJAM program yields correct result!              Points = 3
+Test pass404: mJAM program yields correct result!              Points = 3
+Test pass405: mJAM program yields correct result!              Points = 3
+Test pass406: mJAM program yields correct result!              Points = 3
+Test pass407: mJAM program yields correct result!              Points = 3
+Test pass408: mJAM program yields correct result!              Points = 3
+Test pass409: mJAM program yields correct result!              Points = 3
+Test pass410: mJAM program yields correct result!              Points = 3
+Test pass411: mJAM program yields correct result!              Points = 3
+Test pass412: mJAM program yields correct result!              Points = 3
+Test pass413: mJAM program yields correct result!              Points = 3
+Test pass414: mJAM program yields correct result!              Points = 3
+Test pass415: mJAM program yields correct result!              Points = 3
+Test pass416: mJAM program yields correct result!              Points = 3
+Test pass417: mJAM program yields correct result!              Points = 3
+Test pass420: mJAM program yields correct result!              Points = 5
+Test pass421: mJAM program yields correct result!              Points = 5
+Test pass422: mJAM program FAILS to yield correct result.      Points = 1
+Test pass423: mJAM program yields correct result!              Points = 5
+Test pass424: mJAM program yields correct result!              Points = 5
+Test pass425: mJAM program yields correct result!              Points = 5
+Test pass426: mJAM program yields correct result!              Points = 5
+Test pass430: mJAM program yields correct result!!             Points = 5
+
+
+Runtime errors: 0
+Fail testcases:   Correct: 10   Incorrect: 0
+Pass testcases:   Correct: 24   Incorrect: 1
+
+Total Points Earned: 97

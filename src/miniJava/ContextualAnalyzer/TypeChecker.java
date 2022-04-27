@@ -34,6 +34,7 @@ import miniJava.AbstractSyntaxTrees.QualRef;
 import miniJava.AbstractSyntaxTrees.RefExpr;
 import miniJava.AbstractSyntaxTrees.ReturnStmt;
 import miniJava.AbstractSyntaxTrees.Statement;
+import miniJava.AbstractSyntaxTrees.StringLiteral;
 import miniJava.AbstractSyntaxTrees.ThisRef;
 import miniJava.AbstractSyntaxTrees.TypeDenoter;
 import miniJava.AbstractSyntaxTrees.TypeKind;
@@ -664,5 +665,10 @@ public class TypeChecker implements miniJava.AbstractSyntaxTrees.Visitor<Object,
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public TypeDenoter visitStringLiteral(StringLiteral stringLiteral, Object arg) {
+		return new ClassType(new Identifier(new Token(TokenKind.IDENTIFIER, "String", null)), dummyPos);
 	}
 }

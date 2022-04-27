@@ -854,9 +854,10 @@ public class Interpreter {
 		String sourceFileName;
 		if (args.length >= 2) {
 			sourceFileName = args[1];
-			debug(objectFileName, sourceFileName);
 		} else {
-			interpret(objectFileName);
+			debug("/Users/milenpatel/Desktop/HelloWorld.mJAM", "/Users/milenpatel/Desktop/HelloWorld.asm");
+
+//			interpret(objectFileName);
 		}
 	}
 

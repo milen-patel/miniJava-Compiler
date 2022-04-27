@@ -58,6 +58,7 @@ public enum TokenKind {
 	
 	// Other
 	NUMBER_LITERAL,
+	STRING_LITERAL,
 	IDENTIFIER,
 	EOT,
 	COMMENT, 

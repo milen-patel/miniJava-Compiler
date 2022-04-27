@@ -33,6 +33,13 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 		printStreamMethods.add(printDecl);
 		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", printStreamFields, printStreamMethods, dummy_Pos);
 		
+		
+		ParameterDeclList pdl2 = new ParameterDeclList();
+		pdl2.add(new ParameterDecl(new ClassType(new Identifier(new Token(TokenKind.IDENTIFIER, "String", null)), null), "n", dummy_Pos));
+		FieldDecl lhs2 = new FieldDecl(false, false, new BaseType(TypeKind.VOID, dummy_Pos), "printStr", dummy_Pos);
+		MethodDecl printDecl2 = new MethodDecl(lhs2, pdl2, new StatementList(), dummy_Pos);
+		printStreamMethods.add(printDecl2);
+		
 		// TODO need to figure out what to do about string
 		ClassDecl class_String = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), dummy_Pos);
 		
@@ -559,6 +566,11 @@ public class Identification implements miniJava.AbstractSyntaxTrees.Visitor<Obje
 
 	@Override
 	public Object visitNullLiteral(NullLiteral nullLiteral, Object arg) {
+		return null;
+	}
+
+	@Override
+	public Object visitStringLiteral(StringLiteral stringLiteral, Object arg) {
 		return null;
 	}
 }

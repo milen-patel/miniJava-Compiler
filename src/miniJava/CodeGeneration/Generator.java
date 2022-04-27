@@ -42,6 +42,7 @@ import miniJava.AbstractSyntaxTrees.QualRef;
 import miniJava.AbstractSyntaxTrees.RefExpr;
 import miniJava.AbstractSyntaxTrees.ReturnStmt;
 import miniJava.AbstractSyntaxTrees.Statement;
+import miniJava.AbstractSyntaxTrees.StringLiteral;
 import miniJava.AbstractSyntaxTrees.ThisRef;
 import miniJava.AbstractSyntaxTrees.TypeKind;
 import miniJava.AbstractSyntaxTrees.UnaryExpr;
@@ -101,6 +102,35 @@ public class Generator implements Visitor<Object, Object> {
 		Machine.emit(Op.LOAD, Reg.LB, -1);
 		Machine.emit(Prim.putintnl);
 		Machine.emit(Op.RETURN, 0, 0, 1);
+		
+		MethodDecl printStr = printStream.methodDeclList.get(1);
+		printStr.runtimeEntity = new RuntimeEntity(Reg.CB, Machine.nextInstrAddr());
+		Machine.emit(Op.LOADL, 1); // Use Reg.LB + 3 to access i
+		
+		Machine.emit(Op.LOAD, Reg.LB, -1);
+		Machine.emit(Op.LOADL, 0);
+		Machine.emit(Prim.fieldref); // Use Reg.LB + 4 to access strLen
+		
+		int loopStart = Machine.nextInstrAddr();
+		Machine.emit(Op.LOAD, Reg.LB, 3);
+		Machine.emit(Op.LOAD, Reg.LB, 4);
+		Machine.emit(Prim.le);
+		Machine.emit(Op.JUMPIF, Machine.trueRep, Reg.CB ,Machine.nextInstrAddr()+3); // patch
+		Machine.emit(Prim.puteol);
+		Machine.emit(Op.RETURN, 0, 0, 1);
+		
+		Machine.emit(Op.LOAD, Reg.LB, -1);
+		Machine.emit(Op.LOAD, Reg.LB, 3);
+		Machine.emit(Prim.fieldref);
+		Machine.emit(Prim.put);
+		
+		// i++
+		Machine.emit(Op.LOAD, Reg.LB, 3);
+		Machine.emit(Op.LOADL, 1);
+		Machine.emit(Prim.add);
+		Machine.emit(Op.STORE, Reg.LB, 3);
+		Machine.emit(Op.JUMP, loopStart);
+
 
 		// Generate code for all other methods
 		p.visit(this, null);
@@ -705,6 +735,30 @@ public class Generator implements Visitor<Object, Object> {
 				return cd;
 			}
 		}
+		return null;
+	}
+
+	@Override
+	public Object visitStringLiteral(StringLiteral stringLiteral, Object arg) {
+		String s = stringLiteral.spelling;
+		int strLen = s.length();
+		// Put String Onto Heap
+		Machine.emit(Op.LOADL, -1);
+		Machine.emit(Op.LOADL, strLen + 1);
+		Machine.emit(Prim.newobj);
+		
+		Machine.emit(Op.LOAD, Reg.ST, -1);
+		Machine.emit(Op.LOADL, 0);
+		Machine.emit(Op.LOADL, strLen);
+		Machine.emit(Prim.fieldupd);
+		
+		for (int i = 0; i < strLen; i++) {
+			Machine.emit(Op.LOAD, Reg.ST, -1);
+			Machine.emit(Op.LOADL, i + 1);
+			Machine.emit(Op.LOADL, (int) s.charAt(i));
+			Machine.emit(Prim.fieldupd);
+		}
+		
 		return null;
 	}
 }

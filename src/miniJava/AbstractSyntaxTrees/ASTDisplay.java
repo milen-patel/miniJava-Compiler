@@ -370,4 +370,10 @@ public class ASTDisplay implements Visitor<String,Object> {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public Object visitStringLiteral(StringLiteral stringLiteral, String arg) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

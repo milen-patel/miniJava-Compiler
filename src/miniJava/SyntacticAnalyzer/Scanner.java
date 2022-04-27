@@ -88,6 +88,13 @@ public class Scanner {
 		} else if (this.currentChar == '*') {
 			this.pullNextChar();
 			return TokenKind.MULTIPLICATION;
+		} else if (this.currentChar == '"') {
+			this.currentChar = this.input.nextChar();
+			while (this.currentChar != '"') {
+				this.pullNextChar();
+			}
+			this.currentChar = this.input.nextChar();
+			return TokenKind.STRING_LITERAL;
 		} else if (this.currentChar == '/') {
 			return this.handleDivisionOrComment();
 		} else if (this.isLogicalOperatorStart()) {
